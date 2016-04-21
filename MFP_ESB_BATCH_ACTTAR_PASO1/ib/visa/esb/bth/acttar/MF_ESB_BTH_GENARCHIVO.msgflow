@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/acttar/MF_ESB_BTH_GENARCHIVO.msgflow"
+    nsPrefix="ib_visa_esb_bth_acttar_MF_ESB_BTH_GENARCHIVO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/ACTTAR1_GENARCHIVO_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_GENARCHIVO" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_GENARCHIVO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO1"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj16/MF_ESB_BTH_GENARCHIVO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj30/MF_ESB_BTH_GENARCHIVO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="355,163" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_GENARCHIVO_GenerarArchivo.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="GenerarArchivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="82,163" queueName="IB.BTH.ACTTAR1.GENARCHIVO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTTAR1.GENARCHIVO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="297,379" destination="file" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="561,168" outputDirectory="/temp" outputFilename="temp" recordDefinition="delimited" remoteTransferType="SFTP" fileFtpServer="172.17.11.205:22" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="GrabarArchivoLoteCargos"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="529,257" queueName="IB.BTH.GENBTH.LOGPROCESO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.LOGPROCESO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="530,380" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="385,379" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_GENARCHIVO_ControlarError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlarError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="365,253" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR1_GENARCHIVO_debug.log" pattern="Environment = $ {Environment}&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="Trace"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.EOD"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out4" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_GENARCHIVOPASO1" pluginId="MFP_ESB_BATCH_ACTTAR_PASO1"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="177,37">
+        <body xmi:type="utility:ConstantString" string="* Proceso: Actualizador de Tarjetas - Paso1&#xA;* Identificador: ACTTAR1&#xA;-------------------------------------------&#xA;--Flujo con instancias adicionales para que creen archivos en paralelo de cada comercio"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="imparch.bth.esb.visa.ib" xmlns:tns="imparch.bth.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="T_MSJ_AFILIACION">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_MSJ_AFILIACION_CUERPO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_AFILIACION" type="tns:T_MSJ_AFILIACION">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_AFILIACION;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_MSJ_AFILIACION_CUERPO">
+    <xsd:sequence>
+      <xsd:element name="COD_PRODUCTO" type="xsd:string"/>
+      <xsd:element name="NRO_TARJETA" type="xsd:string"/>
+      <xsd:element name="NRO_MES_EXPIRACION_TARJETA" type="xsd:string"/>
+      <xsd:element name="NRO_ANHO_EXPIRACION_TARJETA" type="xsd:string"/>
+      <xsd:element name="NOM_TARJETAHABIENTE" type="xsd:string"/>
+      <xsd:element name="APE_PATERNO_TARJETAHABIENTE" type="xsd:string"/>
+      <xsd:element name="APE_MATERNO_TARJETAHABIENTE" type="xsd:string"/>
+      <xsd:element name="TELEFONO_TARJETAHABIENTE" type="xsd:string"/>
+      <xsd:element name="EMAIL_TARJETAHABIENTE" type="xsd:string"/>
+      <xsd:element name="NRO_IDENTIFICACION_BENEFICIARIO" type="xsd:string"/>
+      <xsd:element name="NOM_BENEFICIARIO" type="xsd:string"/>
+      <xsd:element name="APE_PATERNO_BENEFICIARIO" type="xsd:string"/>
+      <xsd:element name="APE_MATERNO_BENEFICIARIO" type="xsd:string"/>
+      <xsd:element name="MTO_MAXIMO_CARGO" type="xsd:string"/>
+            <xsd:element name="TIPO_CARGO" type="xsd:string"/>
+            <xsd:element name="MTO_CARGO" type="xsd:string"/>
+            <xsd:element name="FEC_PAGO_DIA" type="xsd:int"/>
+            <xsd:element name="TIPO_PERIODICIDAD" type="xsd:int"/>
+            <xsd:element name="TIPO_MONEDA" type="xsd:int"/>
+            <xsd:element name="FEC_PAGO_MES" type="xsd:int"/>
+            <xsd:element name="FEC_PAGO_ANIO" type="xsd:int"/>
+        </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

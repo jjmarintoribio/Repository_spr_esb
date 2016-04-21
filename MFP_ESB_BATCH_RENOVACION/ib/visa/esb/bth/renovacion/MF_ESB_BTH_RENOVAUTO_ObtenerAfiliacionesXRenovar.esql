@@ -1,0 +1,65 @@
+BROKER SCHEMA ib.visa.esb.bth.renovacion
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVAUTO_ObtenerAfiliacionesXRenovar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		SET Environment.Parametros = refParam;
+		-- (1) Se realiza la resta de la fecha actual para obtener las afiliaciones a renovar
+		DECLARE fecRenovacionBuscar DATE;
+		SET fecRenovacionBuscar = obtenerFechaMenosDias(CAST(SUBSTRING(refParam.Batch.fechaProcesoRenovacion FROM 1 FOR 10) AS DATE FORMAT getFORMATO_FECHA_BD()),
+														CAST( refParam.Servicio.CANDIASPREVREN AS INTEGER));
+		
+		-- (2) Se obtienen todas las afiliaciones a renovar
+		CALL buscarAfiliacionesPorRenovar(fecRenovacionBuscar, Environment.resultSet[]);
+		
+		CREATE NEXTSIBLING OF OutputRoot.MQRFH2 DOMAIN 'XMLNSC';
+		DECLARE totalResultSet INTEGER CARDINALITY(Environment.resultSet[]);
+		DECLARE refResult REFERENCE TO Environment.resultSet;
+		
+		WHILE LASTMOVE(refResult) DO
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.ID_AFILIACION =refResult.ID_AFILIACION;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.CTD_MESES_VIGENCIA = refResult.CTD_MESES_VIGENCIA;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.NRO_VIGENCIA_CADUCIDAD_AFILIACION = refResult.NRO_VIGENCIA_CADUCIDAD_AFILIACION;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.FEC_PAGO = refResult.FEC_PAGO;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.TIPO_PERIODICIDAD = refResult.TIPO_PERIODICIDAD;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.MTO_CARGO = refResult.MTO_CARGO;
+			SET OutputRoot.XMLNSC.AfiliacionRenovacion.Producto.ID_PRODUCTO = refResult.ID_PRODUCTO;
+		
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+			MOVE refResult NEXTSIBLING REPEAT TYPE NAME;			
+		END WHILE;
+		
+		-- (3) Se registra en la tabla proceso mantenimiento 
+		DECLARE idTransaccion INTEGER;
+		
+		CALL insertarProcesoMantenimiento(
+					getID_PROCESO_6(),
+					getTIP_PROC_MANT_RENOAUT(),
+					CURRENT_TIMESTAMP,
+					CURRENT_TIMESTAMP,
+					idTransaccion);
+		
+		-- (4) Se guarda en el proceso log la cantidad de afiliaciones a renovar
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se enviaron ' || CAST( totalResultSet AS CHARACTER) || ' afiliaciones a renovar.');
+
+		PROPAGATE TO TERMINAL 2;
+		
+		--((3)) Envio de mensaje con los Parametros para el control de alertas 
+		
+		SET OutputRoot.XMLNSC 			= NULL;
+		SET OutputRoot.MQMD.Format 		= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros = Environment.Parametros;
+		PROPAGATE TO TERMINAL 3;
+
+		RETURN FALSE;
+	END;
+
+END MODULE;

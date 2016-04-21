@@ -1,0 +1,101 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+PATH ib.visa.esb.bth;
+
+DECLARE cacheParametros SHARED ROW;
+DECLARE cacheServicios SHARED ROW;
+ 
+CREATE COMPUTE MODULE MF_ESB_BTH_GETPARAMS_ObtenerParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--((0))Obtener parametros del proceso de BD
+			
+		ROUTING : BEGIN ATOMIC 
+		    
+			CALL obtenerParametrosBD(getTIPO_SERVICIO_BATCH(),Environment.ResultSet1[]);
+			CALL obtenerServiciosBD(getTIPO_SERVICIO_BATCH(),Environment.ResultSet2[]);
+	       	SET cacheParametros.Parametros[] = Environment.ResultSet1[];
+	       	SET cacheServicios.Servicios[] = Environment.ResultSet2[];
+			SET cacheServicios.iniciado = TRUE;				
+												
+		END ROUTING ;   
+ 
+		DECLARE intIdproceso INTEGER CAST(InputBody.MENSAJE.IDPROCESO AS INTEGER); 
+		DECLARE chrIdentProceso CHARACTER  getIDENTIFICADOR_PROCESO(intIdproceso);
+		SET Environment.Variables.Identificador = chrIdentProceso;
+		
+		--((1)) Se obtiene el servicio a traves del identificador de la aplicacion consumidora
+
+		SET Environment.DatosServicio[] =  (SELECT  P.CODIGO,P.NOMBRE,P.ESTADO, P.GRUPOSERVICIO,P.RUTASERVICIO FROM cacheServicios.Servicios[] as P WHERE P.IDENTIFICADOR = chrIdentProceso);		
+ 
+ 
+ 		SET OutputRoot.Properties 	= InputProperties;
+ 		SET OutputRoot.MQMD 		= InputRoot.MQMD;
+ 		
+ 		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';	
+ 		CREATE FIELD OutputRoot.XMLNSC.MENSAJE;
+ 		DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.MENSAJE;
+ 	 
+		IF (FIELDTYPE(Environment.DatosServicio) IS NULL) THEN 
+		
+			SET refOut.TIPORES 		= getTIP_ERROR_CORE_ESB();
+			SET refOut.CODIGORES 	= getCOD_ERROR_2002();
+			SET refOut.MENSAJERES 	= getMSJ_ERROR_2002();
+			
+		ELSEIF (FIELDVALUE(Environment.DatosServicio.ESTADO) = getEST_INACTIVO()) THEN
+
+			SET refOut.TIPORES 		= getTIP_ERROR_CORE_ESB();		
+			SET refOut.CODIGORES 	= getCOD_ERROR_2003();
+			SET refOut.MENSAJERES 	= getMSJ_ERROR_2003();
+			 
+		END IF;
+ 
+		--((2))	Se obtiene los parametros desde Cache para el servicio que se esta invocando
+	
+		SET refOut.CODIGORES 		= getCOD_EXITO_CORE_ESB();
+
+		SET refOut.SERVICIO.CODIGO 			= Environment.DatosServicio.CODIGO;
+		SET refOut.SERVICIO.NOMBRE 			= Environment.DatosServicio.NOMBRE;
+		SET refOut.SERVICIO.IDENTIFICADOR  	= chrIdentProceso;
+		
+		CREATE FIELD refOut.PARAMETROS;
+		SET Environment.Servicio[] 	= (SELECT P.CODIGO_ATRIBUTO, P.VALOR FROM cacheParametros.Parametros[] as P WHERE P.CODIGO_SERVICIO = Environment.DatosServicio.CODIGO);		
+		CALL crearNombreCampos(Environment.Servicio[],refOut.PARAMETROS);
+
+		CREATE FIELD refOut.PARAMETROSESB;		
+		SET Environment.ESB[] = 	  (SELECT P.CODIGO_ATRIBUTO, P.VALOR FROM cacheParametros.Parametros[] as P WHERE P.CODIGO_SERVICIO = '00000');
+		CALL crearNombreCampos(Environment.ESB[],refOut.PARAMETROSESB);
+
+		RETURN TRUE;	
+
+	END;
+
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETPARAMS_ControlError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.Properties 	= InputProperties;
+ 		SET OutputRoot.MQMD 		= InputRoot.MQMD;
+ 		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';	
+ 		CREATE FIELD OutputRoot.XMLNSC.MENSAJE;
+ 		DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.MENSAJE;
+ 		
+ 		DECLARE chrCodError CHARACTER '';  
+		DECLARE chrMsjError CHARACTER ''; 
+ 		
+		CALL obtenerDetalleError(InputExceptionList,chrCodError,chrMsjError);
+
+		SET refOut.TIPORES 		= getTIP_ERROR_CORE_ESB();
+		SET refOut.CODIGORES 	= chrCodError;
+		SET refOut.MENSAJERES 	= chrMsjError;
+		
+		SET cacheServicios.iniciado = NULL; 		
+
+		RETURN TRUE;
+	END;
+
+	
+END MODULE;

@@ -1,0 +1,46 @@
+BROKER SCHEMA ib.visa.esb.bth.gencar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTESTCARGOS_EjecutarProceso
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+				
+		--((1)) Envio de alertas al inicio del proceso
+		
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 1;
+		END IF;
+			
+		
+		--((2)) Ejecucion del proceso
+		CALL actualizarEstadosCargosImporteCero(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()));
+		
+		--((3)) Envio de alertas al fin del proceso Req-42-02022016
+		SET refParam.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 1;
+		END IF;		
+		
+	END;
+
+	
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTESTCARGOS_PrepararError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+ 
+		IF (COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN 
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_4(),InputRoot.MQRFH2.usr.Parametros,obtenerMensajeError(InputExceptionList),MessageFlowLabel);
+			RETURN TRUE;
+		END IF;
+
+		RETURN FALSE;
+	END;
+
+	
+END MODULE;

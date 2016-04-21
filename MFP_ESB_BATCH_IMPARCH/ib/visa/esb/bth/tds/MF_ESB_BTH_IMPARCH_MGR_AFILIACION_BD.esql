@@ -1,0 +1,301 @@
+BROKER SCHEMA ib.visa.esb.bth.tds
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_BD_ControlarError
+		CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 1;
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRAFI.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQRFH2.usr = InputRoot.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = InputBody.MENSAJE.TOTALREGISTROS ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = 0 ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = InputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO ;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_BD_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.CorrelId 		= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET Environment.Comercio 		= InputBody.MENSAJE.COMERCIO;
+		--:: CAMBIOS ::
+		--SET OutputRoot.MQMD.CorrelId = Environment.CorrelId;
+		--:: CAMBIOS ::
+
+		SET Environment.cantidadRegistros = InputBody.MENSAJE.TOTALREGISTROS;
+		
+		CREATE FIELD Environment.XMLNSC.resultado.error;
+		DECLARE refError REFERENCE TO Environment.XMLNSC.resultado.error;		
+		
+		--????????????????????????????????????????????????????????????????????????????????????????
+		
+		DECLARE nroTarjetaEnmascarado CHARACTER;
+		DECLARE nroTarjetaEncriptado CHARACTER;
+		DECLARE tipoCargo,periodicidad,intTipoDocumento, intFlagReintento INTEGER;
+		DECLARE outIdProducto INTEGER;
+		DECLARE outCantMesesVigencia INTEGER;
+		DECLARE outIdAfiliacion INTEGER;
+		DECLARE outFecCaducidad TIMESTAMP;
+		DECLARE outResultado INT;
+		DECLARE outResultadoMsj CHARACTER;
+		DECLARE outResultOk INT 0;
+		DECLARE outResultFail INT 0;
+		DECLARE inFecPago DATE;
+		DECLARE hasErrors BOOLEAN TRUE;
+		DECLARE tipoDocumento INT;
+		DECLARE numeroDocumento CHARACTER;
+		DECLARE estado INT;
+		
+
+		
+		
+		DECLARE refMqrfh2 REFERENCE TO Environment.MQRFH2.usr.Parametros.Batch;
+
+		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
+
+		WHILE LASTMOVE(refRegis) DO		
+			SET inFecPago = CAST( RIGHT('00' || refRegis.M_CARGO_PAGO_DIA,2) || '/' ||
+			RIGHT('00' || refRegis.M_CARGO_PAGO_MES,2) || '/' ||
+			refRegis.M_CARGO_PAGO_ANHO AS DATE FORMAT 'dd/MM/yyyy');			
+
+		
+			CASE WHEN refRegis.M_CARGO_PERIODICIDAD IN ('1','2','3') THEN
+				SET periodicidad =1;
+			WHEN refRegis.M_CARGO_PERIODICIDAD = '6' THEN
+				SET periodicidad =2;
+			WHEN refRegis.M_CARGO_PERIODICIDAD = '12' THEN
+				SET periodicidad =3;
+			WHEN refRegis.M_CARGO_PERIODICIDAD IN ('13','14') THEN
+				SET periodicidad =0;
+			ELSE
+				SET periodicidad =0;
+			END CASE;
+			
+			SET nroTarjetaEnmascarado = enmascararNumeroTarjeta(REPLACE(refRegis.M_NRO_TARJETA,'''''',''));
+			SET nroTarjetaEncriptado = encriptarNroTarjeta(REPLACE(refRegis.M_NRO_TARJETA,'''''',''));
+			
+			DECLARE correo CHARACTER;			
+			DECLARE flgError INTEGER;
+			DECLARE apellidoMaternoUsuario CHARACTER;
+			DECLARE apellidoMaternoTitular CHARACTER;			
+			DECLARE estadoAfiliacion INTEGER;
+			
+			--Cambio canal de afiliacion: Nuevo campo
+			DECLARE canalAfiliacion INTEGER;
+			
+			SET flgError = 0; --NO HAY ERROR;
+			
+			
+			
+			SET correo = COALESCE(refRegis.M_TITULAR_CORREO,'');
+			SET apellidoMaternoUsuario = COALESCE(refRegis.M_USUARIO_APELLIDO_MATERNO,'');
+			SET apellidoMaternoTitular = COALESCE(refRegis.M_TITULAR_APELLIDO_MATERNO,'');
+			
+			IF LENGTH(correo) > 100 AND flgError <> 1 THEN
+				SET flgError = 1;
+				SET outResultado = 0;
+				SET outResultadoMsj = 'TITULAR_CORREO  LONGITUD EXCEDIDA';
+			END IF;
+			
+			IF LENGTH(apellidoMaternoUsuario) > 100 AND flgError <> 1 THEN
+				SET flgError = 1;
+				SET outResultado = 0;
+				SET outResultadoMsj = 'USUARIO_APELLIDO_MATERNO  LONGITUD EXCEDIDA';
+			END IF;
+			
+			IF LENGTH(apellidoMaternoTitular) > 100 AND flgError <> 1 THEN
+				SET flgError = 1;
+				SET outResultado = 0;
+				SET outResultadoMsj = 'TITULAR_APELLIDO_MATERNO LONGITUD EXCEDIDA';
+			END IF;
+			
+			IF UCASE(refRegis.M_ESTADO) = 'AFILIADO' AND flgError <> 1 THEN
+				SET estadoAfiliacion = 0;
+				SET refRegis.M_FECHA_DESAFILIACION =NULL;
+			END IF;
+			
+			IF UCASE(refRegis.M_ESTADO) = 'DESAFILIADO' AND flgError <> 1 THEN
+				IF refRegis.M_FECHA_DESAFILIACION IS NULL THEN
+					SET flgError = 1;
+					SET outResultado = 0;
+					SET outResultadoMsj = 'SE NECESITA UNA FECHA DE DESAFILIACION PARA UN DESAFILIADO';
+				END IF;
+				SET estadoAfiliacion = 1;				
+			END IF;
+			
+			--Cambio canal de afiliacion: Homologacion				
+			IF UCASE(refRegis.M_CANAL_AFILIACION) = 'COMERCIO' AND flgError <> 1  THEN
+				SET canalAfiliacion = 2;
+			END IF;
+			IF UCASE(refRegis.M_CANAL_AFILIACION) = 'PLATAFORMA' AND flgError <> 1  THEN
+				SET canalAfiliacion = 0;
+			END IF;
+			IF UCASE(refRegis.M_CANAL_AFILIACION) = 'HOMEBANKING' AND flgError <> 1  THEN
+				SET canalAfiliacion = 1;
+			END IF;
+			IF UCASE(refRegis.M_CANAL_AFILIACION) = 'ADQUIRIENTE' AND flgError <> 1  THEN
+				SET canalAfiliacion = 3;
+			END IF;
+			IF UCASE(refRegis.M_CANAL_AFILIACION) = 'EMISOR' AND flgError <> 1  THEN
+				SET canalAfiliacion = 4;
+			END IF;
+			-- FIN
+			
+			
+			
+			
+		--	IF LENGTH(correo) <= 50 THEN
+			--	IF LENGTH(apellidoMaterno) <=50 THEN
+					-- validacion tipo documento			
+					-- validacion numero de documento
+					-- (2) Insertar nueva afiliación
+					
+			IF flgError = 0 THEN	
+				IF refRegis.FLGERRPRD IS FALSE THEN					  
+					CALL migrarAfiliacionTemporal(CAST(refRegis.ID_PRODUCTO AS INTEGER),
+										nroTarjetaEnmascarado,
+										nroTarjetaEncriptado,
+										CAST(refRegis.M_EXPIRACION_MES AS INTEGER),
+										CAST(refRegis.M_EXPIRACION_ANHO AS INTEGER),
+										0,--DEFAULT
+										'11111111',--COALESCE(refRegis.M_P_NRO_DOCUMENTO_IDENTIDAD_TARJETAHABIENTE,'11111111'),
+										refRegis.M_TITULAR_NOMBRE,
+										refRegis.M_TITULAR_APELLIDO_PATERNO,
+										refRegis.M_TITULAR_APELLIDO_MATERNO,
+										refRegis.M_TITULAR_TELEFONO,
+										refRegis.M_TITULAR_CORREO,
+										REPLACE(refRegis.M_USUARIO_NRO_IDENTIFICADOR,'''''',''),
+										refRegis.M_USUARIO_NOMBRE,
+										refRegis.M_USUARIO_APELLIDO_PATERNO,
+										COALESCE(refRegis.M_USUARIO_APELLIDO_MATERNO,''),									
+										CAST(REPLACE(refRegis.M_USUARIO_MONTO_MAXIMO,'''''','') AS DECIMAL),
+										CAST(refRegis.TIPO_MONEDA AS INTEGER),
+										estadoAfiliacion,		
+										obtenerTimestampSinHora(CAST(refRegis.M_FECHA_AFILIACION AS DATE)),	
+										BrokerName,
+										BrokerName,
+										(CASE WHEN UCASE(refRegis.M_CARGO_TIPO) = 'V' THEN 1 ELSE 0 END),
+										CAST(REPLACE(refRegis.M_CARGO_MONTO,'''''','') AS DECIMAL),
+										obtenerTimestampSinHora(inFecPago),
+										periodicidad,									
+										CAST(refMqrfh2.idTransaccion AS INTEGER),																											
+										(CASE WHEN refRegis.M_FECHA_DESAFILIACION IS NULL THEN NULL ELSE obtenerTimestampSinHora(CAST(refRegis.M_FECHA_DESAFILIACION AS DATE)) END),
+										CAST(refRegis.NRO_RECORD AS INTEGER),									
+										CAST(refRegis.M_ID_AFILIACION_ALIGNET AS INTEGER),  --NUEVO REQUERIMIENTO ID_AFILIACION_ALIGNET 
+										canalAfiliacion,
+										(CASE WHEN refRegis.M_FECHA_SOLICITUD IS NULL THEN NULL ELSE obtenerTimestampSinHora(CAST(refRegis.M_FECHA_SOLICITUD AS DATE)) END));--Cambio canal de afiliacion:
+				ELSE
+					CALL registrarErrLog(CAST(refRegis.NRO_RECORD AS INTEGER),'NO HAY UN PROUCTO RELACIONADO PARA ESTA AFILIACION');
+					SET Environment.cantidadRegistrosFail = COALESCE(Environment.cantidadRegistrosFail,0) + 1;
+				END IF;									
+			ELSE
+				
+				SET Environment.cantidadRegistrosFail = COALESCE(Environment.cantidadRegistrosFail,0) + 1;
+				SET OutputRoot.XMLNSC.MENSAJE.NRO_RECORD = refRegis.NRO_RECORD;
+				PROPAGATE TO TERMINAL 1;								 
+								
+			END IF;
+		/*		ELSE
+					SET  outResultado = 0;	
+					SET outResultadoMsj = 'USUARIO_APELLIDO_MATERNO LONGITUD EXCEDIDA';							
+				END IF;
+			ELSE
+				SET  outResultado = 0;	
+				SET outResultadoMsj = 'TITULAR_CORREO LONGITUD EXCEDIDA';					
+			END IF;
+	
+			*/	    
+			
+			/*
+			IF outResultado = 0 THEN
+				SET outResultFail = 1;
+			ELSE
+				SET outResultOk = 1;
+			END IF;
+			
+			SET Environment.cantidadRegistrosOk   =  CAST(COALESCE(Environment.cantidadRegistrosOk ,0)AS INTEGER) +  outResultOk;
+			SET Environment.cantidadRegistrosFail =  CAST(COALESCE(Environment.cantidadRegistrosFail ,0)AS INTEGER) +  outResultFail;
+			
+			
+				
+			IF outResultado = 0 THEN--Imprime en el archivo log, solo aquellos que contengan error de lógica negocio
+					SET refError.nro_registro = COALESCE(refRegis.NRO_RECORD,'');
+					SET refError.mensaje = outResultadoMsj;				
+					SET refError.codigo = obtenerRespuestaPorCodigo(outResultado);
+					CREATE LASTCHILD OF Environment.XMLNSC.resultado NAME 'error';
+					MOVE refError NEXTSIBLING;
+			END IF;	
+			
+			SET outResultFail = 0;
+			SET outResultOk = 0;
+			*/
+			
+			
+			MOVE refRegis NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		/*
+		DELETE LASTCHILD OF Environment.XMLNSC.resultado;
+		
+ 		-- Envio de la lista de logs de los registros que tuvieron erores
+ 		
+ 		DECLARE refError1 REFERENCE TO Environment.XMLNSC.resultado.error;
+ 		
+	
+		WHILE LASTMOVE(refError1) DO
+	
+		SET OutputRoot.XMLNSC.resultado = refError1;
+
+		SET OutputLocalEnvironment.Destination.File.Directory = COALESCE(Environment.MQRFH2.usr.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name = refMqrfh2.nombreArchivo || '.log';
+
+		PROPAGATE TO TERMINAL 1;
+		
+	
+		MOVE refError1 NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		*/
+		
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;
+		SET OutputRoot.XMLNSC.MENSAJE.COMERCIO = Environment.Comercio; 
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = Environment.cantidadRegistros ;
+
+		PROPAGATE TO TERMINAL 2;
+
+		--Envio de los totales de registros que fueron impactados en BD
+
+	/*	SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRAFI.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = Environment.cantidadRegistros ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = Environment.cantidadRegistrosOk ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = Environment.cantidadRegistrosFail;
+
+		PROPAGATE TO TERMINAL 3;
+*/
+		RETURN FALSE;
+		
+	END;
+END MODULE;

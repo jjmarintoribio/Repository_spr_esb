@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNS:SolicitudAfiliacion" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNS:GSIRHIINPUT" xmlns:ns1="myNS:SolicitudAfiliacion" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+	<xsd:element ibmSchExtn:docRoot="true" name="SolicitudAfiliacion">
+        		<xsd:annotation/>
+        <xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+											<xsd:element dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;" maxOccurs="unbounded" name="record">
+					<xsd:complexType>
+						<xsd:sequence> 
+							<xsd:element ibmDfdlExtn:sampleValue="value1" name="CODIGO_GIRO" type="xsd:string"/>
+							<xsd:element dfdl:length="7" dfdl:lengthKind="explicit" ibmDfdlExtn:sampleValue="value2" name="CODIGO_COMERCIO">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/"/>
+                </xsd:annotation>
+                <xsd:simpleType>
+                  <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="8"/>
+                    <xsd:maxLength value="8"/>
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+							<xsd:element ibmDfdlExtn:sampleValue="value3" name="CODIGO_PRODUCTO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value4" name="NRO_TARJETA" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value5" name="EXPIRACION-MES" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value6" name="EXPIRACION-AÑO" type="xsd:string"/>
+                             <xsd:element ibmDfdlExtn:sampleValue="value7" name="TITULAR-NOMBRES" type="xsd:string"/>
+                            <xsd:element dfdl:calendarLanguage="es-PE" dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" ibmDfdlExtn:sampleValue="" name="TITULAR-APELLIDO_PATERNO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value9" name="TITULAR-APELLIDO_MATERNO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value10" name="TITULAR-TELEFONO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value11" name="TITULAR-EMAIL" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value12" name="USUARIO-NRO_IDENTIFICADOR" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value13" name="USUARIO-NOMBRES" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value14" name="USUARIO-APELLIDO_PATERNO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value15" name="USUARIO-APELLIDO_MATERNO" type="xsd:string"/>
+                            <xsd:element ibmDfdlExtn:sampleValue="value16" name="USUARIO-MONTO_MAXIMO" type="xsd:string"/>
+                            <xsd:element dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" ibmDfdlExtn:sampleValue="12" name="FECHA_PRUEBA" type="xsd:date"/>
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+
+</xsd:schema>

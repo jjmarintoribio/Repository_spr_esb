@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/historico/MF_ESB_BTH_HISCAR_CARGO.msgflow" nsPrefix="ib_visa_esb_bth_historico_MF_ESB_BTH_HISCAR_CARGO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_HISCAR_CARGO" bundleName="ib/visa/esb/bth/historico/MF_ESB_BTH_HISCAR_CARGO" pluginId="MFP_ESB_BATCH_HISTORICO"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_HISTORICO/icons/full/obj16/MF_ESB_BTH_HISCAR_CARGO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_HISTORICO/icons/full/obj30/MF_ESB_BTH_HISCAR_CARGO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="154,200" queueName="IB.BTH.HISCAR.INICIO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.HISCAR.INICIO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="344,200" dataSource="DSSPR_DB2" computeExpression="esql://routine/ib.visa.esb.bth.historico#MF_ESB_BTH_HISCAR_CARGO_INICIAR_GenerarHistorial.Main">
+        <translation xmi:type="utility:ConstantString" string="GenerarHistorial"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="480,201" destination="file" filePath="C:\app\visa\esb\batch\logs\historial-cargos-debug.log" pattern="=============== HISTORIAL CARGOS ===========&#xD;&#xA;FECHA Y HORA = ${CURRENT_TIMESTAMP}&#xD;&#xA;-----------------------------------------------------------------&#xD;&#xA;Root = ${Root}&#xD;&#xA;Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="293,352" destination="file" filePath="C:\app\visa\esb\batch\logs\historial-cargos-error.log" pattern="=============== HISTORIAL CARGOS ===========&#xD;&#xA;FECHA Y HORA = ${CURRENT_TIMESTAMP}&#xD;&#xA;-----------------------------------------------------------------&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="563,201" queueName="IB.BTH.GENBTH.LOGPROCESO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.LOGPROCESO.REQ.01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

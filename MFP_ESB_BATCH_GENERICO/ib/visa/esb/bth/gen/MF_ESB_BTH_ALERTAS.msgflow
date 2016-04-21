@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTimeoutControl.msgnode="ComIbmTimeoutControl.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/gen/MF_ESB_BTH_ALERTAS.msgflow"
+    nsPrefix="ib_visa_esb_bth_gen_MF_ESB_BTH_ALERTAS.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/GENBTH_ALERTAS_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_ALERTAS" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_ALERTAS" pluginId="MFP_ESB_BATCH_GENERICO"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENERICO/icons/full/obj16/MF_ESB_BTH_ALERTAS.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENERICO/icons/full/obj30/MF_ESB_BTH_ALERTAS.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="158,221" queueName="IB.BTH.GENBTH.ALERTAS.REQ.01" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.ALERTAS.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="387,221" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_ALERTAS_PrepararControlAlertas.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepararControlAlertas"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutControl.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="587,222" uniqueIdentifier="CTRLFINPR" requestLocation="InputRoot.XMLNSC.TimeoutRequest" requestPersistence="yes">
+        <translation xmi:type="utility:ConstantString" string="Timeout Control"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="200,346" uniqueIdentifier="CTRLFINPR" transactionMode="no" operationMode="controlled">
+        <translation xmi:type="utility:ConstantString" string="NotificarProceso"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="335,99" destination="file" pattern="********/Error 1/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="688,343" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_ALERTAS_ValidarEstadoProceso.Main">
+        <translation xmi:type="utility:ConstantString" string="ValidarEstadoProceso"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="331,400" destination="file" pattern="********/Error 1/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="815,344" queueName="IB.BTH.GENBTH.CORREO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CORREO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="519,147" queueName="IB.BTH.GENBTH.ALERTASTMP.REQ.01" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.ALERTASTMP.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="501,347" queueName="IB.BTH.GENBTH.ALERTASTMP.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no" getWithCorrelID="true">
+        <translation xmi:type="utility:ConstantString" string="ObtenerParametrosTemporales"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="380,346" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_ALERTAS_PrepararValidacion.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepararValidacion"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_ALERTAS" pluginId="MFP_ESB_BATCH_GENERICO"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_7 FCMComposite_1_9">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="208,31">
+        <body xmi:type="utility:ConstantString" string="Flujo que valida si el proceso ha finalizado en su tiempo estimado de finalizacion. &#xA;Si no ha terminado envia un correo de alerta "/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,73 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPCONTROL_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+ 
+		DECLARE intInd INTEGER 0;
+		DECLARE intGrupos INTEGER CAST(InputBody.MENSAJE.CANGRUPOS AS INTEGER);
+
+		SET OutputRoot.MQMD.CorrelId	=  CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.XMLNSC 			= InputBody;
+		SET Environment.colaGetRecep 	= InputBody.MENSAJE.COLAGETRECEP;
+
+		SET OutputLocalEnvironment.MQ.GET.QueueName = Environment.colaGetRecep;																	
+		SET Environment.colaProcesoHorario = InputBody.MENSAJE.COLAHORARIO;
+		
+		WHILE intInd < intGrupos DO
+			 SET intInd = intInd + 1;
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+		
+				
+		END WHILE;
+		
+		RETURN FALSE;
+		
+		
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPCONTROL_ValidarMensaje
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		-- Envio de mensajes para controlar la finalizacion del proceso
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.RCVARCHIVO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= Environment.XMLNSC.MENSAJE.QMPROCESO;
+	
+		SET OutputRoot.MQMD.MsgId 		= CAST(Environment.MQRFH2.usr.Parametros.Batch.msgIdTransaccion AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= OutputRoot.MQMD.CorrelId;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = OutputRoot.MQMD.MsgId;
+				
+		PROPAGATE TO TERMINAL 1;
+		
+		-- Envio de mensajes para que procesen grupo por grupo
+		SET OutputRoot.MQMD.CorrelId 			= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQRFH2.usr 				= Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC 					= InputBody;
+		
+		SET OutputRoot.XMLNSC.MENSAJE.TOTALREGISTROS= Environment.XMLNSC.MENSAJE.TOTALREGISTROS;
+		SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO 	= Environment.XMLNSC.MENSAJE.QMPROCESO;
+				 		 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = Environment.colaProcesoHorario;
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		
+
+		RETURN FALSE;
+					
+	END;
+
+
+END MODULE;
+

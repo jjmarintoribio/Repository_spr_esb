@@ -1,0 +1,91 @@
+
+/*
+ *
+ * Nombre		: MF_ESB_BTH_ALERTAS.esql
+ * Proposito	: Flujo de envio de alertas de los procesos por finalizacion
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.bth.gen
+PATH ib.visa.esb.bth; 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ALERTAS_PrepararControlAlertas
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputRoot.MQMD.CorrelId 	= CAST(InputRoot.MQRFH2.usr.Parametros.Batch.msgIdTransaccion AS BLOB);
+		SET OutputRoot.MQRFH2 			= InputRoot.MQRFH2;
+
+		PROPAGATE TO TERMINAL 1;
+
+		DECLARE intHoraReintento CHARACTER;
+		
+		SET OutputRoot.Properties 	 = InputProperties;
+		SET OutputRoot.MQMD 		 = InputRoot.MQMD;
+		
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+		CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE Name NAME 'TimeoutRequest';
+		DECLARE refOutBody REFERENCE TO OutputRoot.XMLNSC.TimeoutRequest;	
+
+		--((2)) Se prepara el TimeoutRequest para el control de reintentos
+				
+		SET intHoraReintento =  CAST((CURRENT_TIME + CAST(InputRoot.MQRFH2.usr.Parametros.Servicio.MINESTPROC AS INTERVAL MINUTE )) AS CHARACTER FORMAT 'HH:mm:ss');		
+					
+		SET refOutBody.Action 		= 'SET';
+		SET refOutBody.Identifier 	= InputRoot.MQRFH2.usr.Parametros.Batch.msgIdTransaccion;		
+		SET refOutBody.StartDate 	= CURRENT_DATE;				
+		SET refOutBody.StartTime 	= intHoraReintento;
+		SET refOutBody.Count 		= 1;		
+		SET refOutBody.IgnoreMissed =FALSE; 	--para cuando el broker o qm se detenga el mensaje vuelva a procesarse
+		SET refOutBody.AllowOverwrite = TRUE;
+		
+		PROPAGATE TO TERMINAL 2;
+			
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ALERTAS_PrepararValidacion
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		SET OutputRoot.MQMD.CorrelId = CAST(InputRoot.XMLNSC.TimeoutRequest.Identifier AS BLOB);	
+		PROPAGATE TO TERMINAL 1;
+	
+		RETURN FALSE;
+
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ALERTAS_ValidarEstadoProceso
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		DECLARE intEstProceso INTEGER 0;
+		CALL validarEstadoProceso(CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idProceso AS INTEGER),
+								CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER),
+								intEstProceso);
+		IF (intEstProceso = getEST_0_PROCESO()) THEN --Si aun sigue en iniciado envia alerta 
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_3(),InputRoot.MQRFH2.usr.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 1;
+			
+		END IF;
+	
+		RETURN FALSE;
+
+	END;
+
+END MODULE;

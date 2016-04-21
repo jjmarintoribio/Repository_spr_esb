@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:Afiliacion" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:Afiliacion" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+
+	<xsd:element dfdl:encoding="ISO-8859-1" ibmSchExtn:docRoot="true" name="Afiliacion">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+				<xsd:element dfdl:encoding="ISO-8859-1" dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+						<xsd:sequence dfdl:separatorSuppressionPolicy="trailingEmpty">
+							<xsd:element ibmDfdlExtn:sampleValue="value1" name="COD_PRODUCTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Cod. Interno Max. 40 caracteres&lt;/F&gt;">{fn:string-length( /ns0:Afiliacion/MENSAJE[1]/COD_PRODUCTO)le(41)}</dfdl:assert>
+                  
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element ibmDfdlExtn:sampleValue="value2" name="NRO_TARJETA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Tarjeta Max. 16 a 19 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/NRO_TARJETA)ge(17) and fn:string-length(/ns0:Afiliacion/MENSAJE[1]/NRO_TARJETA )le(20)}</dfdl:assert>
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;La Tarjeta es incorrecta&lt;/F&gt;">{fn:not(fn:contains(/ns0:Afiliacion/MENSAJE[1]/NRO_TARJETA,' '))}</dfdl:assert>
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;La Tarjeta debe iniciar con apostrofe&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/NRO_TARJETA ,"'")}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element dfdl:textNumberPattern="#0" name="NRO_MES_EXPIRACION_TARJETA" type="xsd:int">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Error Mes , rango 1 - 12&lt;/F&gt;">{xs:integer( /ns0:Afiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA)gt(0) and xs:integer( /ns0:Afiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA)le(12)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            						<xsd:element dfdl:textNumberPattern="#0" name="NRO_ANHO_EXPIRACION_TARJETA" type="xsd:int">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Anho Incorrecto&lt;/F&gt;">{xs:int(/ns0:Afiliacion/MENSAJE[1]/NRO_ANHO_EXPIRACION_TARJETA)gt(1800) and xs:int(/ns0:Afiliacion/MENSAJE[1]/NRO_ANHO_EXPIRACION_TARJETA)le(9999)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:encoding="ISO-8859-1" name="NOM_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Nom. TarjetaHabiente Max. 50 caracteres&lt;/F&gt;">{fn:string-length( /ns0:Afiliacion/MENSAJE[1]/NOM_TARJETAHABIENTE)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="APE_PATERNO_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Titular Ap. Paterno Max. 50 caracteres&lt;/F&gt;">{fn:string-length( /ns0:Afiliacion/MENSAJE[1]/APE_PATERNO_TARJETAHABIENTE)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="APE_MATERNO_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Titular Ap. Materno Max. 50 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/APE_MATERNO_TARJETAHABIENTE)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="TELEFONO_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Telefono Max. 15 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/TELEFONO_TARJETAHABIENTE)le(15)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="EMAIL_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:discriminator message="Correo Max. 75 caracteres">{fn:string-length( /ns0:Afiliacion/MENSAJE[1]/EMAIL_TARJETAHABIENTE)le(75)}</dfdl:discriminator>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="NRO_IDENTIFICACION_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Identificador Max. 24 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/NRO_IDENTIFICACION_BENEFICIARIO)le(24)}</dfdl:assert>
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Identificador debe iniciar con apostrofes&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/NRO_IDENTIFICACION_BENEFICIARIO ,"'" )}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="NOM_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Beneficiario Nombre Max. 50 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/NOM_BENEFICIARIO)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="APE_PATERNO_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Beneficiario Ap. Paterno Max. 50 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/APE_PATERNO_BENEFICIARIO)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="APE_MATERNO_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Beneficiario Ap. Materno Max. 50 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/APE_MATERNO_BENEFICIARIO)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="MTO_MAXIMO_CARGO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Mto. Maximo debe iniciar con apostrofe&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/MTO_MAXIMO_CARGO ,"'")}</dfdl:assert>
+                  <dfdl:assert message="&lt;F&gt;Mto. Maximo debe tener maximo 12 caracteres&lt;/F&gt;">{fn:string-length(/ns0:Afiliacion/MENSAJE[1]/MTO_MAXIMO_CARGO)le(12)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="TIPO_CARGO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Tipo de Cargo inválido , solo permitidos V (variable) y F (fijo)&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'V') or fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'F')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="MTO_CARGO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Monto Cargo debe iniciar con apostrofe&lt;/F&gt;">{fn:starts-with( /ns0:Afiliacion/MENSAJE[1]/MTO_CARGO,"'")}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="FEC_PAGO_DIA" type="xsd:int"/>
+                            <xsd:element name="TIPO_PERIODICIDAD" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Periodicidad Errada&lt;/F&gt;">{xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (1) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (6) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (12) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (14)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="TIPO_MONEDA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Moneda Error, solo se permiten 604 Y 840&lt;/F&gt;">{xs:string(/ns0:Afiliacion/MENSAJE[1]/TIPO_MONEDA)eq('604') or xs:string(/ns0:Afiliacion/MENSAJE[1]/TIPO_MONEDA)eq('840')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="FEC_PAGO_MES" type="xsd:int">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Mes Cargo Error&lt;/F&gt;">{xs:int(/ns0:Afiliacion/MENSAJE[1]/FEC_PAGO_MES)gt(0) and xs:int(/ns0:Afiliacion/MENSAJE[1]/FEC_PAGO_MES)le(12)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="FEC_PAGO_ANIO" type="xsd:int">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Anho Cargo invalido&lt;/F&gt;">{xs:int(/ns0:Afiliacion/MENSAJE[1]/FEC_PAGO_ANIO)gt(1800) and xs:int(/ns0:Afiliacion/MENSAJE[1]/FEC_PAGO_ANIO)le(9999)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="TITULAR_TIPO_DOCUMENTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="TITULAR_NRO_DOCUMENTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="REINTENTO_AUTOMATICO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+</xsd:schema>

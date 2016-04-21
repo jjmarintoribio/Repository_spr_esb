@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:Lote" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:Lote" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+	<xsd:element ibmSchExtn:docRoot="true" name="Lote">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+											<xsd:element dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+                        											<xsd:sequence>
+              		<xsd:element ibmDfdlExtn:sampleValue="value1" name="NRO_IDENTIFICACION_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Nro. Identificación Max. 24 caracteres&lt;/F&gt;">{fn:string-length( /Lote/MENSAJE[1]/NRO_IDENTIFICACION_BENEFICIARIO)le(24)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element dfdl:textNumberPattern="#0" name="COD_PRODUCTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Cod. Producto Max. caracteres 40&lt;/F&gt;">{fn:string-length( /ns0:Lote/MENSAJE[1]/COD_PRODUCTO)le(41)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" name="FEC_ESTIMADA_PAGO" type="xsd:date"/>
+                            						<xsd:element dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" name="FEC_PROCESO_PAGO" type="xsd:date"/>
+                            <xsd:element dfdl:textNumberPattern="#0.###" name="MTO_CARGO" type="xsd:string">
+            
+              </xsd:element>
+                                          
+              
+              
+              
+                                        <xsd:element default="" minOccurs="0" name="NRO_RECIBO" nillable="false" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                  
+                  <dfdl:assert message="&lt;F&gt;Nro de recibo max 20 caracteres&lt;/F&gt;">{fn:string-length( /Lote/MENSAJE[1]/NRO_RECIBO)le(20)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                        </xsd:sequence>
+                    </xsd:complexType>
+				</xsd:element>				
+                			                                                </xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+
+</xsd:schema>

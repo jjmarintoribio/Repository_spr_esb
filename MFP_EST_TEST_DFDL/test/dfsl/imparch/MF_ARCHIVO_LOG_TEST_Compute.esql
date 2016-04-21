@@ -1,0 +1,26 @@
+BROKER SCHEMA test.dfsl.imparch
+PATH ib.visa.esb.bth;
+DECLARE cacheTesting SHARED ROW;
+CREATE COMPUTE MODULE MF_ARCHIVO_LOG_TEST_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		
+		
+	CALL obtenerLogMigracion(Environment.Resultset1[]);
+		
+		DECLARE refResult REFERENCE TO Environment.Resultset1;			
+		
+		WHILE LASTMOVE(refResult) DO
+			SET OutputRoot.XMLNSC.resultado = refResult;			
+			SET OutputLocalEnvironment.Destination.File.Directory = '/app/visa/esb/batch/logs_importaciones/' || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(InputRoot.MQRFH2.usr.Batch.Mgr.nombreArchivo,'csv','dat') || '.log';				
+			PROPAGATE TO TERMINAL 4;
+			MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+		SET OutputLocalEnvironment.Destination.File.Directory = '/app/visa/esb/batch/logs_importaciones/' || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name = REPLACE(InputRoot.MQRFH2.usr.Batch.Mgr.nombreArchivo,'csv','dat') || '.log';
+		PROPAGATE TO TERMINAL 0;
+	END;
+END MODULE;

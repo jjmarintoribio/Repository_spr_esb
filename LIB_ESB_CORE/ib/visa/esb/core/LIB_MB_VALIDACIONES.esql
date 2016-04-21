@@ -1,0 +1,144 @@
+/*
+ *
+ * Nombre		: LIB_MB_VALIDACIONES.esql
+ * Prop�sito	: Funciones de validaciones de datos
+ * Fecha		: 2011-01-12
+ * Autores		: Synopsis
+ * Versi�n		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+
+BROKER SCHEMA ib.visa.esb.core
+
+-- Funciones genericas de validacion
+
+	CREATE FUNCTION esCampoVacio(IN chrCampo CHARACTER) 
+	RETURNS BOOLEAN
+	-- Retorna FALSE si el campo es no nulo
+	-- Retorna TRUE si el campo es nulo o vacio
+	BEGIN
+		DECLARE blnFlag BOOLEAN FALSE;	
+	
+		IF (chrCampo IS NULL) THEN
+			SET blnFlag = TRUE;
+		ELSE
+			IF (chrCampo = '') THEN
+				SET blnFlag = TRUE;
+			END IF;
+		END IF;	
+	
+		RETURN blnFlag;
+	END;
+
+-- FUNCIONES PARA LA VALIDACION DE CAMPOS DE TRAMA DE SOLICITUD DE CLIENTE
+CREATE PROCEDURE validarCampoAlfanumerico(	
+											IN refCampo REFERENCE, 
+											IN intIndiceCampo INTEGER, 
+											IN intLongitudMaximaCampo INTEGER
+										 )
+-- Valida la correcci�n de un campo alfanumerico enviado por el cliente. Si en longMaxCadena se envia 0 no se valida longitud maxima
+BEGIN
+	DECLARE chrCadenaAlfanumerica CHARACTER;
+	DECLARE refCampoPadre REFERENCE TO refCampo;
+	DECLARE chrNombreCampo CHARACTER;
+	DECLARE chrNombreCampoPadre CHARACTER;
+	DECLARE chrMensaje CHARACTER;
+	DECLARE intLongitudCadena INTEGER;
+	DECLARE intDiferenciaLongitud INTEGER;
+
+	IF (EsCampoVacio(refCampo) = FALSE) THEN
+		MOVE refCampoPadre PARENT;
+		SET chrNombreCampoPadre = FIELDNAME(refCampoPadre);
+		SET chrNombreCampo 		= FIELDNAME(refCampo);
+
+		IF (intLongitudMaximaCampo > 0) THEN
+			SET chrCadenaAlfanumerica	= FIELDVALUE(refCampo);
+			SET intLongitudCadena 		= LENGTH(chrCadenaAlfanumerica);
+			SET intDiferenciaLongitud 	= (intLongitudMaximaCampo - intLongitudCadena);	
+
+			IF (intDiferenciaLongitud < 0) THEN
+				IF (intIndiceCampo > 0) THEN
+					SET chrMensaje = 	'El campo '||
+										chrNombreCampo ||
+										--' perteneciente al elemento '||
+										--chrNombreCampoPadre || 
+										' en el indice '||
+										CAST(intIndiceCampo AS CHARACTER) ||
+										' excedio en '||
+										CAST(ABS(intDiferenciaLongitud) AS CHARACTER)||
+										' caracteres.';
+				ELSE 
+					SET chrMensaje = 	'El campo '||
+										chrNombreCampo ||
+										--' perteneciente al elemento '||
+										--chrNombreCampoPadre || 
+										' excedio en '||
+										CAST(ABS(intDiferenciaLongitud) AS CHARACTER)||
+										' caracteres.';
+				END IF;												
+				
+				THROW USER EXCEPTION MESSAGE 3000 VALUES (chrMensaje);
+				
+			END IF;
+		END IF;
+	END IF;
+END;
+
+
+
+CREATE PROCEDURE validarCampoObligatorio(	IN refCampo REFERENCE, 
+											IN chrNombreCampo CHARACTER, 
+											IN intIndiceCampo INTEGER
+										)
+-- Valida campo obligatorio
+BEGIN
+	DECLARE refCampoPadre REFERENCE TO refCampo;
+	MOVE refCampoPadre PARENT;	
+
+	DECLARE chrNombreCampoPadre CHARACTER;	
+	-- si el campo no existe
+	IF (FIELDNAME(refCampo) <> chrNombreCampo) THEN
+		IF (intIndiceCampo=0) THEN
+			THROW USER EXCEPTION MESSAGE 3000 VALUES (	'El campo ' || 
+														chrNombreCampo || 
+														' no tiene valor.' );
+		ELSE
+			THROW USER EXCEPTION MESSAGE 3000 VALUES (	'El campo ' || 
+														chrNombreCampo || 
+														' en el indice ' || 
+														CAST(intIndiceCampo AS CHARACTER DEFAULT '-999')||
+														' no tiene valor.'	
+													);
+		END IF;
+	ELSE
+		-- si el campo es obligatorio y no existe valor
+		IF (FIELDVALUE(refCampo) = '') THEN
+			SET chrNombreCampo 			= FIELDNAME(refCampo);
+			SET chrNombreCampoPadre 	= FIELDNAME(refCampoPadre);
+			
+			IF (intIndiceCampo=0) THEN
+				THROW USER EXCEPTION MESSAGE 3000 
+				VALUES (
+						'El campo ' ||
+						chrNombreCampo ||
+						--' perteneciente al elemento ' ||
+						--chrNombreCampoPadre ||
+						' no tiene valor.'
+						);
+			ELSE
+				THROW USER EXCEPTION MESSAGE 3000 
+				VALUES (
+						'El campo ' ||
+						chrNombreCampo ||
+						' en el indice '||
+						CAST(intIndiceCampo AS CHARACTER DEFAULT '-999') ||
+						--' perteneciente al elemento ' ||
+						--chrNombreCampoPadre ||
+						' no tiene valor.'
+						);
+			END IF;
+		END IF;
+	END IF;
+END;

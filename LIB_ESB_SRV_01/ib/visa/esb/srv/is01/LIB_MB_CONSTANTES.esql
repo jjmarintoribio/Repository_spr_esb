@@ -1,0 +1,22 @@
+/*
+ *
+ * Nombre		: LIB_MB_CONSTANTES.esql
+ * Proposito	: Archivo que contiene las constantes utilizadas en los flujos
+ * Fecha		: 2014-08-01
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.srv.is01
+
+--Namespaces servicios de SPR WEB----------/
+
+DECLARE C_NSSPRWEB_SCHEMA CONSTANT CHARACTER 'http://www.visanet.com.pe/spr/web/ws/schema'; 
+
+--Codigo de respuestas de los servicios de CavaliServices 
+DECLARE C_COD_EXITO_SRV_CAVSRV CONSTANT CHARACTER '00000'; -- ejecucion sin problemas
+DECLARE C_COD_PARAM_INVALIDO CONSTANT CHARACTER '10001'; -- parametros invalidos 
+
+

@@ -1,0 +1,86 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ERRARCHIVO_SeteaProcesoError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN	
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		SET Environment.Variables.finRegistro = FALSE;
+		SET Environment.Variables.Parametros = refParam;
+		
+		SET Environment.Variables.errorMensaje = '[ERROR] EL PROCESO SE HA FINALIZADO DEBIDO A ERRORES EN EL ARCHIVO............';
+		--SET OutputRoot.BLOB.BLOB = CAST(Environment.Variables.errorMensaje AS BLOB CCSID 819);
+		
+		
+		
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) ||  'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name = refParam.Batch.nombreArchivoLog;
+
+		PROPAGATE TO TERMINAL 1;
+		--SET OutputRoot.BLOB.BLOB = NULL;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) ||  'temp/' ;
+		SET OutputLocalEnvironment.Destination.File.Name = refParam.Batch.nombreArchivoLog;
+		PROPAGATE TO TERMINAL 3 ;
+		
+		RETURN FALSE;
+		
+	END;
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ERRARCHIVO_MoverArchivoTemp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) ||  'temp/' ;
+		SET OutputLocalEnvironment.Destination.File.Name = refParam.Batch.nombreArchivoLog;		
+		RETURN TRUE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ERRARCHIVO_MoverArchivoFinal
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;		
+		SET OutputRoot =  InputRoot;	
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR)  ;
+		SET OutputLocalEnvironment.Destination.File.Name = refParam.Batch.nombreArchivoLog;		
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ERRARCHIVO_LimpiarRegistros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+	SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+	SET Environment.Variables.finRegistro = TRUE;
+	SET Environment.Variables.cantidadRegisrto = InputBody.MENSAJE.TOTALREGISTROS;
+	
+	DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros.Batch;
+	
+	--FINALIZA EL PROCESO	
+	CALL actualizarProcesoMigracionError(24,
+											 CURRENT_TIMESTAMP,
+											 0,
+											 CAST(Environment.Variables.cantidadRegisrto AS INTEGER),
+											 CAST(Environment.Variables.cantidadRegisrto AS INTEGER),
+											 3, --FALLIDO
+											 CAST(refParam.idTransaccion AS INTEGER));	
+	
+	--LIMPIA LOS MENSAJES
+	--SET Environment.Variables.codigo= refParam;
+	SET OutputRoot.MQMD.CorrelId = CAST(refParam.msgIdTransaccion AS BLOB);
+	WHILE Environment.Variables.finRegistro = TRUE DO
+		PROPAGATE TO TERMINAL 0 DELETE NONE;
+	END WHILE;
+	
+	RETURN FALSE;
+	END;
+END MODULE;
+
+
+

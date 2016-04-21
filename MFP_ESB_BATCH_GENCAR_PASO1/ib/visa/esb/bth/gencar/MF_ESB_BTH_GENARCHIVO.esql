@@ -1,0 +1,398 @@
+BROKER SCHEMA ib.visa.esb.bth.gencar
+PATH ib.visa.esb.bth;
+ 
+ 
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((0)) Obtener la lista de tarjetas por Emisor
+
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;				   
+--		CALL buscarCargosProcesoAutorizador(InputBody.MENSAJE.LOTES.NROS,
+--											CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+--											Environment.Cargos[]);
+--											
+--		-- ((0.1)) Actualizar el estado del cargo a EN_PROCESO
+--		CALL actualizarBuscarCargosProcesoAutorizador(InputBody.MENSAJE.LOTES.NROS,
+--											  CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()));
+
+		DECLARE refLote REFERENCE TO InputBody.MENSAJE.LOTES.INFOLOTES.Lote;
+		DECLARE intInd INTEGER 0;	 
+		DECLARE intIdArchivo CHARACTER InputBody.MENSAJE.LOTES.IDARCHIVO; 
+		DECLARE chrFecActual CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA()); 
+				
+		DECLARE chrNomArchivo CHARACTER refParam.Servicio.PREJFILEDEST || '_' || intIdArchivo || '_' || BrokerName;
+					 
+		WHILE LASTMOVE(refLote) DO											
+
+			--//*********CABECERA LOTE****************//
+			--//***************************************//
+			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_GENCARGOS';			
+			SET OutputRoot.Properties.MessageType 		= 'MSJ_LOTE_INI';	
+			SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+			
+			CREATE FIELD OutputRoot.MRM.MENSAJE;
+			DECLARE refItemh REFERENCE TO OutputRoot.MRM.MENSAJE;
+							
+			SET refItemh.TIPOREGISTRO		= 'H';
+			SET refItemh.CODCOMERCIO		= refLote.COD_COMERCIO;
+			SET refItemh.TOTALTRANSACCIONES	= refLote.NRO_CARGOS;
+			SET refItemh.FECHAENVIO			= chrFecActual; 
+			SET refItemh.NROLOTE			= refLote.ID_LOTE;
+			SET refItemh.IMPORTETOTAL		= REPLACE(CAST(refLote.MTO_TOTAL AS CHARACTER),'.','');
+			IF (refLote.TIPO_MONEDA = '0') THEN 
+				SET refItemh.CODADQUIRIENTE	= '9999'; 
+				SET refItemh.CODMONEDA		= '604';
+			ELSEIF (refLote.TIPO_MONEDA = '1') THEN  
+				SET refItemh.CODADQUIRIENTE	= '9998'; 
+				SET refItemh.CODMONEDA		= '840';
+			END IF;
+			SET refItemh.CODENMASCARADO		= '';
+			SET refItemh.FILLER				= '';			
+			CALL setearDestino(refParam,chrNomArchivo);
+			PROPAGATE TO TERMINAL 1;
+
+			--//*********DETALLE CARGOS****************//
+			--//***************************************//
+
+			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_GENCARGOS';			
+			SET OutputRoot.Properties.MessageType 		= 'MSJ_CARGO';	
+			SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+			
+			--cambio
+			SET OutputRoot.Properties.CodedCharSetId = 819;
+			SET OutputRoot.Properties.Encoding = 273;
+			
+			CREATE FIELD OutputRoot.MRM.MENSAJE;
+			DECLARE refItemd REFERENCE TO OutputRoot.MRM.MENSAJE;
+			
+			--08012016
+			CALL buscarCargosProcesoAutorizador_new(CAST(refLote.ID_LOTE AS INTEGER),
+											CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+											Environment.Cargos[]);	
+			DECLARE refCargos REFERENCE TO Environment.Cargos;
+			
+			WHILE LASTMOVE(refCargos) DO
+															
+				SET refItemd.TIPOREGISTRO		= 'D'; 
+				SET refItemd.CODCOMERCIO		= refLote.COD_COMERCIO;
+				SET refItemd.NROTARJETA			= desencriptarNroTarjeta(refCargos.NRO_TARJETA_ENCRIPTADO);
+				SET refItemd.IMPORTE			= REPLACE(CAST(refCargos.MTO_CARGO AS CHARACTER),'.','');
+				SET refItemd.CODCLIENTE			= refCargos.NRO_IDENTIFICACION_BENEFICIARIO;
+				SET refItemd.FECHAPAGO			= CAST(refCargos.FEC_PROCESO_PAGO AS CHAR FORMAT 'yyyyMMdd');  
+				SET refItemd.FECHAVENCIMIENTO	= refCargos.FEC_EXPIRACION_TARJETA;
+				SET refItemd.CODRESULTADO		= '00';
+				SET refItemd.FILLER1			= '';
+				SET refItemd.NROREFERENCIA		= refCargos.NRO_RECIBO;
+				SET refItemd.CODCARGO			= refCargos.ID_CARGO;
+				SET refItemd.CODPRODUCTO		= refCargos.ID_PRODUCTO;
+				SET refItemd.FILLER2			= '';
+				
+				CALL setearDestino(refParam,chrNomArchivo);				
+				PROPAGATE TO TERMINAL 1 DELETE NONE;
+				
+				MOVE refCargos NEXTSIBLING REPEAT TYPE NAME;
+			
+			END WHILE;
+--			WHILE  (refLote.ID_LOTE = Environment.Cargos[intInd+1].ID_LOTE) DO											
+--				
+--				SET intInd = intInd + 1;		
+--							
+--				SET refItemd.TIPOREGISTRO		= 'D'; 
+--				SET refItemd.CODCOMERCIO		= refLote.COD_COMERCIO;
+--				SET refItemd.NROTARJETA			= desencriptarNroTarjeta(Environment.Cargos[intInd].NRO_TARJETA_ENCRIPTADO);
+--				SET refItemd.IMPORTE			= REPLACE(CAST(Environment.Cargos[intInd].MTO_CARGO AS CHARACTER),'.','');
+--				SET refItemd.CODCLIENTE			= Environment.Cargos[intInd].NRO_IDENTIFICACION_BENEFICIARIO;
+--				SET refItemd.FECHAPAGO			= CAST(Environment.Cargos[intInd].FEC_PROCESO_PAGO AS CHAR FORMAT 'yyyyMMdd');
+--				SET refItemd.FECHAVENCIMIENTO	= Environment.Cargos[intInd].FEC_EXPIRACION_TARJETA;
+--				SET refItemd.CODRESULTADO		= '00';
+--				SET refItemd.FILLER1			= '';
+--				SET refItemd.NROREFERENCIA		= Environment.Cargos[intInd].NRO_RECIBO;
+--				SET refItemd.CODCARGO			= Environment.Cargos[intInd].ID_CARGO;
+--				SET refItemd.CODPRODUCTO		= Environment.Cargos[intInd].ID_PRODUCTO;
+--				SET refItemd.FILLER2			= '';
+--
+--				CALL setearDestino(refParam,chrNomArchivo);				
+--				PROPAGATE TO TERMINAL 1 DELETE NONE;
+--			
+--			END WHILE;
+
+
+			--//*********RESUMEN LOTE****************//
+			--//***************************************//
+			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_GENCARGOS';			
+			SET OutputRoot.Properties.MessageType 		= 'MSJ_LOTE_FIN';	
+			SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+			SET OutputRoot.MRM = NULL;
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+			  
+			CREATE FIELD OutputRoot.MRM.MENSAJE;
+			DECLARE refItemf REFERENCE TO OutputRoot.MRM.MENSAJE;
+							
+			SET refItemf.TIPOREGISTRO		= 'F';
+			SET refItemf.CODCOMERCIO		= refLote.COD_COMERCIO;
+			SET refItemf.TOTALTRANSACCIONES	= refLote.NRO_CARGOS;
+			SET refItemf.FECHAENVIO			= chrFecActual;
+			SET refItemf.NROLOTE			= refLote.ID_LOTE;
+			SET refItemf.FILLER				= '';
+
+			CALL setearDestino(refParam,chrNomArchivo);
+			PROPAGATE TO TERMINAL 1;
+		
+			MOVE refLote NEXTSIBLING REPEAT TYPE NAME;
+
+		END WHILE;
+	
+		--((1)) Envio del cierre del archivo de cargos generado
+		
+		SET OutputRoot.Properties = InputProperties;
+
+		CALL setearDestino(refParam,chrNomArchivo);
+		PROPAGATE TO TERMINAL 2;
+
+		--((2)) Envio de la confirmacion del cierre del archivo
+		
+		SET OutputRoot.Properties = InputProperties;
+		SET OutputRoot.MQMD.ReplyToQ 		= 'IB.BTH.GENCAR1.VALARCHIVO.REQ.01';
+		SET OutputRoot.MQMD.ReplyToQMgr 	= InputBody.MENSAJE.LOTES.QMBUS;
+		
+		SET OutputRoot.MQRFH2 	= InputRoot.MQRFH2;
+		CREATE NEXTSIBLING OF OutputRoot.MQRFH2 DOMAIN 'XMLNSC';
+		
+		SET OutputRoot.XMLNSC.ARCHIVO.TOTAL 		= InputRoot.MQRFH2.usr.Parametros.Batch.cantNodos; --cantidad archivos
+		SET OutputRoot.XMLNSC.ARCHIVO.IDARCHIVO 	= intIdArchivo;
+		SET OutputRoot.XMLNSC.ARCHIVO.CANCARGOS 	= InputBody.MENSAJE.LOTES.CANCARGOS;
+		SET OutputRoot.XMLNSC.ARCHIVO.CANCARGOSTOTAL = InputBody.MENSAJE.LOTES.CANCARGOSTOTAL;
+		SET OutputRoot.XMLNSC.ARCHIVO.NOMARCHIVO 	= chrNomArchivo;
+		SET OutputRoot.XMLNSC.ARCHIVO.QMBUS			= InputBody.MENSAJE.LOTES.QMBUS;
+		
+	
+		PROPAGATE TO TERMINAL 3;		
+		
+		--08012016
+		CALL actualizarBuscarCargosProcesoAutorizador(InputBody.MENSAJE.LOTES.NROS,
+											  CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()));
+		
+		
+		--((3)) Registro de Log del Proceso
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se creo y cerro el archivo de cargo: '|| chrNomArchivo);
+
+		PROPAGATE TO TERMINAL 4;	
+
+		
+		RETURN FALSE;
+		
+	END;
+
+ 
+CREATE PROCEDURE setearDestino(IN refParam REFERENCE,IN chrNomArchivo CHARACTER)
+BEGIN
+	--DECLARE inCCSID, inEncoding INT; 
+	--SET inCCSID = 819; --ISO 8859-1 
+	--SET inEncoding = 1209; --
+	--SET OutputRoot.MQRFH2 = ASBITSTREAM(Environment.MQRFH2, inEncoding, inCCSID);
+	--SET OutputRoot.MQRFH2.CodedCharSetId = 819; 
+	--SET OutputRoot.MQRFH2.Encoding = 7819;
+	SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+	SET OutputLocalEnvironment.Destination.File.Name 		= chrNomArchivo;
+
+END;
+
+CREATE PROCEDURE buscarCargosProcesoAutorizador_new(
+					IN I_IDS_LOTES INTEGER,	
+					IN I_FEC_PROCESO_PAGO TIMESTAMP
+					)
+LANGUAGE DATABASE
+DYNAMIC RESULT SETS 1
+EXTERNAL NAME "SPRESB.SP_CARGO_BUSCAR_PROCESO_AUTORIZADOR_1";  
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_UnirArchivos
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		 
+
+		--((1)) Crea un nuevo archivo en blanco
+		SET OutputRoot.Properties = InputProperties;
+ 
+		SET Environment.nombreArchivo = refParam.Servicio.PREJFILEDEST
+										|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())
+										|| refParam.Servicio.EXTFILEDEST;
+
+ 		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.nombreArchivo;	
+		
+		
+		SET Environment.Body 	= InputBody;
+		SET Environment.MQRFH2 	= InputRoot.MQRFH2;
+
+		PROPAGATE TO TERMINAL 1; 
+		
+		--//******* CARGA ARCHIVOS COMPLETOS**********//
+		--//******************************************//		
+
+		DECLARE refArchivo REFERENCE TO InputBody.ARCHIVOSCARGO.LISTAARCHIVOS.Archivo;
+							 
+		WHILE LASTMOVE(refArchivo) DO		
+
+			SET OutputRoot.Properties 	= InputProperties;
+	 
+	  		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+			SET OutputLocalEnvironment.Destination.File.Name 		= refArchivo.nombre;
+						
+			PROPAGATE TO TERMINAL 2;
+	
+			MOVE refArchivo NEXTSIBLING REPEAT TYPE NAME;
+	
+		END WHILE;
+		
+		--//********* RESUMEN ARCHIVO*****************//
+		--//******************************************//
+		SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_GENCARGOS';			
+		SET OutputRoot.Properties.MessageType 		= 'MSJ_CABECERA_FIN';	
+		SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+		   
+		CREATE FIELD OutputRoot.MRM.MENSAJE;
+		DECLARE refIteme REFERENCE TO OutputRoot.MRM.MENSAJE;
+						    
+		SET refIteme.TIPOREGISTRO		= 'E';
+		SET refIteme.FECHAPROCESO		= CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2());
+		SET refIteme.FILLER				= '';
+
+ 		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.nombreArchivo;
+
+		PROPAGATE TO TERMINAL 3;		
+		
+		--((1)) Envio del cierre del archivo unido de cargos generado
+		SET OutputRoot.Properties = InputProperties;
+
+ 		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.nombreArchivo;
+		
+		PROPAGATE TO TERMINAL 4;
+	
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_AsignarNombreArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot; 
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.nombreArchivo; 
+		RETURN TRUE;
+		
+	END;
+
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_CrearCabeceraArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) Armado de la cabecera del archivo final
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		 
+		--//********* CABECERA ARCHIVO****************//
+		--//******************************************//
+		SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_GENCARGOS';			
+		SET OutputRoot.Properties.MessageType 		= 'MSJ_CABECERA_INI';	
+		SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+		  
+		CREATE FIELD OutputRoot.MRM.MENSAJE;  
+		DECLARE refItems REFERENCE TO OutputRoot.MRM.MENSAJE;
+						 
+		SET refItems.TIPOREGISTRO		= 'S';  
+		SET refItems.FECHAPROCESO		= CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2());
+		SET refItems.FILLER1			= '';
+		SET refItems.TOTALTRANSACCIONES	= Environment.Body.ARCHIVOSCARGO.CANCARGOS;
+		SET refItems.FILLER2			= '';
+     
+ 		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST;
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.nombreArchivo;
+		
+		PROPAGATE TO TERMINAL 1;
+
+
+		--((2)) Registro de Log del Proceso
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso,
+									refParam.Batch.idTransaccion,    
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se comenzo a unir el archivo final de cargos: ' || Environment.nombreArchivo);
+
+		PROPAGATE TO TERMINAL 2;	
+
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_ArmarLogProceso
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) Registro de Log del Proceso
+		
+		SET Environment.MQRFH2.usr.Parametros.Batch.nombreArchivo = Environment.nombreArchivo;
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									Environment.MQRFH2.usr.Parametros.Batch.idProceso, 
+									Environment.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se cerro el archivo de cargos unidos: '|| Environment.nombreArchivo);
+									
+																			
+
+		PROPAGATE TO TERMINAL 1;
+
+		--((2)) Cambia de estado la instancia del proceso
+
+		CALL actualizarProcesoAutorizadorTransaccionBD(CAST(Environment.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER),
+														CURRENT_TIMESTAMP,
+														CURRENT_TIMESTAMP,
+														NULL,
+														Environment.nombreArchivo,
+														NULL,
+														getEST_1_PROCESO()
+														) ;
+		--((3)) Envio de alertas al inicio del proceso
+		 
+		IF ( COALESCE(Environment.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),Environment.MQRFH2.usr.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 2;
+		END IF;
+																		
+		RETURN FALSE;
+	END;
+
+	
+END MODULE;

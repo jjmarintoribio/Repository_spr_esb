@@ -1,0 +1,103 @@
+BROKER SCHEMA ib.visa.esb.bth.gen 
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BATCH_LANZADOR_ObtenerParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+ 
+		IF (InputBody.MENSAJE.TIPORES <> getCOD_EXITO_CORE_ESB()) THEN 
+			THROW USER EXCEPTION MESSAGE CAST(InputBody.MENSAJE.CODIGORES AS INTEGER) VALUES(InputBody.MENSAJE.MENSAJERES);
+		END IF;	
+
+		SET OutputRoot.Properties 	= Environment.Properties;
+		SET OutputRoot.MQMD 		= Environment.MQMD; 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';		
+		
+		CREATE FIELD OutputRoot.MQRFH2.usr.Parametros;
+		DECLARE refParam REFERENCE TO OutputRoot.MQRFH2.usr.Parametros;
+		  
+		SET refParam.Servicio 	= InputBody.MENSAJE.PARAMETROS;
+		SET refParam.General	= InputBody.MENSAJE.SERVICIO;
+		SET refParam.ESB 		= InputBody.MENSAJE.PARAMETROSESB; 
+		
+		--2015-04-30 -cargos
+		--((2)) Guardado de parametros del proceso batch
+		SET refParam.Batch.idProceso 			= CAST(Environment.MRM.MENSAJE.IDPROCESO AS INTEGER);				
+		SET refParam.Batch.cantNodos			= COALESCE(refParam.Servicio.CANTINST, refParam.ESB.CANTINST);
+		SET refParam.Batch.msgIdTransaccion		= getMsgId();		
+		SET refParam.Batch.horaInicioProceso	= obtenerFechaHoraActual(2);
+		SET refParam.Batch.fechaInicioProceso	= obtenerFechaActual(4);
+		SET refParam.Batch.fechaProcesoOtros	= obtenerFechaActual(1);--'20171018';--obtenerFechaActual(1);--'20160728';
+		--SET refParam.Batch.fechaProceso			= obtenerTimestampSinHora(CURRENT_DATE);		
+		SET refParam.Batch.fechaProceso			= CAST('2024-04-27 00:00:00.000000' AS TIMESTAMP FORMAT getFORMATO_FECHAHORA1_BD());   --obtenerTimestampSinHora(CURRENT_DATE);
+		SET refParam.Batch.cola = obtenerColaInicioProceso(InputBody.MENSAJE.SERVICIO.IDENTIFICADOR);
+		IF Environment.MRM.MENSAJE.FILLER IS NOT NULL THEN			 		
+			SET refParam.Batch.Mgr.idTransaccion = CAST(SUBSTRING(Environment.MRM.MENSAJE.FILLER BEFORE '|') AS INTEGER);	
+			SET refParam.Batch.Mgr.idProcesoMigracion = SUBSTRING(SUBSTRING(Environment.MRM.MENSAJE.FILLER AFTER '|') BEFORE '#');
+			SET refParam.Batch.Mgr.nombreArchivo = SUBSTRING(Environment.MRM.MENSAJE.FILLER AFTER '#');
+		END IF;
+		
+		
+ 		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaInicioProceso(InputBody.MENSAJE.SERVICIO.IDENTIFICADOR);		 
+
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+	
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_LANZADOR_PrepararParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		
+		IF (FIELDTYPE(InputBody.MENSAJE.IDPROCESO) IS NULL OR isNumeric(InputBody.MENSAJE.IDPROCESO, TRUE) IS FALSE) THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_2001() VALUES(getMSJ_ERROR_2001());
+		END IF;		
+		
+		SET Environment.Properties 	= InputProperties;
+		SET Environment.MQMD 		= InputRoot.MQMD;
+		SET Environment.MRM			= InputBody;
+	
+	
+		SET OutputRoot.Properties	= InputProperties;
+		SET OutputRoot.MQMD.CorrelId= InputRoot.MQMD.MsgId;
+		
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = InputBody.MENSAJE.IDPROCESO;
+		 
+		RETURN TRUE;
+	END;
+
+
+END MODULE; 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_LANZADOR_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE idProceso CHARACTER ;
+		IF (isNumeric(InputBody.MENSAJE.IDPROCESO, TRUE) IS FALSE) THEN
+			SET idProceso = 0;
+		ELSE
+			SET idProceso = CAST(InputBody.MENSAJE.IDPROCESO AS INTEGER);			
+		END IF;	
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(idProceso AS CHARACTER),
+									'',
+									getTIP_LOG_ERROR(),
+									MessageFlowLabel,
+									'Error en el Lanzador');
+		
+		
+		RETURN TRUE;
+	END;
+
+	
+END MODULE;

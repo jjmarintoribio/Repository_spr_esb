@@ -1,0 +1,31 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+
+PATH ib.visa.esb.bth;
+ 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_ENCRIP_ValidarDesencriptado
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+
+		IF (InputBody.MENSAJE.FLGARCHIVOPGP = 'S') THEN
+
+			CALL desencriptarArchivoTarjetasPgp(InputBody.MENSAJE.RUTAORIGEN,
+												InputBody.MENSAJE.ARCHIVO,
+												InputBody.MENSAJE.DIRECTORIOTARJETA,
+												InputBody.MENSAJE.DIRECTORIOARCHIVE);
+												
+		ELSE
+			CALL desencriptarArchivoTarjetas(	InputBody.MENSAJE.CODEMISOR,
+												InputBody.MENSAJE.RUTAORIGEN,
+												InputBody.MENSAJE.ARCHIVO,
+												InputBody.MENSAJE.DIRECTORIOTARJETA,
+												InputBody.MENSAJE.DIRECTORIOARCHIVE,
+												InputBody.MENSAJE.FLGENCRIP);
+		END IF;	
+													
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;

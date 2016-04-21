@@ -1,0 +1,220 @@
+BROKER SCHEMA ib.visa.esb.bth.gencar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerLotes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		--((0.1)) Registrar el autorizador de transacciones
+		DECLARE intIdTransaccion INTEGER; 	
+		CALL insertarProcesoAutorizadorTransaccionBD(getID_PROCESO_5(),
+														CURRENT_TIMESTAMP,
+														NULL,
+														NULL,
+														NULL,
+														getEST_0_PROCESO(),
+														CURRENT_TIMESTAMP,
+														intIdTransaccion);
+														
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;
+		SET Environment.Parametros.Batch.idTransaccion = CAST(intIdTransaccion AS CHARACTER);
+		
+		--((0.2))Obtener Valor numerico de Parametros (Periodo de operación)
+			CALL obtenerParametro(getID_PARAMETRO_PERIODO_OPERACION(),Environment.resultSetParametros[]);
+			SET Environment.Parametros.Batch.HorasPeriodoOpe	= COALESCE(Environment.resultSetParametros[1].VAL_NUMERICO,24); --periodo de operacion
+		
+		--((0.3)) Envio de alertas al inicio del proceso
+		
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 4;
+		END IF;
+
+ 		SET OutputRoot.Properties 				= InputProperties;
+		SET OutputRoot.MQMD						= InputRoot.MQMD;
+		SET OutputRoot.MQRFH2.usr.Parametros	= Environment.Parametros;
+ 		
+		--((0.4)) Envio de mensaje con los Parametros para el control de alertas
+		
+		SET OutputRoot.XMLNSC 		= NULL; 
+		PROPAGATE TO TERMINAL 3 DELETE NONE;
+		
+
+ 		DECLARE refParam REFERENCE TO OutputRoot.MQRFH2.usr.Parametros;
+
+		  
+		--((1)) Obtiene el detalle de los lotes del dia.
+		  	
+		CALL buscarLoteComercio(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+--		Temporal0207 
+--		DECLARE fechaTemporalProceso3 TIMESTAMP;
+--		SET fechaTemporalProceso3 = CAST('2016-02-14 00:00:00.000000' AS TIMESTAMP FORMAT getFORMATO_FECHAHORA1_BD());
+--		CALL buscarLoteComercio(CAST(fechaTemporalProceso3 AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+-- 
+		--((2)) Agrupa los Lotes segun la cantidad de nodos del BUS y la cantidad de cargos.
+		
+		CREATE FIELD Environment.Proceso.InfoComercios;
+		DECLARE refComercios REFERENCE TO Environment.Proceso.InfoComercios;
+		DECLARE refResul REFERENCE TO Environment.ResultSet1;
+		
+		DECLARE intInd INTEGER 0;
+		DECLARE intIni INTEGER 1;
+		DECLARE intAux INTEGER 1;
+	
+		DECLARE intCantMayor INTEGER 0; 
+		DECLARE intIndLista INTEGER 1;
+		DECLARE intTempCant INTEGER 0;
+		 
+		DECLARE intCantNodos INTEGER CAST(refParam.Batch.cantNodos AS INTEGER);
+		    
+		WHILE intIni <= intCantNodos DO 
+			CREATE NEXTSIBLING OF refComercios AS refComercios REPEAT;
+			SET refComercios.ComerciosUnidos 	= '';
+			SET refComercios.cantCargos 	= 0;
+			SET intIni = intIni + 1;
+		END WHILE;
+
+		DELETE FIRSTCHILD OF Environment.Proceso;
+			  
+		WHILE LASTMOVE(refResul) DO
+			 
+			SET intInd = obtieneIndice(intInd,intCantNodos,intIndLista);
+			SET intTempCant = COALESCE(Environment.Proceso.InfoComercios[intInd].cantCargos,0) +  refResul.NRO_CARGOS;
+			
+			IF (intTempCant >= intCantMayor) THEN
+				SET intCantMayor 	= intTempCant;
+				SET intIndLista 	= intInd;
+			ELSE	
+				SET intInd = obtieneIndice(intInd,intCantNodos,intIndLista);
+			END IF;
+			
+ 			IF (FIELDTYPE(Environment.Proceso.InfoComercios[intInd].ListadoComercios.Comercio) IS NULL) THEN
+ 				CREATE FIELD Environment.Proceso.InfoComercios[intInd].ListadoComercios.Comercio[1];
+ 			ELSE
+ 				SET intAux = CARDINALITY(Environment.Proceso.InfoComercios[intInd].ListadoComercios.Comercio[])+1;
+ 				CREATE FIELD Environment.Proceso.InfoComercios[intInd].ListadoComercios.Comercio[intAux] ;
+ 			END IF;
+ 			
+ 			SET Environment.Proceso.InfoComercios[intInd].ListadoComercios.Comercio[intAux] = refResul;
+
+			MOVE refResul NEXTSIBLING REPEAT TYPE NAME;
+
+		END WHILE;
+
+		CREATE NEXTSIBLING OF OutputRoot.MQRFH2 DOMAIN 'XMLNSC';
+		
+		--Envio de lista agrupadas de Comercios 
+		
+		DECLARE refLis REFERENCE TO Environment.Proceso.InfoComercios;
+		WHILE LASTMOVE(refLis) DO
+			
+			SET OutputRoot.XMLNSC.MENSAJE 			= refLis.ListadoComercios;
+			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO = QueueManagerName;--QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
+			
+			--Se envia a la cola que esta en cluster en ambos Nodos para que la carga de la creacion del archivo sea balanceada
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.GENCAR3.ENVIARGEN.REQ.01';		 
+						  
+			MOVE refLis NEXTSIBLING REPEAT TYPE NAME;
+
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+
+		END WHILE;
+		 
+		--((3)) Registro de Log del Proceso
+		
+		SET OutputRoot.Properties 	= NULL;
+		SET OutputRoot.XMLNSC 		= NULL; 
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Obtuvo lista de Comercios y se crearan ' || CAST(CARDINALITY(Environment.ResultSet1[]) AS CHARACTER) || ' archivos de pagos');
+		
+		PROPAGATE TO TERMINAL 2 DELETE NONE;
+
+		--((4)) Envio de mensaje con los Parametros para el control de alertas
+		
+		SET OutputRoot.XMLNSC 		= NULL; 
+		PROPAGATE TO TERMINAL 3;
+
+
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_EnviarGenerar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	 	
+	 	--((1)) Envio individual de los comerciones con sus lotes
+	 	
+	 	DECLARE refLis REFERENCE TO InputBody.MENSAJE.Comercio;
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		DECLARE blbMsgId BLOB getMsgIdValor(refParam.Batch.idTransaccion,FALSE);
+		DECLARE blbCorrelId BLOB ;
+ 				 	
+		WHILE LASTMOVE(refLis) DO
+
+			SET blbCorrelId = getMsgIdValor(refParam.Batch.idTransaccion || refLis.ID_COMERCIO, FALSE);
+			
+			SET OutputRoot.Properties 	= InputProperties;
+			SET OutputRoot.MQRFH2 		= InputRoot.MQRFH2;			
+			SET OutputRoot.XMLNSC.MENSAJE 	= refLis;
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= blbCorrelId;
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = blbMsgId;
+			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= InputBody.MENSAJE.QMPROCESO; --QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
+			  
+  			CALL buscarLoteComercioDetalle(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+  											CAST(refLis.ID_COMERCIO AS INTEGER), 
+  											OutputRoot.XMLNSC.MENSAJE.Lote[]);
+  			--Temporal0207 
+--  			DECLARE fechaTemporalProceso2 TIMESTAMP;
+--			SET fechaTemporalProceso2 = CAST('2016-02-14 00:00:00.000000' AS TIMESTAMP FORMAT getFORMATO_FECHAHORA1_BD());
+--  			CALL buscarLoteComercioDetalle(CAST(fechaTemporalProceso2 AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+--  										CAST(refLis.ID_COMERCIO AS INTEGER), 
+--  									OutputRoot.XMLNSC.MENSAJE.Lote[]);
+		 		 				  
+			PROPAGATE TO TERMINAL 1;
+
+			--((2)) Registro de Log del Proceso
+
+			CALL armarMensajeLogProceso(OutputRoot,
+								refParam.Batch.idProceso, 
+								refParam.Batch.idTransaccion,    
+								getTIP_LOG_INFO(),
+								MessageFlowLabel,
+								'Se envio a generar el archivo para el comercio ' || refLis.COD_COMERCIO);
+	
+			PROPAGATE TO TERMINAL 2;
+
+			MOVE refLis NEXTSIBLING REPEAT TYPE NAME;
+			
+			
+			--((3)) Envio de mensaje para el control de finalizacion
+			
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.RCVARCHIVO.REQ.01'; 
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+			
+			SET OutputRoot.MQMD.MsgId 		= blbMsgId;
+			SET OutputRoot.MQMD.CorrelId 	= blbCorrelId;
+
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= blbCorrelId;
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = blbMsgId;
+			
+			PROPAGATE TO TERMINAL 3;
+
+		END WHILE;
+		
+		RETURN FALSE;
+					
+	END;
+
+	
+END MODULE;
+

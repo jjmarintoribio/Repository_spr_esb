@@ -1,0 +1,25 @@
+
+PATH ib.visa.esb.bth;
+DECLARE ns NAMESPACE 'myNs:Lote';
+
+CREATE COMPUTE MODULE IMPORTACION_CARGOS_ACTUALIZAR_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.NRO_REGISTRO = InputLocalEnvironment.File.Record;
+		DECLARE refInputRoot REFERENCE TO InputRoot.DFDL.ns:Lote.MENSAJE.FEC_PROCESO_PAGO;
+		DECLARE refNroIde REFERENCE TO InputRoot.DFDL.ns:Lote.MENSAJE.NRO_IDENTIFICACION_BENEFICIARIO;
+		DECLARE refFecEstimada REFERENCE TO InputRoot.DFDL.ns:Lote.MENSAJE.FEC_ESTIMADA_PAGO;
+		
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPAGO = refInputRoot ;
+		SET OutputRoot.XMLNSC.MENSAJE."refNroIde" = refNroIde ;	
+		SET OutputRoot.XMLNSC.MENSAJE."refFecEstimada" = refFecEstimada ;	
+		PROPAGATE TO TERMINAL 2;
+		DECLARE outParameter INTEGER;
+
+		CALL test1(CAST(refInputRoot AS DATE FORMAT 'yyyy-MM-dd'),refNroIde,CAST(refFecEstimada AS DATE FORMAT 'yyyy-MM-dd'),outParameter);
+		
+		SET OutputRoot.XMLNSC.RESULTADO = outParameter;
+		
+		PROPAGATE TO TERMINAL 1;
+	END;
+END MODULE;

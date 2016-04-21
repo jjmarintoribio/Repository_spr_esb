@@ -1,0 +1,90 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_SRVSEGURIDAD_EjecutarFuncionalidad
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.Properties 	= InputProperties;
+		
+		SET OutputRoot.MQMD 		= InputRoot.MQMD;
+		SET OutputRoot.MQMD.ReplyToQMgr = QueueManagerName;
+		SET OutputRoot.MQMD.ReplyToQ 	= 'IB.BTH.GENBTH.SRVSEGURIDAD.RES.01';
+		SET OutputRoot.MQMD.CorrelId	= InputRoot.MQMD.MsgId;
+		SET OutputRoot.MQMD.Format 		= 'MQSTR';
+		
+
+		DECLARE chtTipo CHARACTER COALESCE(FIELDNAME(InputBody.*[2]),'');
+		DECLARE refIn REFERENCE TO 	InputBody.*[2];	
+		
+		IF ( chtTipo= 'encriptacion') THEN	
+
+			CREATE FIELD OutputRoot.XMLNSC.encriptacion;
+			DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.encriptacion;	
+
+			SET refOut.exito 			= TRUE;
+			SET refOut.valorClaro 		= refIn.valorClaro;
+			
+			IF (COALESCE(refIn.tipoEncriptacion) = 'TRJ') THEN	
+				SET refOut.valorEncriptado  = encriptarNroTarjeta(refIn.valorClaro);
+			ELSEIF (COALESCE(refIn.tipoEncriptacion) = 'SAL') THEN	
+				SET refOut.valorEncriptado  = encriptarSal(refIn.valorClaro);
+			ELSE 
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_2001() VALUES(getMSJ_ERROR_2001());			
+			END IF;
+			
+			SET refOut.tipoEncriptacion = refIn.tipoEncriptacion;
+			
+		ELSEIF (chtTipo = 'desencriptacion') THEN
+
+			CREATE FIELD OutputRoot.XMLNSC.desencriptacion;
+			DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.desencriptacion;			
+		
+			SET refOut.exito 				= TRUE;
+			SET refOut.valorEncriptado 		= refIn.valorEncriptado;
+			
+			IF (COALESCE(refIn.tipoEncriptacion) = 'SAL') THEN	
+				SET refOut.valorClaro  = desencriptarSal(refIn.valorEncriptado);
+			ELSE 
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_2001() VALUES(getMSJ_ERROR_2001());			
+			END IF;
+			
+			SET refOut.tipoEncriptacion = refIn.tipoEncriptacion;
+		
+		ELSEIF (chtTipo = 'validacionFirma') THEN
+
+			CREATE FIELD OutputRoot.XMLNSC.validacionFirma;
+			DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.validacionFirma;
+			
+			SET refOut.exito 				= TRUE;
+			SET refOut.codigo		 		= refIn.codigo;
+			SET refOut.firmaDigital	 		= refIn.firmaDigital;
+			SET refOut.textoEncriptado 		= refIn.textoEncriptado;
+			SET refOut.textoClaro	 		= validarFirmaDigital(refIn.codigo,refIn.textoEncriptado,refIn.firmaDigital);						
+			SET refOut.valido			 	= TRUE;
+
+		ELSE
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_2001() VALUES(getMSJ_ERROR_2001());			
+		
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_SRVSEGURIDAD_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputRoot.MQMD.ReplyToQMgr = QueueManagerName;
+		SET OutputRoot.MQMD.ReplyToQ 	= 'IB.BTH.GENBTH.SRVSEGURIDAD.RES.01';		
+		SET OutputRoot.MQMD.CorrelId= InputRoot.MQMD.MsgId;
+		SET OutputRoot.XMLNSC.*[2].exito = FALSE;
+		RETURN TRUE;
+	END;
+
+	
+END MODULE;

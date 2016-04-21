@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:Bin" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:Bin" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+
+	<xsd:element ibmSchExtn:docRoot="true" name="Bin">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+				<xsd:element dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+						<xsd:sequence dfdl:separatorSuppressionPolicy="trailingEmpty">
+				<xsd:element ibmDfdlExtn:sampleValue="value1" name="NOM_MARCA_TARJETA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="Marca Tarjeta Max. 100 caracteres">{fn:string-length( /ns0:Bin/MENSAJE/NOM_MARCA_TARJETA[1])le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element ibmDfdlExtn:sampleValue="value2" name="COD_EMISOR" type="xsd:string">
+							 <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="Codigo Emisor Max. 40 caracteres">{fn:string-length( /ns0:Bin/MENSAJE/COD_EMISOR[1])le(40)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+							</xsd:element>
+							
+							
+							<xsd:element dfdl:lengthKind="delimited" dfdl:lengthPattern="" name="NRO_BIN">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="Bin Debe tener 6 digitos">{fn:string-length(/ns0:Bin/MENSAJE[1]/NRO_BIN)eq(6)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+                                              <xsd:simpleType>
+                  <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="/^\d{6}$/"/>
+                  </xsd:restriction>
+                </xsd:simpleType>
+                            </xsd:element>							
+                            						<xsd:element name="NOM_TARJETA" type="xsd:string">
+                            						<xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="Nombre Tarjeta Max. 100 caracteres">{fn:string-length( /ns0:Bin/MENSAJE/NOM_TARJETA[1])le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="TIPO_TARJETA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="Tipo de tarjeta no encontrado">{fn:starts-with( fn:upper-case( /ns0:Bin/MENSAJE[1]/TIPO_TARJETA),'DEBITO') or fn:starts-with( fn:upper-case( /ns0:Bin/MENSAJE[1]/TIPO_TARJETA),'CREDITO') or fn:starts-with( fn:upper-case( /ns0:Bin/MENSAJE[1]/TIPO_TARJETA),'PREPAGO')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>                            
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+</xsd:schema>

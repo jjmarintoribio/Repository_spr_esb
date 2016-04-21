@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="core.esb.visa.ib" xmlns:tns="core.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+ <xsd:complexType name="T_MENSAJE_AUDITORIA">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_EXTRUCTURA_AUDITORIA"/>
+    </xsd:sequence> 
+  </xsd:complexType>
+  <xsd:element name="MSG_AUDITORIA" type="tns:T_MENSAJE_AUDITORIA">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSG_AUDITORIA;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_DATOS_AUDITORIA">
+    <xsd:sequence>
+      <xsd:element name="MSGID" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="48"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FECHAHORA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="26"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="HORA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="8"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="INDORIGEN" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="30"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CODSERVICIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="5"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="PROTOCOLOENTRADA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="2"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="RUTASERVICIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="30"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="GRUPOSERVICIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="4"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="ANOMES" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="6"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="TIPOEVENTO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="2"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="TIPOMENSAJE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="1"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="BROKER" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="15"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="FLUJO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="100"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="CODERROR" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="4"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="DATO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" lengthUnits="EndOfBitStream" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+        </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="T_DATOS_NEGOCIO">
+    <xsd:sequence>
+      <xsd:element name="INDTRANSACCION" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="35"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="INDSERVICIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="35"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="INDCLIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="35"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="INDEXTERNOSERVICIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="NROCUENTA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="30"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FECHAHORAORIGEN" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="25"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CODINFORMATIVO1" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CODINFORMATIVO2" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CODINFORMATIVO3" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CODINFORMATIVO4" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="T_EXTRUCTURA_AUDITORIA">
+    <xsd:sequence>
+            <xsd:element name="DATOSNEGOCIO" type="tns:T_DATOS_NEGOCIO"/>
+            <xsd:element name="DATOSAUDITORIA" type="tns:T_DATOS_AUDITORIA"/>
+    </xsd:sequence>
+  </xsd:complexType>
+ </xsd:schema>

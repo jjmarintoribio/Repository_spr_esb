@@ -1,0 +1,53 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+
+DECLARE UDP_SEPARADOR_DIRECTORIO EXTERNAL  CHARACTER '/'; --separador en Linux
+DECLARE UDP_DIRECTORIO_CARGA_CARGOS EXTERNAL CHARACTER '/storage_ib/migraciones/'; --TODO poner el directorio correcto
+DECLARE UDP_DIRECTORIO_MQFTE_SOURCE EXTERNAL CHARACTER '/local/storage_ib/migracion_agente/';
+DECLARE UDP_DIRECTORIO_MQSIARCHIVE EXTERNAL CHARACTER 'mqsiarchive'; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviarDesencriptar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		
+		/*IF STARTSWITH(InputLocalEnvironment.File.Name , 'AFILIACIONES') THEN
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRAFI.RECEPARCHIVO.REQ.01';	
+		END IF;
+		
+		IF STARTSWITH(InputLocalEnvironment.File.Name , 'CARGOS') THEN
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRCAR1.RECEPARCHIVO.REQ.01';	
+		END IF; 
+			*/
+		
+		/*SET Environment.Variables.Archivo = InputLocalEnvironment.File.Name || '.go'; 
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_MQFTE_SOURCE;
+		SET OutputLocalEnvironment.Destination.File.Name 		= InputLocalEnvironment.File.Name;	
+		PROPAGATE TO TERMINAL 1; 
+			*/
+			
+			
+		SET OutputRoot.XMLNSC.MENSAJE.FLGARCHIVOPGP 	= 'S';											
+		SET OutputRoot.XMLNSC.MENSAJE.RUTAORIGEN 		= InputLocalEnvironment.File.Directory || UDP_SEPARADOR_DIRECTORIO;
+		SET OutputRoot.XMLNSC.MENSAJE.ARCHIVO 			= InputLocalEnvironment.File.Name;		
+		SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOARCHIVE	= UDP_DIRECTORIO_MQSIARCHIVE || UDP_SEPARADOR_DIRECTORIO;
+		SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOTARJETA	= UDP_DIRECTORIO_CARGA_CARGOS;
+		PROPAGATE TO TERMINAL 0;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviaTriggerFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			--TODO :: INICIO								  
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_MQFTE_SOURCE;
+		--TODO :: FIN
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Variables.Archivo;
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		PROPAGATE TO TERMINAL 2;								  
+		RETURN FALSE;
+		
+	END;
+END MODULE;

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_ENCRIP.msgflow"
+    nsPrefix="ib_visa_esb_bth_acttar_MF_ESB_BTH_RECEPARCHIVO_ENCRIP.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_RECEPARCHIVO_ENCRIP" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_ENCRIP" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO2/icons/full/obj16/MF_ESB_BTH_RECEPARCHIVO_ENCRIP.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO2/icons/full/obj30/MF_ESB_BTH_RECEPARCHIVO_ENCRIP.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="506,202" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_RECEPARCHIVO_ENCRIP_ValidarDesencriptado.Main">
+        <translation xmi:type="utility:ConstantString" string="ValidarDesencriptado"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="-14,204" uniqueIdentifier="ctrlLectura" transactionMode="no" timeoutInterval="70">
+        <translation xmi:type="utility:ConstantString" string="Timeout Notification"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="113,204" queueName="IB.BTH.ACTTAR2.RECEPARCHIVO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTTAR2.RECEPARCHIVO.REQ.01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="gencar.bth.esb.visa.ib" xmlns:tns="gencar.bth.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="T_CABECERA_INI">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_CABECERA_INI_CUERPO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_CABECERA_INI" type="tns:T_CABECERA_INI">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_CABECERA_INI;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_CABECERA_INI_CUERPO">
+    <xsd:sequence>
+      <xsd:element name="TIPOREGISTRO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="1"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FECHAPROCESO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="8"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FILLER1" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="1"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="TOTALTRANSACCIONES" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="'0'" stringJustification="rightJustify" typeName="MRCWFStringRep" width="6"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element default=" " name="FILLER2" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="194"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+        </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="T_CABECERA_FIN">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_CABECERA_FIN_CUERPO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_CABECERA_FIN" type="tns:T_CABECERA_FIN">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_CABECERA_FIN;XSDElementDeclaration=1$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_CABECERA_FIN_CUERPO">
+    <xsd:sequence>
+      <xsd:element name="TIPOREGISTRO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="1"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FECHAPROCESO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="8"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element default=" " name="FILLER" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="201"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

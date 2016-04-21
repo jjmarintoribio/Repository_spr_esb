@@ -1,0 +1,147 @@
+BROKER SCHEMA ib.visa.esb.bth.notificacion
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_NOTIFICA_AFILIACION_NotificarAfiliacionesPorExpirar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		DECLARE intIdProcesoNotificacion,intIdEnvioDetalleNotificacion,intCantEnviosNotificacion INTEGER;
+		SET intCantEnviosNotificacion = 0; --Req-9 1709
+		
+		--((1)) Insertar proceso envio de notificacion
+		CALL insertarProcesoEnvioNotificacion(getID_PROCESO_20(),
+											  CURRENT_TIMESTAMP,
+											  intIdProcesoNotificacion);
+		SET refParam.Batch.idTransaccion = CAST(intIdProcesoNotificacion AS CHARACTER);
+		
+		--((2.0)) Envio de alertas al inicio del proceso
+		
+		SET Environment.Parametros.Batch.idTransaccion = CAST(intIdProcesoNotificacion AS CHARACTER);
+		
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 1;
+		END IF;
+		
+--		--((2.1)) Envio de mensaje con los Parametros para el control de alertas
+--		SET OutputRoot.Properties 				= InputProperties;
+--		SET OutputRoot.MQMD						= InputRoot.MQMD;
+--		SET OutputRoot.MQRFH2.usr.Parametros	= Environment.Parametros; 		
+--		SET OutputRoot.XMLNSC 					= NULL; 
+--		PROPAGATE TO TERMINAL 3 DELETE NONE;
+		
+		--((3)) Obtener Notificaciones disponibles
+		CALL buscarNotificaciones(getID_NOTIFICACION_AFILIACION_EXPIRAR(),
+								  Environment.resultSetNotificaciones[]);
+		
+		DECLARE blnExiste BOOLEAN EXISTS(Environment.resultSetNotificaciones[]);---- Valida que solamente sea la notificación para envio de expiracion de afiliaciones
+		
+		IF blnExiste THEN
+						
+			DECLARE refNotificaciones REFERENCE TO Environment.resultSetNotificaciones[1];
+				
+			--((4))Obtener Valor numerico de Parametros (dias a expirar)
+			DECLARE diasExpiracionAfiliacionPrevios,intCantNotificaciones INTEGER;
+			CALL obtenerParametro(getPREV_DAYS_AFILIACION_EXPIRAR(),Environment.resultSetParametros[]);
+			SET diasExpiracionAfiliacionPrevios = COALESCE(Environment.resultSetParametros[1].VAL_NUMERICO,1);
+			SET Environment.parametro.fechaProcesoEjecutar = obtenerFechaMasDias(obtenerDateConFormato(Environment.Parametros.Batch.fechaProcesoOtros),diasExpiracionAfiliacionPrevios);
+										  
+			--((5.0))Enviar notificaciones a los afiliados, 
+			IF(refNotificaciones.FLG_AFILIADO = getEST_TRUE()) THEN
+			
+				--((5.1))Obtener todas afiliaciones que se encuentren por expirar
+				CALL obtenerAfiliacionesPorExpirarNotificacion(Environment.parametro.fechaProcesoEjecutar,
+															   Environment.resultSetAfiliaciones[]);
+				DECLARE refAfiliaciones REFERENCE TO Environment.resultSetAfiliaciones;
+				SET intCantEnviosNotificacion = CARDINALITY(Environment.resultSetAfiliaciones[]);
+				
+				WHILE LASTMOVE(refAfiliaciones) DO
+
+					SET refAfiliaciones.ASUNTO				= refNotificaciones.DESC_ASUNTO_AFILIADO;
+					SET refAfiliaciones.CUERPO	= refNotificaciones.DESC_CUERPO_MENSAJE_AFILIADO;
+					SET refAfiliaciones.FECHA_DESAFILIACION = CAST(Environment.parametro.fechaProcesoEjecutar  AS CHAR FORMAT getFORMATO_FECHA4());
+					CALL prepararMensajeCorreoNotificar(OutputRoot,refParam.ESB.REMITENTE,refAfiliaciones);
+					PROPAGATE TO TERMINAL 1;
+					
+					MOVE refAfiliaciones NEXTSIBLING REPEAT TYPE NAME;
+				END WHILE;															   
+				PROPAGATE TO TERMINAL 1;--TODO eliminar
+			END IF;
+			
+			--((6.0))Enviar notificacion al administrador del comercio
+			IF(refNotificaciones.FLG_CONTACTO_ADMINISTRADOR_COMERCIO = getEST_TRUE()) THEN
+
+				CALL obtenerComerciosPorExpirarAfiliaciones(Environment.parametro.fechaProcesoEjecutar,
+															Environment.resultSetComercios[]);
+				DECLARE refComercios REFERENCE TO Environment.resultSetComercios;
+				SET intCantEnviosNotificacion = intCantEnviosNotificacion + CARDINALITY(Environment.resultSetComercios[]);
+				
+				WHILE LASTMOVE(refComercios) DO
+
+					SET refComercios.ASUNTO				 = refNotificaciones.DESC_ASUNTO_OTROS;
+					SET refComercios.FECHA_DESAFILIACION = CAST(Environment.parametro.fechaProcesoEjecutar  AS CHAR FORMAT getFORMATO_FECHA4());
+					CALL prepararMensajeCorreoNotificarOtros(OutputRoot,refParam.ESB.REMITENTE,refComercios);
+					PROPAGATE TO TERMINAL 1;
+					
+					MOVE refComercios NEXTSIBLING REPEAT TYPE NAME;
+					
+				END WHILE;
+				 																
+				--Enviar notificaciones a los contactos de comercios
+				IF(refNotificaciones.FLG_CONTACTOS_COMERCIO = getEST_TRUE()) THEN
+					SET Environment.respuesta.FLG_CONTACTOS_COMERCIO = refNotificaciones.FLG_CONTACTOS_COMERCIO;
+				END IF;
+			
+			END IF;
+			
+			--((7.0))Enviar notificaciones a los emisores
+			IF(refNotificaciones.FLG_CONTACTO_EMISOR = getEST_TRUE()) THEN
+				SET Environment.respuesta.FLG_CONTACTO_EMISOR = refNotificaciones.FLG_CONTACTO_EMISOR;
+			END IF;
+			
+			SET Environment.respuesta.NOM_NOTIFICACION = refNotificaciones.NOM_NOTIFICACION;
+			
+			--((8)) Insertar proceso envio  detalle de envio de notificacion
+			CALL insertarDetalleProcesoEnvioNotificacion( refNotificaciones.ID_NOTIFICACION,
+														  intIdProcesoNotificacion,
+														  intCantEnviosNotificacion,
+														  intIdEnvioDetalleNotificacion);
+			
+			--((9))Actualizar la fecha de fin para el proceso de envio de notificacion
+			CALL actualizarProcesoEnvioNotificacion(CAST(Environment.Parametros.Batch.idTransaccion AS INTEGER),
+													CURRENT_TIMESTAMP);
+													
+			--((10))Registro de Log del Proceso		
+			SET OutputRoot.Properties 	= NULL;
+			SET OutputRoot.XMLNSC 		= NULL; 
+			CALL armarMensajeLogProceso(OutputRoot,
+										refParam.Batch.idProceso, 
+										refParam.Batch.idTransaccion,   
+										getTIP_LOG_INFO(),
+										MessageFlowLabel,
+										'Se enviaron la cantidad  ' || CAST(intCantEnviosNotificacion AS CHARACTER) || ' notificaciones.');
+			
+			PROPAGATE TO TERMINAL 2 ;
+			
+		
+		--Req-9 1709 Solo controla en el final el tiempo xq no esta definido en parametro
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 1;
+		END IF;
+					
+		--((2.1)) Envio de mensaje con los Parametros para el control de alertas
+		SET OutputRoot.Properties 				= InputProperties;
+		SET OutputRoot.MQMD						= InputRoot.MQMD;
+		SET OutputRoot.MQRFH2.usr.Parametros	= Environment.Parametros; 		
+		SET OutputRoot.XMLNSC 					= NULL; 
+		PROPAGATE TO TERMINAL 3 DELETE NONE;
+																														  
+		END IF;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+

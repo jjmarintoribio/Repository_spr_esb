@@ -1,0 +1,43 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+ PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLFINPROCESO_PrepararMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.MQRFH2 	= InputRoot.MQRFH2;
+		SET Environment.Body	= InputBody;
+		
+		SET OutputRoot.MQMD.MsgId 		= CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		
+
+		
+		
+		RETURN TRUE;
+	END; 
+END MODULE;
+ 
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLFINPROCESO_PrepararValidacion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		 
+		SET OutputRoot.MQMD.MsgId = CAST(Environment.Body.MENSAJE.IDTRANSACCION AS BLOB);
+
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLFINPROCESO_PrepararFinalizacion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaFinalizacionProceso(Environment.MQRFH2.usr.Parametros.General.IDENTIFICADOR);
+		SET OutputRoot.MQMD.Format 		= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr 		= Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE 	= Environment.Body.MENSAJE;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

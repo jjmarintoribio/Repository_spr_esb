@@ -1,0 +1,75 @@
+BROKER SCHEMA ib.visa.esb.bth.actestado
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_AFI_BD_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.CorrelId 		= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= Environment.CorrelId;
+
+		SET Environment.cantidadRegistros = InputBody.MENSAJE.TOTALREGISTROS;
+		
+		-- ((1.0)) Bucle para obtener todos los registros un grupo del archivo cargado
+		DECLARE intInd INTEGER 0;
+		DECLARE intCantReg INTEGER CAST(InputRoot.MQRFH2.usr.Parametros.Servicio.CANREGTRANS1 AS INTEGER);
+
+		WHILE intInd < intCantReg DO
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+			SET intInd = intInd + 1;	
+		END WHILE;
+
+		-- ((2.0)) Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr 					= Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;		
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_AFI_BD_ActualizarEstado
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		IF FIELDTYPE(InputBody.MENSAJE.Afiliacion.id) IS NOT NULL THEN
+		
+			-- Se actualiza el estado de afiliacion a desafiliado
+			--CALL actualizarEstadoAfiliaciones(CAST(InputBody.MENSAJE.Alerta.id AS INTEGER), --22012016
+			CALL actualizarEstadoAfiliaciones(CAST(InputBody.MENSAJE.Afiliacion.id AS INTEGER),
+											   CURRENT_TIMESTAMP,
+											   getID_ESB_VISA(),
+											   BrokerName);
+
+
+		END IF;
+
+		RETURN FALSE;
+	END;
+END MODULE;		
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_AFI_BD_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 1;
+		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.ACTESTSOLAFI.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;		
+		SET OutputRoot.MQMD.Format 	  = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId  = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQRFH2.usr 	  = InputRoot.MQRFH2.usr;
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+END MODULE;	

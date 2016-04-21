@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/gen/MF_ESB_BTH_CARPARAMSEG.msgflow"
+    nsPrefix="ib_visa_esb_bth_gen_MF_ESB_BTH_CARPARAMSEG.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/GENBTH_CARPARAMSEG_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_CARPARAMSEG" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CARPARAMSEG" pluginId="MFP_ESB_BATCH_GEN_SEGURIDAD"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GEN_SEGURIDAD/icons/full/obj16/MF_ESB_BTH_CARPARAMSEG.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GEN_SEGURIDAD/icons/full/obj30/MF_ESB_BTH_CARPARAMSEG.gif"/>
+    <longDescription xmi:type="utility:ConstantString" string="Carga los parametros de seguridad"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="185,127" dataSource="DSESB_DB" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CARPARAMSEG_ObtenerParametrosSeguridad.Main">
+        <translation xmi:type="utility:ConstantString" string="ObtenerParametrosSeguridad"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="35,127" uniqueIdentifier="ctrlParamSeg" transactionMode="no" timeoutInterval="30000">
+        <translation xmi:type="utility:ConstantString" string="IniciarCargaParametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="135,210" destination="file" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CARPARAMSEG" pluginId="MFP_ESB_BATCH_GENERICO"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_5">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="133,27">
+        <body xmi:type="utility:ConstantString" string="Obtiene los parametros por una sola vez al iniciar el BUS.&#xA;Si se necesita carga de nuevo los parametros se debe de reiniciar el flujo"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

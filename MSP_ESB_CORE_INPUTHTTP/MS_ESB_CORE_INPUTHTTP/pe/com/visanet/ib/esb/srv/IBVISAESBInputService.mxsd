@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://visanet.com.pe/ib/esb/srv" xmlns:ns="http://visanet.com.pe/ib/esb" xmlns:tns="http://visanet.com.pe/ib/esb/srv">
+
+	<xsd:import namespace="http://visanet.com.pe/ib/esb" schemaLocation="../IBVISAESBInputServiceHeader.mxsd"/>
+				
+    <xsd:complexType name="INTEGRACIONREQ_Type">
+    	<xsd:sequence>
+    		<xsd:element maxOccurs="1" minOccurs="1" name="CABECERA" type="ns:CABECERA_Type"/>
+    		<xsd:element maxOccurs="1" minOccurs="1" name="DETALLE" type="tns:DETALLE_Type"/>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="INTEGREQ" type="tns:INTEGRACIONREQ_Type"/>
+
+    <xsd:complexType name="MENSAJEREQ_Type">
+    	<xsd:sequence>
+    		<xsd:element name="INTEGREQ" type="tns:INTEGRACIONREQ_Type"/>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="INTEGRACIONRES_Type">
+    	<xsd:sequence>
+    		<xsd:element name="CABECERA" type="ns:CABECERARes_Type"/>
+    		<xsd:element maxOccurs="1" minOccurs="0" name="DETALLE" type="tns:DETALLE_Type"/>
+
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="MENSAJERES_Type">
+    	<xsd:sequence>
+    		<xsd:element name="INTEGRES" type="tns:INTEGRACIONRES_Type"/>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="INTEQRES" type="tns:INTEGRACIONRES_Type"/>
+
+    <xsd:element name="MENSAJEREQ" type="tns:MENSAJEREQ_Type">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MENSAJEREQ;XSDElementDeclaration=2$MRObject" schemaObject="/0/MENSAJEREQ;XSDElementDeclaration=2"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+
+    <xsd:element name="MENSAJERES" type="tns:MENSAJERES_Type">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MENSAJERES;XSDElementDeclaration=3$MRObject" schemaObject="/0/MENSAJERES;XSDElementDeclaration=3"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+
+	<xsd:complexType name="DETALLE_Type">
+    	<xsd:sequence>
+    		<xsd:element maxOccurs="1" minOccurs="1" name="DATOS" type="tns:DATOS_Type"/>
+    	</xsd:sequence> 
+    </xsd:complexType>
+	
+	    <xsd:complexType name="DATOS_Type">
+    	<xsd:sequence>
+    		<xsd:any>
+    			<xsd:annotation>
+    				<xsd:documentation>Campo contendra los campos necesarios para llamar a un servicio especifico</xsd:documentation>
+    			</xsd:annotation>
+      </xsd:any>
+    	</xsd:sequence>
+    </xsd:complexType>
+	
+</xsd:schema>

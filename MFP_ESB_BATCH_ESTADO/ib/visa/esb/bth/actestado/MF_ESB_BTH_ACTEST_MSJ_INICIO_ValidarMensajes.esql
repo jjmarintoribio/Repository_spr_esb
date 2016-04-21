@@ -1,0 +1,165 @@
+BROKER SCHEMA ib.visa.esb.bth.actestado
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_MSJ_INICIO_ValidarMensajes
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.refParam = InputRoot.MQRFH2.usr.Parametros;		
+		
+		DECLARE refParam REFERENCE TO Environment.refParam;
+		DECLARE cantMsjes INTEGER 0;
+
+		-- ((1)) Buscar Mensajes con estado pendiente (TRAE DE LA BD)
+		CALL buscarMensajesAlertas(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+								   Environment.resultSetMensajes[]);
+										 
+		SET cantMsjes = CARDINALITY(Environment.resultSetMensajes[]);
+		DECLARE refMensajes REFERENCE TO Environment.resultSetMensajes;
+		
+		-- ((1.0)) Grabar proceso para obtener el id de transaccion
+			
+			DECLARE intIdTransaccion INTEGER;
+--			CALL insertarProcesoMantenimiento(
+--											getID_PROCESO_19(),
+--											getTIP_PROC_MANT_ACTEST(),
+--											CURRENT_TIMESTAMP,
+--											CURRENT_TIMESTAMP,
+--											intIdTransaccion);
+			--22012016
+		 	CALL insertarProcesoActualizadorEstados(getID_PROCESO_19(),
+											  CURRENT_TIMESTAMP,
+											  intIdTransaccion); 
+			--22012016
+			SET refParam.Batch.idTransaccion	= CAST(intIdTransaccion AS CHARACTER);
+			
+		-- ((1.1)) Existen solicitud de afiliaciones
+		
+		IF cantMsjes > 0 THEN
+			
+			SET refParam.Batch.msgIdTransaccion	= getMsgId(); --identificador unico del procesamiento de un archivo			
+			SET Environment.cantidad.registro 	= 0;
+			SET Environment.cantidad.grupo 	= 1;		
+			
+			
+			-- ((2.2)) Grabar log proceso
+			CALL armarMensajeLogProceso(OutputRoot,
+										CAST(refParam.Batch.idProceso AS CHARACTER), 
+										CAST(refParam.Batch.idTransaccion AS CHARACTER),   
+										getTIP_LOG_INFO(),
+										MessageFlowLabel,
+										'Se inicio la actualización de estados para alerta de mensajes: ' || CAST(cantMsjes AS CHARACTER) || ' registros.');
+										
+			PROPAGATE TO LABEL 'LOGPROCESO';
+			
+			--((2.3)) Envio de alertas al inicio del proceso
+		
+			IF (COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN
+				CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),refParam,NULL,NULL);
+				PROPAGATE TO LABEL 'CORREO';
+			END IF;
+	
+			--((2.4)) Envio de mensaje con los Parametros para el control de alertas 
+						
+			--SET OutputRoot.XMLNSC 		= NULL;
+--OMENTADO 22012016			
+--			SET OutputRoot.MQMD.Format 	= 'MQHRF2  '; 
+--			SET OutputRoot.MQRFH2.usr.Parametros = refParam;
+--			PROPAGATE TO LABEL 'ALERTAS';
+
+			WHILE LASTMOVE(refMensajes) DO
+					
+					--((3.0))Se envia un mensaje por cada grupo de mensajes
+					
+					IF ( Environment.cantidad.registro 	= refParam.Servicio.CANREGTRANS1) THEN
+					
+						SET OutputRoot.MQMD.CorrelId  		= refParam.Batch.msgIdTransaccion; -- para obtener todos los grupos con el get cuando se termine de leer el file
+					  
+						SET OutputRoot.MQRFH2.usr = refParam;   
+						SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+						SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		= getMsgIdValor((getEST_ACTIVO() || CAST(Environment.cantidad.grupo AS CHARACTER)),FALSE);
+						SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO= Environment.cantidad.registro;
+						SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+						
+		
+						SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+						PROPAGATE TO LABEL 'RCVARCHIVO';
+		
+						SET Environment.cantidad.registro 	= 0;
+						SET Environment.cantidad.grupo 		= CAST(Environment.cantidad.grupo AS INTEGER) + 1;				
+						
+					END IF;
+					
+					-- ((3.1)) Se envia el detalle de cada registro a la cola temporal de recepcion 
+					SET Environment.cantidad.registro 	= CAST(Environment.cantidad.registro AS INTEGER) + 1;  				
+					SET OutputRoot.MQMD.CorrelId  	= getMsgIdValor((getEST_ACTIVO() || CAST(Environment.cantidad.grupo AS CHARACTER)),FALSE);
+					
+					SET OutputRoot.XMLNSC = NULL;
+					CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+					SET OutputRoot.XMLNSC.MENSAJE.Alerta.id = refMensajes.ID_ALERTA;
+					
+					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivoDetalle(refParam.General.IDENTIFICADOR);				
+					PROPAGATE TO LABEL 'REGARCHIVODET';					
+					MOVE refMensajes NEXTSIBLING REPEAT TYPE NAME;
+					
+				
+			END WHILE;
+			
+			--((4.1)) Envio de mensajes para el control de la secuencia
+			
+			SET OutputRoot.MQMD.Priority					= 1; --Prioridad con la que seran atendidos cuando el semaforo esta en verde
+			SET OutputRoot.MQMD.CorrelId					= getMsgIdValor(refParam.General.IDENTIFICADOR,TRUE);
+			
+			SET OutputRoot.XMLNSC = NULL;
+			CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+			
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.TOTALREGISTROS = CAST(Environment.cantidad.registro AS INTEGER); --cantidad de mensajes
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAGETRECEP	= obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.HORARIO	 	= refParam.Servicio.CANREGTRANS1;
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAHORARIO 	= 'IB.BTH.ACTESTMSJ.REGARCHIVO.REQ.01';
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANREGTRANS	= refParam.Servicio.CANREGTRANS1;
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANGRUPOS		= Environment.cantidad.grupo;
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.QMPROCESO		= QueueManagerName;			
+			SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.PROCESAR 		= getSI();	
+			SET OutputRoot.XMLNSC.MENSAJE.Parametros			= refParam; --Se pone los parametros aqui para que no de problemas en el mqget del controlador de secuencia
+	
+			PROPAGATE TO LABEL 'RCVCONTROLSEC';
+			
+			--((5)) Envio del grupo de los ultimos registros del archivo
+	
+			SET OutputRoot.MQMD.CorrelId  	= refParam.Batch.msgIdTransaccion;--CAST(refParam.Batch.msgIdTransaccion AS BLOB CCSID 819) ;		
+			SET OutputRoot.MQRFH2.usr = refParam;  
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	 = refParam.Batch.msgIdTransaccion;--refParam.Batch.msgIdTransaccion;
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		 = getMsgIdValor((getEST_ACTIVO() || CAST(Environment.cantidad.grupo AS CHARACTER)),FALSE);
+			SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = Environment.cantidad.registro;
+			SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	 = refParam.Batch.fechaProceso;
+	
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);	
+			PROPAGATE TO LABEL 'RCVARCHIVO';
+
+			
+		
+			ELSE
+				
+			CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'No se encontraron mensajes de alerta para esta fecha de proceso: ' || obtenerFechaActual(4));
+									
+			PROPAGATE TO LABEL 'LOGPROCESO';
+		
+		END IF;
+		
+		RETURN FALSE;
+		END;
+CREATE PROCEDURE insertarProcesoActualizadorEstados(
+				   IN I_ID_PROCESO INTEGER,
+				   IN I_FEC_INICIO_PROCESO TIMESTAMP, 
+				   OUT I_ID_PROCESO_NOTIFICACION INTEGER)
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_PROCESO_ACTUALIZADOR_ESTADO_INSERTAR";		
+END MODULE;

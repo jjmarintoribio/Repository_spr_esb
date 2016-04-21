@@ -1,0 +1,341 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth;
+
+DECLARE cacheProcesoActTar SHARED ROW;
+  
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_ValidarRegistro 
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+    
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		
+		
+		DECLARE refParam REFERENCE TO cacheProcesoActTar.campo.Parametros;
+
+		--((1)) solo con el primer registro se va a obtener parametros
+
+		IF (InputLocalEnvironment.File.Record = 1) THEN 
+			
+			SET OutputRoot.MQMD.MsgId	= getMsgId();
+			SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+			CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+			SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 
+		 
+			SET cacheProcesoActTar.campo.cantidad 	= 0;
+			SET cacheProcesoActTar.campo.grupo 		= 1;		 
+		 
+		 	SET Environment.File.Name 		= InputLocalEnvironment.File.Name;
+		  	SET Environment.File.TimeStamp	= RIGHT(InputLocalEnvironment.File.TimeStamp,16);
+			PROPAGATE TO TERMINAL 1;
+			--TODO :::inicio
+			CREATE FIELD cacheProcesoActTar.campo.Registros.REGISTRO;
+			--TODO :::fin
+		ELSE
+ 
+			IF (CAST(SUBSTRING(InputBody.BLOB FROM 1 FOR 1) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId) = 'D') THEN -- solo detalles
+
+				--((2))Se envia un mensaje por cada grupo de mensajes
+			
+				IF ( cacheProcesoActTar.campo.cantidad 	= refParam.Batch.cantRegistrosTransaccion) THEN
+					
+					SET OutputRoot.MQMD.CorrelId  		= refParam.Batch.msgIdTransaccion; -- para obtener todos los grupos con el get cuando se termine de leer el file
+				  
+					SET OutputRoot.MQRFH2.usr = refParam;   
+					SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+					SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		= getMsgIdValor((getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16)) || CAST(cacheProcesoActTar.campo.grupo AS CHARACTER),FALSE);
+					SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO= cacheProcesoActTar.campo.cantidad;
+					SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+
+					--TODO :::inicio
+					DELETE LASTCHILD OF cacheProcesoActTar.campo.Registros;
+					SET OutputRoot.XMLNSC.MENSAJE.REGISTROS =cacheProcesoActTar.campo.Registros;  
+	
+					ROUTING : BEGIN ATOMIC 
+						DELETE FIELD cacheProcesoActTar.campo.Registros;	
+						CREATE FIELD cacheProcesoActTar.campo.Registros.REGISTRO;															
+					END ROUTING ;
+					--TODO :::fin  					
+	
+					SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+			
+					PROPAGATE TO TERMINAL 3; 
+	
+					SET cacheProcesoActTar.campo.cantidad 	= 0;
+					SET cacheProcesoActTar.campo.grupo 		= cacheProcesoActTar.campo.grupo + 1;				
+					
+				END IF; 
+				
+				--((3)) Se arma la lista de registros agrupando los registros del archivo
+
+				SET cacheProcesoActTar.campo.cantidad 	= cacheProcesoActTar.campo.cantidad + 1;
+
+				   				
+				SET OutputRoot.Properties.MessageSet 	= 'MS_ESB_BATCH_ACTTARJETAS';
+				SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA_RES';
+				SET OutputRoot.Properties.MessageFormat	= 'XML';
+				
+				SET OutputRoot.MQMD.CorrelId  = getMsgIdValor((getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16)) || CAST(cacheProcesoActTar.campo.grupo AS CHARACTER),FALSE);			
+		
+				--Se parsea el mensaje  		
+				CREATE LASTCHILD OF Environment DOMAIN 'MRM';			
+				DECLARE parseOptions INTEGER BITOR(ValidateContent, ValidateValue, ValidateLocalError);
+				CREATE LASTCHILD OF Environment.MRM	PARSE ( InputBody.BLOB
+									                        OPTIONS parseOptions
+									                        SET 'MS_ESB_BATCH_ACTTARJETAS'
+									                        TYPE 'MSJ_TARJETA_RES'
+									                        FORMAT 'CWF');
+				--TODO :::inicio									                        
+				--SET OutputRoot.XMLNSC	= Environment.MRM.MRM;
+				DECLARE refFila REFERENCE TO cacheProcesoActTar.campo.Registros;
+  				MOVE refFila LASTCHILD;  
+				SET refFila = Environment.MRM.MRM.MENSAJE;
+ 				CREATE LASTCHILD OF  cacheProcesoActTar.campo.Registros NAME 'REGISTRO';    
+				--TODO :::fin
+					
+				
+				
+			END IF;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_GrabarParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		 		 	
+		--((1)) Registro del proceso
+ 
+		DECLARE intIdTransaccion INTEGER; 	 
+		CALL insertarProcesoActualizacionTarjetasBD(getID_PROCESO_2(),
+														NULL,
+														NULL,
+														CURRENT_TIMESTAMP,
+														Environment.File.Name,
+														getEST_0_PROCESO(),
+														CURRENT_TIMESTAMP,
+														intIdTransaccion);
+
+		--((1)) Guardado en memoria
+		DECLARE campo NAME (getEST_ACTIVO() || Environment.File.TimeStamp);		
+										
+			CREATE FIELD cacheProcesoActTar.campo.Parametros;	
+			DECLARE refParam REFERENCE TO cacheProcesoActTar.campo.Parametros;  
+		ROUTING : BEGIN ATOMIC 
+
+			
+
+
+			SET refParam.Servicio 	= InputBody.MENSAJE.PARAMETROS;
+			SET refParam.General	= InputBody.MENSAJE.SERVICIO;
+			SET refParam.ESB 		= InputBody.MENSAJE.PARAMETROSESB; 
+			
+			--((2)) Guardado de parametros del proceso batch 
+			SET refParam.Batch.idProceso 			= CAST(getID_PROCESO_2() AS INTEGER);		
+ 			SET refParam.Batch.cantNodos			= COALESCE(refParam.Servicio.CANTINST, refParam.ESB.CANTINST);
+			SET refParam.Batch.horaInicioProceso	= obtenerFechaHoraActualMasDias(2,1);
+	   		SET refParam.Batch.fechaInicioProceso	= obtenerFechaActual(4);						   
+			SET refParam.Batch.fechaProceso			= obtenerTimestampSinHora(CURRENT_DATE);
+			SET refParam.Batch.fechaNombreArchivo  	= SUBSTRING(Environment.File.Name FROM POSITION( '.' IN Environment.File.Name) - 6 FOR 6);-- Formato(yyMMdd)
+			SET refParam.Batch.nombreArchivo		= Environment.File.Name;			
+			SET refParam.Batch.idTransaccion		= intIdTransaccion;
+			SET refParam.Batch.msgIdTransaccion		= getMsgId(); --identificador unico del procesamiento de un archivo
+			
+			-- ((3)) Se obtiene el horario de proceso
+			
+			DECLARE chrColaHorario, chrNroHorario CHARACTER '';
+			--Cambio 16-12-2015
+--			CALL calcularProcesoPorHorario(refParam.General.IDENTIFICADOR, 
+--													refParam.Servicio.INTVHORAPRC1,
+--													refParam.Servicio.INTVHORAPRC2,
+--													chrColaHorario, chrNroHorario);
+--													
+			SET chrColaHorario = 'IB.BTH.'  || refParam.General.IDENTIFICADOR || '.REGARCHIVO.REQ.01';
+			SET chrNroHorario = '1';
+			--Cambio 16-12-2015
+			
+			DECLARE chrT1 CHARACTER refParam.Servicio.CANREGTRANS1;
+			DECLARE chrT2 CHARACTER refParam.Servicio.CANREGTRANS2;
+			IF (chrNroHorario = '1') THEN
+				SET refParam.Batch.cantRegistrosTransaccion =  chrT1;
+			ELSEIF (chrNroHorario = '2') THEN
+				SET refParam.Batch.cantRegistrosTransaccion =  chrT2;
+			END IF;
+			 
+			SET refParam.Batch.horario	 	= chrNroHorario;
+			SET refParam.Batch.colaHorario 	= chrColaHorario;		
+
+		
+		END ROUTING ;
+		  
+		--((2)) Registro de Log del Proceso
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se inicio la lectura del archivo: ' || refParam.Batch.nombreArchivo);
+
+		PROPAGATE TO TERMINAL 1;				
+		
+		--((2)) Envio de alertas al inicio del proceso
+		
+		IF (COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 2;
+		END IF;
+
+		--((3)) Envio de mensaje con los Parametros para el control de alertas 
+		
+		SET OutputRoot.XMLNSC 		= NULL;
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros = cacheProcesoActTar.campo.Parametros;
+		PROPAGATE TO TERMINAL 3;
+
+		RETURN FALSE;
+
+	END;
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_ControlarFinArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	
+		--((1)) Envio de mensajes para el control de la secuencia
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		DECLARE refParam REFERENCE TO cacheProcesoActTar.campo.Parametros;		
+		
+		
+		--TODO :::inicio   CON CONTROL DE SECUENCIA
+		SET OutputRoot.MQMD.Priority					= 5; --Prioridad con la que seran atendidos cuando el semaforo esta en verde		
+		SET OutputRoot.MQMD.CorrelId					= getMsgIdValor(refParam.General.IDENTIFICADOR,TRUE);
+		 				    
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.TOTALREGISTROS = InputLocalEnvironment.File.Record; --cantidad total del archivo
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAGETRECEP	= obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAHORARIO 	= refParam.Batch.colaHorario;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANREGTRANS	= refParam.Batch.cantRegistrosTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANGRUPOS		= cacheProcesoActTar.campo.grupo;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.QMPROCESO		= QueueManagerName;								
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.PROCESAR 		= getSI();	
+		SET OutputRoot.XMLNSC.MENSAJE.Parametros			= cacheProcesoActTar.campo.Parametros; --Se pone los parametros aqui para que no de problemas en el mqget del controlador de secuencia
+		--TODO :::fin
+		
+		--TODO :::inicio    SIN CONTROL DE SECUENCIA
+	/*	SET OutputRoot.MQMD.CorrelId				= getMsgIdValor(refParam.General.IDENTIFICADOR,TRUE);
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  ';
+		SET OutputRoot.MQRFH2.usr.Parametros 		= cacheProcesoActTar.campo.Parametros;
+		 				    
+		SET OutputRoot.XMLNSC.MENSAJE.TOTALREGISTROS= InputLocalEnvironment.File.Record; --cantidad total del archivo
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAGETRECEP	= obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+		SET OutputRoot.XMLNSC.MENSAJE.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAHORARIO 	= refParam.Batch.colaHorario;
+		SET OutputRoot.XMLNSC.MENSAJE.CANREGTRANS	= refParam.Batch.cantRegistrosTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.CANGRUPOS		= cacheProcesoActTar.campo.grupo;
+		SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= QueueManagerName;								
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESAR 		= getSI();	
+		*/		
+		--TODO :::fin
+		
+		
+		PROPAGATE TO TERMINAL 1;
+							
+		--((2)) Envio del grupo de los ultimos registros del archivo
+
+		SET OutputRoot.MQMD.CorrelId  	= refParam.Batch.msgIdTransaccion;		
+	
+		SET OutputRoot.MQRFH2.usr = refParam;  
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		= getMsgIdValor(campo || CAST(cacheProcesoActTar.campo.grupo AS CHARACTER),FALSE);
+		SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO= cacheProcesoActTar.campo.cantidad;		
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		--TODO :::inicio
+		DELETE LASTCHILD OF cacheProcesoActTar.campo.Registros;
+		SET OutputRoot.XMLNSC.MENSAJE.REGISTROS =cacheProcesoActTar.campo.Registros;  
+		--TODO :::fin 
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+
+		--TODO :::inicio
+		SET cacheProcesoActTar.campo.Registros = NULL;
+		--TODO :::fin
+
+		PROPAGATE TO TERMINAL 2 ;
+	 
+		--((3)) Registro de Log del Proceso de fin de archivo
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),    
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de la lectura del archivo: ' || refParam.Batch.nombreArchivo);
+
+		PROPAGATE TO TERMINAL 3 ;
+
+		--((4)) Registro de Log del Proceso si es que ocurrio algun error en la carga y se genero el archivo con errores
+		
+		IF (refParam.error IS TRUE) THEN
+			CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),    
+									getTIP_LOG_ERROR(),
+									MessageFlowLabel,
+									'Se genero el archivo ' ||  InputLocalEnvironment.File.Name || getSUFIJO_ARCHIVO_ERRORES() || ' con ' || CAST(refParam.registrosErrorDfdl AS CHARACTER) || ' registros que tuvieron error en la carga') ;
+
+			PROPAGATE TO TERMINAL 3 ;
+			
+			--((5))	 Se cierra el archivo de errores
+								
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+			SET OutputLocalEnvironment.Destination.File.Name 		= InputLocalEnvironment.File.Name || getSUFIJO_ARCHIVO_ERRORES() || '.log';
+												
+			PROPAGATE TO TERMINAL 4 ;
+		
+		END IF;
+		 
+		SET cacheProcesoActTar.campo =NULL;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_ControlarErrorRecepcion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) Controlar el error
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		DECLARE refParam REFERENCE TO cacheProcesoActTar.campo.Parametros;		
+		
+		SET refParam.error =  TRUE;
+		SET refParam.registrosErrorDfdl =  COALESCE(refParam.registrosErrorDfdl,0) + 1;
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Name 		= InputLocalEnvironment.File.Name || getSUFIJO_ARCHIVO_ERRORES() || '.log';
+
+		SET OutputRoot.BLOB.BLOB = InputBody.BLOB;
+		
+		PROPAGATE TO TERMINAL 1 ;
+		
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;
+
+

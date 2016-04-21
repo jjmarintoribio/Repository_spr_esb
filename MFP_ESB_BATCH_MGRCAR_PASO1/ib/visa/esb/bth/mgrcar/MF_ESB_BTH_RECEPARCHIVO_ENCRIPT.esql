@@ -1,0 +1,18 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+
+PATH ib.visa.esb.bth;
+ 
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_ENCRIPT_ValidarDesencriptado
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF (InputBody.MENSAJE.FLGARCHIVOPGP = 'S') THEN   
+			CALL desencriptarArchivoMigracionPgp(InputBody.MENSAJE.RUTAORIGEN,
+												InputBody.MENSAJE.ARCHIVO,
+												InputBody.MENSAJE.DIRECTORIOTARJETA,
+												InputBody.MENSAJE.DIRECTORIOARCHIVE);
+		END IF;	
+													
+		RETURN FALSE;
+	END;     
+END MODULE;

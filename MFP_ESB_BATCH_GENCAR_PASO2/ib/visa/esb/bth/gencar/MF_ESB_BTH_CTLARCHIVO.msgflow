@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmJavaCompute.msgnode="ComIbmJavaCompute.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/gencar/MF_ESB_BTH_CTLARCHIVO.msgflow"
+    nsPrefix="ib_visa_esb_bth_gencar_MF_ESB_BTH_CTLARCHIVO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.source.directory" name="source.directory" defaultValueLiteral="/storage_ib/cargos_telefonica_rpta/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.target.directory" name="target.directory" defaultValueLiteral="/storage_ib/cargos_telefonica_rpta/work/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.archive.directory" name="archive.directory" defaultValueLiteral="/storage_ib/cargos_telefonica_rpta/work/mqsiarchive/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_CTLARCHIVO" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_CTLARCHIVO" pluginId="MFP_ESB_BATCH_GENCAR_PASO2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENCAR_PASO2/icons/full/obj16/MF_ESB_BTH_CTLARCHIVO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENCAR_PASO2/icons/full/obj30/MF_ESB_BTH_CTLARCHIVO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="78,89" uniqueIdentifier="ctrlCopiar" timeoutInterval="5">
+        <translation xmi:type="utility:ConstantString" string="Timeout Notification"/>
+      </nodes>
+      <nodes xmi:type="ComIbmJavaCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="262,89" javaClass="ib.visa.esb.bth.gen.MF_ESB_BTH_CTLARCHIVO_MoverArchivo">
+        <translation xmi:type="utility:ConstantString" string="MoverArchivo"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.source.directory">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.source.directory" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_CTLARCHIVO" pluginId="MFP_ESB_BATCH_GENCAR_PASO2"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.target.directory">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.target.directory" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_CTLARCHIVO" pluginId="MFP_ESB_BATCH_GENCAR_PASO2"/>
+          <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.archive.directory">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.archive.directory" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_CTLARCHIVO" pluginId="MFP_ESB_BATCH_GENCAR_PASO2"/>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

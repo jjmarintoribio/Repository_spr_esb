@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmLabel.msgnode="ComIbmLabel.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_INICIO.msgflow"
+    nsPrefix="ib_visa_esb_bth_actestado_MF_ESB_BTH_ACTEST_SOLAFI_INICIO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_ACTEST_SOLAFI_INICIO" bundleName="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_INICIO" pluginId="MFP_ESB_BATCH_ESTADO"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ESTADO/icons/full/obj16/MF_ESB_BTH_ACTEST_SOLAFI_INICIO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ESTADO/icons/full/obj30/MF_ESB_BTH_ACTEST_SOLAFI_INICIO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="153,192" queueName="IB.BTH.ACTESTSOLAFI.INICIO.REQ.01">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTESTSOLAFI.INICIO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="389,192" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.actestado#MF_ESB_BTH_ACTEST_SOLAFI_INICIO_ValidarSolAfiliacion.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ObtenerSolicitudesAfiliacion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="316,390" destinationMode="list" transactionMode="no" validateMaster="none">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTESTAFI.REGARCHIVODET.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Registro del detalle del archivo. Se registra cada fila del detalle del archivo.&#xD;&#xA;&#xD;&#xA;IB.BTH.IMPDES.REGARCHIVODET.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="717,340" queueName="IB.BTH.GENBTH.ALERTAS.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.ALERTAS.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="714,190" queueName="IB.BTH.GENBTH.CORREO.REQ.01">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CORREO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="320,522" queueName="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="322,453" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTESTSOLAFI.RCVARCHIVO.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola que registra las cabecera de los grupos de registros&#xD;&#xA;&#xD;&#xA;IB.BTH.IMPDES.RCVARCHIVO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="701,267" queueName="IB.BTH.GENBTH.LOGPROCESO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.LOGPROCESO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="592,190" labelName="CORREO">
+        <translation xmi:type="utility:ConstantString" string="L_Correo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="596,340" labelName="ALERTAS">
+        <translation xmi:type="utility:ConstantString" string="L_Alertas"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="193,390" labelName="REGARCHIVODET">
+        <translation xmi:type="utility:ConstantString" string="L_Regarchivodet"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="202,453" labelName="RCVARCHIVO">
+        <translation xmi:type="utility:ConstantString" string="L_RcvArchivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="193,522" labelName="RCVCONTROLSEC">
+        <translation xmi:type="utility:ConstantString" string="L_RcvControlSec"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="583,267" labelName="LOGPROCESO">
+        <translation xmi:type="utility:ConstantString" string="L_LogProceso"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="270,311" destination="file" filePath="/app/visa/esb/batch/logs/ACTEST_SOLAFI_inicio-error.log" pattern="=============== ACTUALIZACION ESTADO (SOL.AFILIACION) - ERROR ==============&#xD;&#xA;********************************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;Mensaje = ${Root}&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,129 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_CORREO.esql
+ * Proposito	: Flujo de  envios de correos del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+BROKER SCHEMA ib.visa.esb.core
+
+CREATE COMPUTE MODULE MF_ESB_CORE_CORREO_EnviarCorreo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+
+		DECLARE refEnvioCorreoHeader REFERENCE TO InputRoot.MRM.MENSAJE.DATOSCORREO;
+		DECLARE refDatosAuditoria REFERENCE TO InputRoot.MRM.MENSAJE.AUDITORIA;
+		DECLARE refDatosProtocolo REFERENCE TO InputRoot.MQRFH2.usr.Parametros.Protocolo;
+		DECLARE refDatosServicio REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		DECLARE chrBodyMensaje CHARACTER '';
+		DECLARE chrMensajeError CHARACTER '';
+		DECLARE chrDatosParametros CHARACTER '';
+		DECLARE chrDatosServicio CHARACTER '';
+		DECLARE chrInfoReintento CHARACTER '';
+		DECLARE intIndice INTEGER 1;
+		DECLARE intCantidad INTEGER 0;
+		
+		SET OutputRoot.EmailOutputHeader.To = refEnvioCorreoHeader.TO;
+		SET OutputRoot.EmailOutputHeader.Cc = refEnvioCorreoHeader.CC;
+		SET OutputRoot.EmailOutputHeader.Bcc = refEnvioCorreoHeader.BCC;
+		SET OutputRoot.EmailOutputHeader."Reply-To" = refEnvioCorreoHeader.REENVIAR;
+		SET OutputRoot.EmailOutputHeader.From = refEnvioCorreoHeader.FROM; --'Notificacion-ESB@telefonica.com';
+		
+		IF COALESCE(refDatosAuditoria.DATOSAUDITORIA.CODSERVICIO,'')='' THEN
+		
+			SET OutputRoot.EmailOutputHeader.Subject = C_ASUNTO_CORREO;
+		ELSE
+			SET OutputRoot.EmailOutputHeader.Subject = C_ASUNTO_CORREO || ' - Servicio: ' || refDatosAuditoria.DATOSAUDITORIA.CODSERVICIO;
+		END IF;
+		
+		
+ 		SET chrMensajeError = COALESCE(refDatosAuditoria.DATOSAUDITORIA.DATO,'');
+ 
+		IF FIELDTYPE(InputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes) IS NOT NULL THEN
+		
+			IF FIELDVALUE(refDatosServicio.Servicio.NRORETRY) > 0 THEN
+				SET chrInfoReintento = '<tr><td>Info Reintento:</td><td><font color=red>Reintento ' || CAST(CAST(refDatosServicio.Servicio.NRORETRY AS INTEGER) - CAST(COALESCE(InputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes,0) AS INTEGER) AS CHARACTER) ||
+										' de '|| refDatosServicio.Servicio.NRORETRY || '</font></td></tr>';		
+			END IF; 
+				 
+		END IF;
+		 
+		SET chrBodyMensaje = '<b>Datos del Evento:</b><br><table border=1>' ||
+							 '<tr><td>MsgId Transaccion:</td><td>' 		|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.MSGID,'') || '</td></tr>' ||
+							 '<tr><td>Ind Transaccion:</td><td>' 		|| COALESCE(refDatosServicio.Auditoria.indTransaccion,'') || '</td></tr>' ||
+						     '<tr><td>Broker:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.BROKER,'') || '</td></tr>' ||
+						     '<tr><td>Protocolo entrada:</td><td>' 		|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.PROTOCOLOENTRADA,'') || '-' || refDatosProtocolo.TipoProtocolo || '</td></tr>' ||
+						     '<tr><td>Servicio:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.CODSERVICIO,'') || '-' || COALESCE(refDatosServicio.Servicio.NOMBRE,'') || '</td></tr>' ||
+						     '<tr><td>Nombre Flujo:</td><td>' 			|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.FLUJO,'') || '</td></tr>' ||    
+						     '<tr><td>Fecha Hora:</td><td>' 			|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.FECHAHORA,'') || '</td></tr>' ||
+						     '<tr><td>Codigo Error:</td><td><font color=red>' 		   || COALESCE(refDatosAuditoria.DATOSAUDITORIA.CODERROR,'') || '</font></td></tr>' ||
+							 '<tr><td>Descripcion del error:</td><td><font color=red>' || chrMensajeError ||  '</font></td></tr>' ||
+							 chrInfoReintento || '</table>';
+							  
+		/*SET chrBodyMensaje = chrBodyMensaje || '<br><b>Datos de la Transaccion:</b><br><table border=1>' 	||
+							 '<tr><td>Origen:</td><td>' 							|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.INDORIGEN,'') || '</td></tr>' ||
+ 							 '<tr><td>Ruta Servicio:</td><td>' 						|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.RUTASERVICIO,'') || '</td></tr>' ||
+							 '<tr><td>Grupo Servicio:</td><td>' 					|| COALESCE(refDatosAuditoria.DATOSAUDITORIA.GRUPOSERVICIO,'') || '</td></tr>' ||							 							 
+							 '<tr><td>Indicador Transaccion:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.INDSERVICIO,'') || '</td></tr>' ||
+							 '<tr><td>Indicador Servicio:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.INDTRANSACCION,'') || '</td></tr>' ||
+							 '<tr><td>Indicador Cliente:</td><td>' 					|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.INDCLIENTE,'') || '</td></tr>' ||
+							 '<tr><td>Indicador Externo del Servicio:</td><td>' 	|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.INDEXTERNOSERVICIO,'') || '</td></tr>' ||							 
+							 '<tr><td>Numero de Cuenta:</td><td>' 					|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.NROCUENTA,'') || '</td></tr>' ||
+							 '<tr><td>Fecha del Origen:</td><td>' 					|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.FECHAHORAORIGEN,'') || '</td></tr>' ||
+							 '<tr><td>Codigo Informativo 1:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.CODINFORMATIVO1,'') || '</td></tr>' ||
+							 '<tr><td>Codigo Informativo 2:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.CODINFORMATIVO2,'') || '</td></tr>' ||
+							 '<tr><td>Codigo Informativo 3:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.CODINFORMATIVO3,'') || '</td></tr>' ||
+							 '<tr><td>Codigo Informativo 4:</td><td>' 				|| COALESCE(refDatosAuditoria.DATOSNEGOCIO.CODINFORMATIVO4,'') || '</td></tr></table>';
+			*/
+							 
+			SET intCantidad = CARDINALITY(refDatosProtocolo.Datos.*[]);
+			
+			IF intCantidad >0 THEN
+				
+				WHILE intIndice <= intCantidad DO
+					
+					SET chrDatosParametros = chrDatosParametros  || '<tr><td>' || FIELDNAME(refDatosProtocolo.Datos.*[intIndice]) || '</td><td>' || FIELDVALUE(refDatosProtocolo.Datos.*[intIndice]) || '</td></tr>';				
+					SET intIndice = intIndice + 1;
+					
+				END WHILE;
+				SET chrBodyMensaje = chrBodyMensaje || '<br><b>Parametros protocolo entrada: </b><br><table border=1>' || chrDatosParametros  || '</table>';
+			
+			END IF;
+			
+			SET intCantidad = CARDINALITY(refDatosServicio.Servicio.*[]);
+			SET intIndice = 1;
+			
+			IF intCantidad >0 THEN
+
+				WHILE intIndice <= intCantidad DO
+
+					SET chrDatosServicio = chrDatosServicio  || '<tr><td>' || FIELDNAME(refDatosServicio.Servicio.*[intIndice]) || '</td><td>' || FIELDVALUE(refDatosServicio.Servicio.*[intIndice]) || '</td></tr>';				
+					SET intIndice = intIndice + 1;
+
+				END WHILE;							 						
+				SET chrBodyMensaje = chrBodyMensaje || '<br><b>Parametros del Servicio: </b><br><table border=1>' || chrDatosServicio || '</table>';
+
+			END IF;
+		set Environment.mensaje = '<html><body>' || chrBodyMensaje ||'</body></html>' ;
+		
+		SET OutputRoot.BLOB.BLOB = CAST(chrBodyMensaje AS BLOB CCSID 1208);
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+
+END MODULE;

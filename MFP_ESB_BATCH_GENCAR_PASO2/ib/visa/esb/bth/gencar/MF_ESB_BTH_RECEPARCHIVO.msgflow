@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_bth_SMF_ESB_BTH_GETPARAMS.subflow="ib/visa/esb/bth/SMF_ESB_BTH_GETPARAMS.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/gencar/MF_ESB_BTH_RECEPARCHIVO.msgflow"
+    nsPrefix="ib_visa_esb_bth_gencar_MF_ESB_BTH_RECEPARCHIVO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_RECEPARCHIVO" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_RECEPARCHIVO" pluginId="MFP_ESB_BATCH_GENCAR_PASO2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENCAR_PASO2/icons/full/obj16/MF_ESB_BTH_RECEPARCHIVO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENCAR_PASO2/icons/full/obj30/MF_ESB_BTH_RECEPARCHIVO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="314,408" inputDirectory="/storage_ib/cargos_telefonica_rpta/work" filenamePattern="RECUVIDAT????????.DAT" processedFileAction="moveToArchive" messageDomainProperty="BLOB" waitInterval="10" recordDetection="delimited">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivoCargos"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="465,734" destination="file" filePath="C:\app\visa\esb\batch\logs\gencar_receparchivo_error.log" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Environment = ${Environment}&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="549,734" computeExpression="esql://routine/ib.visa.esb.bth.gencar#MF_ESB_BTH_RECEPARCHIVO_ControlErrorRecepcion.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlErrorRecepcion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="515,533" computeExpression="esql://routine/ib.visa.esb.bth.gencar#MF_ESB_BTH_RECEPARCHIVO_ControlarFinArchivo.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlarFinArchivo"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_GETPARAMS.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="548,301">
+        <translation xmi:type="utility:ConstantString" string="ObtenerParametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="673,287" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.gencar#MF_ESB_BTH_RECEPARCHIVO_GrabarParametros.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="GrabarParametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_17" location="483,386" computeExpression="esql://routine/ib.visa.esb.bth.gencar#MF_ESB_BTH_RECEPARCHIVO_ValidarRegistro.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ValidaRegistro"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="680,387" destinationMode="list" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENCAR2.REGARCHIVODET.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Registro del detalle del archivo. Se registra cada fila del detalle del archivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="683,451" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENCAR2.RCVARCHIVO.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola que registra las cabecera de los grupos de registros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="921,681" queueName="IB.BTH.GENBTH.LOGPROCESO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.LOGPROCESO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="736,739" outputDirectory="/temp" outputFilename="temp" outputMode="append" recordDefinition="delimited">
+        <translation xmi:type="utility:ConstantString" string="EscribirArchivoCargosError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="678,534" queueName="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="783,201" queueName="IB.BTH.GENBTH.CORREO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CORREO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="896,244" queueName="IB.BTH.GENBTH.ALERTAS.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.ALERTAS.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="857,330" destination="file" filePath="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_debug.log" pattern="=============== RECEPCION ARCHIVOS CARGOS - ===============&#xD;&#xA;**************************************************************************************&#xD;&#xA;>> Grabar Parametros ....&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root.XMLNSC}&#xD;&#xA;Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_Parametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="500,297" destination="file" filePath="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_debug00.log" pattern="Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="593,406" destination="file" filePath="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_debug01.log" pattern="--------------- BEGIN ----------------&#xA;XMLNSC = ${Root.XMLNSC}&#xA;------------------------------------------------">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_02"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="406,348" destination="file" filePath="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_debug03.log" pattern="-">
+        <translation xmi:type="utility:ConstantString" string="T_Debu02"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="163,583" inputDirectory="/storage_ib/cargos_telefonica_rpta/" filenamePattern="WEBFNRECUSUN????????.dat" processedFileAction="moveToArchive" messageDomainProperty="BLOB" recordDetection="delimited">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivoAlignet"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="636,476" destination="file" filePath="/app/visa/esb/batch/logs/GENCAR2_RECEPARCHIVO_debug04.log" pattern="--------------- BEGIN ----------------&#xA;XMLNSC = ${Root.XMLNSC}&#xA;------------------------------------------------">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_04"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out4" targetTerminalName="InTerminal.EOD"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in">
+        <bendPoints>226,17,-83,-363</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/gencar/MF_ESB_BTH_RECEPARCHIVO" pluginId="MFP_ESB_BATCH_GENCARGOS"/>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_5">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="31,7">
+        <body xmi:type="utility:ConstantString" string="* Proceso: Generador de Cargos - Paso2 &#xA;* Identificador: GENCAR2&#xA;------------------------------------------&#xA;Descripcion:&#xA;- No maneja el control de secuencia&#xA;- Si tiene el control de horarios&#xA;- Ante un error en una fila sigue procesando el archivo pero genera un archivo con las filas con errores&#xA;&#xA;Input Directory produccion  : /storage_ib/cargos_telefonica_rpta/&#xA;Input Directory Certificacion: /app/visa/esb/batch/ftp/ "/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

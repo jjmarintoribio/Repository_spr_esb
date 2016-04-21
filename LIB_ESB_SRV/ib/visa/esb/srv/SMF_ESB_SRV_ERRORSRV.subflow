@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/srv/SMF_ESB_SRV_ERRORSRV.subflow"
+    nsPrefix="ib_visa_esb_srv_SMF_ESB_SRV_ERRORSRV.subflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="SMF_ESB_SRV_ERRORSRV" bundleName="ib/visa/esb/srv/SMF_ESB_SRV_ERRORSRV" pluginId="LIB_ESB_SRV"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/LIB_ESB_SRV/icons/full/obj16/SMF_ESB_SRV_ERRORSRV.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/LIB_ESB_SRV/icons/full/obj30/SMF_ESB_SRV_ERRORSRV.gif"/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="eflow:FCMSource" xmi:id="InTerminal.Input" location="130,163">
+        <translation xmi:type="utility:TranslatableString" key="InTerminal.Input" bundleName="ib/visa/esb/srv/SMF_ESB_SRV_ERRORSRV" pluginId="LIB_ESB_SRV"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="223,163" computeExpression="esql://routine/ib.visa.esb.srv#SMF_ESB_SRV_ERRORSRV_PrepararMensaje.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepararMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="340,164" destinationMode="reply" transactionMode="no" persistenceMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.ERRORSRV.REQ.01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="InTerminal.Input" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

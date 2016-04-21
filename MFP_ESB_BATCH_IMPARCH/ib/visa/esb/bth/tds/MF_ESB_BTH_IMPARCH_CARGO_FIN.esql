@@ -1,0 +1,275 @@
+BROKER SCHEMA ib.visa.esb.bth.tds
+ PATH ib.visa.esb.bth; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_EjecutarFinalizacionCarga
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) hacer que cambie el estado de un proceso
+		
+		SET Environment.finArchivo.IdProceso		  = InputRoot.MQRFH2.usr.Parametros.Batch.idProceso;
+		SET Environment.finArchivo.IdTransaccion	  = InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion;
+		SET Environment.Parametros 					  = InputRoot.MQRFH2.usr.Parametros;
+		
+		--SET Environment.finArchivo.TotalRegistros  = InputBody.MENSAJE.CANTIDADREGISTROS;
+		--cambios importacion
+		SET Environment.finArchivo.TotalRegistros  = InputRoot.XMLNSC.MENSAJE.CANTIDADIMP;
+		---
+		
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		
+
+		--((1.1)) Ejecutar el proceso de importacion de cargos
+		 --TODO //RMQ: cambio para importacion// 
+		CREATE FIELD Environment.XMLNSC.resultado.error;
+		DECLARE refError REFERENCE TO Environment.XMLNSC.resultado.error;	
+		
+		CALL actualizarCargosImportacion(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,
+		CAST(InputRoot.MQRFH2.usr.Parametros.Batch.Metadata.idComercio AS INTEGER),
+		InputRoot.MQRFH2.usr.Parametros.Batch.Metadata.codigoUsuarioCreacion, InputRoot.MQRFH2.usr.Parametros.Batch.Metadata.ipCreacion); -- 21/07
+		
+		---------------------------- Actualizacion de cantidad de transacciones en proceso importacion
+					
+		DECLARE estadoProcesoImp INTEGER 2;-- ESTADO DE PROCESO (PROCESADO)
+		--DECLARE intRegistrosTotal INTEGER CAST(COALESCE(Environment.Parametros.registrosTotalesImp,0) AS INTEGER);
+		DECLARE intRegistrosTotal INTEGER CAST(COALESCE(Environment.finArchivo.TotalRegistros,0) AS INTEGER);
+		DECLARE intRegistrosFail INTEGER;
+		SET intRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) + CAST(COALESCE(Environment.Parametros.registrosErrorDfdl,0) AS INTEGER);
+		SET Environment.flagFinArchivo=FALSE;
+		
+		IF intRegistrosTotal = intRegistrosFail THEN
+			SET estadoProcesoImp = 3; -- ESTADO DE PROCESO (FALLIDO)
+		END IF;
+			
+		CALL actualizarProcesoImportacion(CAST(Environment.finArchivo.IdProceso AS INTEGER),
+										  CURRENT_TIMESTAMP,
+										  CAST(COALESCE(Environment.finArchivo.TotalRegistrosOk,0) AS INTEGER),
+										  intRegistrosFail,
+										  intRegistrosTotal,
+										  estadoProcesoImp, 
+										  CAST( Environment.finArchivo.IdTransaccion AS INTEGER));
+										  
+		CALL actualizarProcesoImportacionCargosCantidad(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,intRegistrosFail,intRegistrosTotal);
+		
+		
+		---------------------------
+					
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de actualizar en BD el archivo de Importacion ' || InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo);
+		
+		PROPAGATE TO TERMINAL 1;
+			
+		--((2)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+		
+		PROPAGATE TO TERMINAL 2;			
+		
+		--((3)) Manda a sacar todos los mensajes de los registros impactados
+		
+		SET Environment.flagFinArchivo = TRUE;
+		
+			SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+			
+			---------------------------- Generacion de archivo log : cambio para importacion
+			CALL obtenerLogImportacionCargos(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,Environment.Resultset1[]);
+			
+			DECLARE refResult REFERENCE TO Environment.Resultset1;			
+			
+			WHILE LASTMOVE(refResult) DO
+				SET OutputRoot.XMLNSC.resultado = refResult;			
+				SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+				SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+				/*SET OutputLocalEnvironment.Destination.File.Directory = REPLACE(Environment.Parametros.Servicio.PATHFILERROR,' ','') || 'temp/';
+				SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.Parametros.Batch.nombreArchivo,'csv','dat') || '.log';*/
+				PROPAGATE TO TERMINAL 3; --IN
+				MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+			END WHILE;
+			
+			/*SET OutputLocalEnvironment.Destination.File.Directory = REPLACE(Environment.MQRFH2.usr.Servicio.PATHFILERROR,' ','') || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.Parametros.Batch.nombreArchivo,'csv','dat') || '.log';*/
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+			PROPAGATE TO TERMINAL 0; -- FIN DE ARCHIVO
+			
+			CALL armarMensajeLogProceso(OutputRoot,
+										InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+										InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,     
+										getTIP_LOG_INFO(),
+										MessageFlowLabel,
+										'Se termino de generar el archivo de log , finalizando el proceso ');
+										
+			CALL dropTablasTemporalesCargos(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion);
+															
+			SET Environment.Archivo = TRIM(InputRoot.MQRFH2.usr.Servicio.PATHFILERROR) || 'temp/';
+			PROPAGATE TO TERMINAL 1;
+			------------------------------
+			--PROPAGATE TO TERMINAL 3;
+			
+		
+		--((4)) Envio de alertas al fin  del proceso
+		SET refParam.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 4;
+		END IF;	
+		
+		RETURN FALSE;
+	END;
+	
+	--TODO //RMQ: cambio para importacion// 
+   	CREATE PROCEDURE actualizarCargosImportacion (
+   												IN P_ID_TRANSACCION CHARACTER, IN P_ID_COMERCIO INTEGER,
+   												IN P_COD_USUARIO CHARACTER, IN P_IP_USUARIO CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_CARGO_ACTUALIZAR_IMPORTACION_NEW";
+	
+	CREATE PROCEDURE obtenerLogImportacionCargos(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	DYNAMIC RESULT SETS 1
+	EXTERNAL NAME "SPRESB.SP_TMP_IMPORTACION_CARGO_ERROR_GENERAR_LOG";
+	
+	CREATE PROCEDURE actualizarProcesoImportacionCargosCantidad(IN P_ID_TRANSACCION CHARACTER, IN P_NRO_FALLAS_DFDL INTEGER, IN P_NRO_TOTAL INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_PROCESO_IMPORTACION_CARGO_ACTUALIZAR";
+	
+	CREATE PROCEDURE dropTablasTemporalesCargos(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_CARGO_TEMPORAL_DROP";
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_ContadorImportaciones
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+		SET Environment.finArchivo.TotalRegistrosOk = CAST(COALESCE(Environment.finArchivo.TotalRegistrosOk,0) AS INTEGER) + CAST(InputBody.MENSAJE.CANTIDADREGISTROSOK AS INTEGER);
+		SET Environment.finArchivo.TotalRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) + CAST(InputBody.MENSAJE.CANTIDADREGISTROSFAIL AS INTEGER);
+		SET Environment.finArchivo.TotalRegistros  = InputBody.MENSAJE.CANTIDADREGISTROS;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_ActualizarImportacionCantidad
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+		--cambio importacion
+		SET Environment.finArchivo.TotalRegistros  = InputRoot.XMLNSC.MENSAJE.CANTIDADIMP;
+		--			
+		DECLARE estadoProcesoImp INTEGER 2;-- ESTADO DE PROCESO (PROCESADO)
+		DECLARE intRegistrosTotal INTEGER CAST(COALESCE(Environment.finArchivo.TotalRegistros,0) AS INTEGER);
+		DECLARE intRegistrosFail INTEGER;
+		SET intRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) + CAST(COALESCE(Environment.Parametros.registrosErrorDfdl,0) AS INTEGER);
+		SET Environment.flagFinArchivo=FALSE;
+		
+			
+		IF intRegistrosTotal = intRegistrosFail THEN
+			SET estadoProcesoImp = 3; -- ESTADO DE PROCESO (FALLIDO)
+		END IF;
+			
+		CALL actualizarProcesoImportacion(CAST(Environment.finArchivo.IdProceso AS INTEGER),
+										  CURRENT_TIMESTAMP,
+										  CAST(COALESCE(Environment.finArchivo.TotalRegistrosOk,0) AS INTEGER),
+										  intRegistrosFail,
+										  intRegistrosTotal,
+										  estadoProcesoImp, 
+										  CAST( Environment.finArchivo.IdTransaccion AS INTEGER));
+		
+		--cambio importacion
+		CALL actualizarProcesoImportacionCargosCantidad(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,intRegistrosFail,intRegistrosTotal);		
+		---------------------------- Generacion de archivo log : cambio para importacion
+		CALL obtenerLogImportacionCargos(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,Environment.Resultset1[]);
+				
+		DECLARE refResult REFERENCE TO Environment.Resultset1;			
+			
+			WHILE LASTMOVE(refResult) DO
+				SET OutputRoot.XMLNSC.resultado = refResult;			
+				SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+				SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+				PROPAGATE TO TERMINAL 0; --IN
+				MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+			END WHILE;
+			
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+			PROPAGATE TO TERMINAL 1; -- FIN DE ARCHIVO
+			
+			CALL armarMensajeLogProceso(OutputRoot,
+										InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+										InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,     
+										getTIP_LOG_INFO(),
+										MessageFlowLabel,
+										'Se termino de generar el archivo de log , finalizando el proceso ');
+										
+			CALL dropTablasTemporalesCargos(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion);
+															
+			SET Environment.Archivo = TRIM(InputRoot.MQRFH2.usr.Servicio.PATHFILERROR) || 'temp/';
+			PROPAGATE TO TERMINAL 2;
+		------------------------------------------------------			
+		--cambio importacion comentado										  
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		--SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		--PROPAGATE TO TERMINAL 0 DELETE NONE;
+		--PROPAGATE TO TERMINAL 1;								  
+		RETURN FALSE;
+	END;
+	
+	CREATE PROCEDURE actualizarProcesoImportacionCargosCantidad(IN P_ID_TRANSACCION CHARACTER, IN P_NRO_FALLAS_DFDL INTEGER, IN P_NRO_TOTAL INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_PROCESO_IMPORTACION_CARGO_ACTUALIZAR";
+	
+	CREATE PROCEDURE obtenerLogImportacionCargos(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	DYNAMIC RESULT SETS 1
+	EXTERNAL NAME "SPRESB.SP_TMP_IMPORTACION_CARGO_ERROR_GENERAR_LOG";
+	
+	CREATE PROCEDURE dropTablasTemporalesCargos(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_CARGO_TEMPORAL_DROP";
+END MODULE;
+
+
+
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_MoverArchivoTemp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		RETURN TRUE;		
+	END;
+	
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_MoverArchivoFinal
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN		
+	SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		RETURN TRUE;
+	END;
+	
+END MODULE;
+

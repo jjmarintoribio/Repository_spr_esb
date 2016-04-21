@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="imparch.bth.esb.visa.ib" xmlns:tns="imparch.bth.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="T_MSJ_CARGO_TDS">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <tdsStructRep dataElementSeparation="AllElementsDelimited" groupTerminator="" messageSetDefaultRep="Text1" observeElementLength="true" suppressAbsentElementDelimiters="Never"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_MSJ_CARGO_CUERPO_TDS"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_CARGO_TDS" type="tns:T_MSJ_CARGO_TDS">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_CARGO_TDS;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_MSJ_CARGO_CUERPO_TDS">
+        <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <tdsStructRep messageSetDefaultRep="Text1" observeElementLength="true"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+        <xsd:sequence>
+      <xsd:element name="NRO_IDENTIFICACION_BENEFICIARIO" nillable="false" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <tdsElemRep length="0" lengthUnits="Bytes" messageSetDefaultRep="Text1" precision="-1"/>
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep" width="5"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="COD_PRODUCTO" type="xsd:string"/>
+            <xsd:element name="FEC_ESTIMADA_PAGO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <tdsElemRep length="10" messageSetDefaultRep="Text1" precision="-1"/>
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="10"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="FEC_PROCESO_PAGO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <tdsElemRep length="0" lengthUnits="Bytes" messageSetDefaultRep="Text1" precision="-1"/>
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="10"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="MTO_CARGO" type="xsd:decimal">
+      </xsd:element>
+            <xsd:element name="NRO_RECIBO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="20"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+        </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

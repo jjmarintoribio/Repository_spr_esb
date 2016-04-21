@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_bth_SMF_ESB_BTH_CONTROLERROR.subflow="ib/visa/esb/bth/SMF_ESB_BTH_CONTROLERROR.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/tds/MF_ESB_BTH_IMPARCH_BINE_BD.msgflow"
+    nsPrefix="ib_visa_esb_bth_tds_MF_ESB_BTH_IMPARCH_BINE_BD.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/importacion-bine-error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Debug" name="T_Debug" defaultValueLiteral="/app/visa/esb/batch/logs/importacion-bine-debug-archivo-det.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_IMPARCH_BINE_BD" bundleName="ib/visa/esb/bth/tds/MF_ESB_BTH_IMPARCH_BINE_BD" pluginId="MFP_ESB_BATCH_IMPARCH"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj16/MF_ESB_BTH_IMPARCH_BINE_BD.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj30/MF_ESB_BTH_IMPARCH_BINE_BD.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="419,325" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.IMPBINE.CTRLREGISTRO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="887,172" destination="file" filePath="/app/visa/esb/batch/logs/importacion-bine-debug-db-out-det.log" pattern="============ IMPORTACION ARCHIVOS - DESAFILIACION=========&#xD;&#xA;*********************************************************************************&#xD;&#xA;>>>>>> Resultado .........&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root}&#xD;&#xA;Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_DebugResultado"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="800,44" destination="file" filePath="/app/visa/esb/batch/logs/importacion-bine-debug-archivo-det.log" pattern="============ IMPORTACION ARCHIVOS - BINES ===============&#xD;&#xA;*********************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;XMLNSC = ${Root.XMLNSC}&#xD;&#xA;Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="299,198" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_REGARCHIVO_BINE_BD_PrepararLectura.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararLectura"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="290,67" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_REGARCHIVO_BINE_BD_ControlarError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlarError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="882,326" outputDirectory="/temp" outputFilename="temp.dat" writeMode="writeInPlace" outputMode="append" recordDefinition="delimited">
+        <translation xmi:type="utility:ConstantString" string="EscribirArchivoLog"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="182,67" destination="file" filePath="/app/visa/esb/batch/logs/importacion-bine-error.log" pattern="***************/IMPORTACION DE ARCHIVOS (Desafiliacion BD ) /********************&#xD;&#xA;========================================================&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_CONTROLERROR.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="401,72">
+        <translation xmi:type="utility:ConstantString" string="SMF_ESB_BTH_CONTROLERROR"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="40,198" queueName="IB.BTH.IMPBINE.REGARCHIVO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.IMPBINE.REGARCHIVO.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola que sera diferente dependiendo de las instancias que se le asignen"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="246,295" destination="file" filePath="/app/visa/esb/batch/logs/importacion-bine-debug-archivo-det.log" pattern="---------------- BEGIN -------------------------&#xA;XMLNSC = ${Root.XMLNSC}&#xA;---------------- END --------------------------">
+        <translation xmi:type="utility:ConstantString" string="Trace"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="335,450" destination="file" filePath="/app/visa/esb/batch/logs/importacion-bine-debug-archivo-det01.log" pattern="---------------- BEGIN -------------------------&#xA;XMLNSC = ${Root.XMLNSC}&#xA;Environment = ${Environment}&#xA;---------------- END --------------------------">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input1"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/tds/MF_ESB_BTH_IMPARCH_BINE_BD" pluginId="MFP_ESB_BATCH_IMPARCH"/>
+        <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Debug">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.T_Debug" bundleName="ib/visa/esb/bth/tds/MF_ESB_BTH_IMPARCH_BINE_BD" pluginId="MFP_ESB_BATCH_IMPARCH"/>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_Debug" overriddenNodes="FCMComposite_1_4 FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

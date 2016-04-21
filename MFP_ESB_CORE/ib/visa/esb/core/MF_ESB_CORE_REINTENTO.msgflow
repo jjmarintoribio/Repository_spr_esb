@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTimeoutControl.msgnode="ComIbmTimeoutControl.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow"
+    xmlns:ib_visa_esb_core_SMF_ESB_CORE_ERRORGEN.subflow="ib/visa/esb/core/SMF_ESB_CORE_ERRORGEN.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/core/MF_ESB_CORE_REINTENTO.msgflow"
+    nsPrefix="ib_visa_esb_core_MF_ESB_CORE_REINTENTO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_COLA_TEMPORAL_REINTENTO" name="UDP_COLA_TEMPORAL_REINTENTO" lowerBound="1" defaultValueLiteral="IB.GEN.REINTENTOTEMP.REQ.01">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.destination" name="destination" lowerBound="1" eType="//@eClassifiers.1" defaultValueLiteral="file"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.Trace" name="Trace" defaultValueLiteral="/app/visa/esb/srv/logs/RETRY_Error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.messageCatalog" name="messageCatalog">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.messageNumber" name="messageNumber" defaultValueLiteral="3051">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.IdControlRetry" name="IdControlRetry" lowerBound="1" defaultValueLiteral="CTRLRETRY">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_CORE_REINTENTO" bundleName="ib/visa/esb/core/MF_ESB_CORE_REINTENTO" pluginId="MFP_ESB_CORE"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj16/MF_ESB_CORE_REINTENTO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj30/MF_ESB_CORE_REINTENTO.gif"/>
+    <longDescription xmi:type="utility:ConstantString" string="Flujo encargado de recibir el mensaje entero que recibe el flujo generico de salida, por si cuando este flujo de salida recibe un error al enviar el mensaje, el flujo de reintentos le vuelve a dejar el mensaje entero para que lo vuelva a enviar."/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmTimeoutControl.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="373,144" uniqueIdentifier="CTRLRETRY" requestLocation="InputRoot.XMLNSC.TimeoutRequest" requestPersistence="yes">
+        <translation xmi:type="utility:ConstantString" string="TOC"/>
+        <longDescription xmi:type="utility:ConstantString" string="Si la propiedad &quot;Unique Identifier&quot; es modificado al momento de subir el flujo con un bar, entonces se debe de asegurar que se ha creado un servicio configurable el cual tenga el mismo nombre&#xA;Ademas de haber creado la cola correspondiente para que ahi se registre los mensajes de control de reintentos"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="48,239" uniqueIdentifier="CTRLRETRY" transactionMode="no" operationMode="controlled">
+        <translation xmi:type="utility:ConstantString" string="TON"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="181,143" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_REINTENTO_PrepararNotificacionControl.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepararNotificacionControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="186,239" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_REINTENTO_PrepararReintento.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararReintento"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="287,240" queueName="TEMP" transactionMode="no" getWithCorrelID="true">
+        <translation xmi:type="utility:ConstantString" string="QTemporalReintentoGet"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola donde se obtendra el mensaje que fue temporalmenteregistrado para el timeoutNotification para el reintento&#xD;&#xA;Si el servicio tiene la propiedad QRETRY en 'N' entonces se obtendra el mensaje de la cola generica temporal de reintentos: IB.GEN.REINTENTOTEMP.REQ.01.&#xD;&#xA;Si el servicio tiene la propiedad QRETRY en 'S' entonces se obtendra el mensaje de la cola temporal asignada para ese servicio. Por ejemplo para el servicio 01001 serra: IB.SRV.RETRY01001.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="384,58" destinationMode="reply" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="QTemporalReintentoPut"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola donde se dejara el mensaje temporalmente para el timeoutNotification saque el mensaje.&#xA;Si el servicio tiene la propiedad QRETRY en 'N' entonces se dejara el mensaje en la cola generica temporal de reintentos: IB.GEN.REINTENTOTEMP.REQ.01.&#xA;Si el servicio tiene la propiedad QRETRY en 'S' entonces se dejara el mensaje en la cola temporal asignada para ese servicio. Por ejemplo para el servicio 00001 serra: IB.SRV.RETRY00001TEMP.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="481,236" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_REINTENTO_EnviarReintento.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="EnviarReintento"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="592,237" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="QFlujoGenericoEnvio"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="162,57" destination="file" pattern="********/Error/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="180,316" destination="file" pattern="********/Error Notificacion/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_ErrorNotificacion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="14,143" queueName="IB.GEN.REINTENTO.REQ.01" messageDomainProperty="BLOB" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.REINTENTO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_core_SMF_ESB_CORE_ERRORGEN.subflow:FCMComposite_1" xmi:id="FCMComposite_1_8" location="256,57">
+        <translation xmi:type="utility:ConstantString" string="SMF_ESB_CORE_ERRORGEN"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic_Config" configurable="true" userDefined="true" describedAttribute="Property.UDP_COLA_TEMPORAL_REINTENTO">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_COLA_TEMPORAL_REINTENTO" bundleName="ib/visa/esb/core/MF_ESB_CORE_REINTENTO" pluginId="MFP_ESB_CORE"/>
+        <propertyDescriptor groupName="Group.Basic" describedAttribute="Property.destination">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.destination" bundleName="ComIbmTrace" pluginId="com.ibm.etools.mft.ibmnodes"/>
+          <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.Trace">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.Trace" bundleName="ib/cav/esb/core/MF_CORE_REINTENTO_REQ" pluginId="MFP_ESB_CORE"/>
+            <propertyDescriptor groupName="Group.Basic" describedAttribute="Property.messageCatalog">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.messageCatalog" bundleName="ComIbmTrace" pluginId="com.ibm.etools.mft.ibmnodes"/>
+              <propertyDescriptor groupName="Group.Basic" describedAttribute="Property.messageNumber">
+                <propertyName xmi:type="utility:TranslatableString" key="Property.messageNumber" bundleName="ComIbmTrace" pluginId="com.ibm.etools.mft.ibmnodes"/>
+                <propertyDescriptor groupName="Group.Config_Retry" configurable="true" describedAttribute="Property.IdControlRetry">
+                  <propertyName xmi:type="utility:TranslatableString" key="Property.IdControlRetry" bundleName="ib/cav/esb/core/MF_CORE_REINTENTO_REQ" pluginId="MFP_ESB_CORE"/>
+                </propertyDescriptor>
+              </propertyDescriptor>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.destination" overriddenNodes="FCMComposite_1_13 FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.destination"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.Trace" overriddenNodes="FCMComposite_1_13 FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.messageCatalog" overriddenNodes="FCMComposite_1_13 FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.messageCatalog"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.messageNumber" overriddenNodes="FCMComposite_1_13 FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.messageNumber"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.IdControlRetry" overriddenNodes="FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmTimeoutControl.msgnode#Property.uniqueIdentifier"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.IdControlRetry" overriddenNodes="FCMComposite_1_3">
+      <overriddenAttribute href="ComIbmTimeoutNotification.msgnode#Property.uniqueIdentifier"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+  <eClassifiers xmi:type="ecore:EEnum">
+    <eLiterals xmi:id="destination.none" name="none"/>
+    <eLiterals xmi:id="destination.userTrace" name="userTrace" value="1"/>
+    <eLiterals xmi:id="destination.file" name="file" value="2"/>
+    <eLiterals xmi:id="destination.localError" name="localError" value="3"/>
+  </eClassifiers>
+</ecore:EPackage>

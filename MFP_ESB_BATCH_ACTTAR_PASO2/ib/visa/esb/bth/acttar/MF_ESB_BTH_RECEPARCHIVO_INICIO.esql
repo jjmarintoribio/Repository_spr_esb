@@ -1,0 +1,99 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth;
+
+DECLARE cacheListaEmisores,cacheListaCorreoError SHARED ROW;
+
+DECLARE UDP_SEPARADOR_DIRECTORIO EXTERNAL  CHARACTER '/'; --separador en Linux
+DECLARE UDP_DIRECTORIO_CARGA_TARJETAS EXTERNAL CHARACTER '/app/visa/esb/batch/ftp/tarjetas/'; --TODO poner el directorio correcto
+DECLARE UDP_DIRECTORIO_MQSIARCHIVE EXTERNAL CHARACTER 'mqsiarchive'; 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_ValidarArchivosEncriptados
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		ROUTING : BEGIN ATOMIC 
+			IF cacheListaEmisores.iniciado IS NULL THEN
+  
+				CALL obtenerListadoEmisores(cacheListaEmisores.Emisores[]);
+				SET cacheListaEmisores.iniciado = TRUE;				
+
+			END IF;
+ 
+		END ROUTING ; 
+
+		SET OutputRoot.XMLNSC.MENSAJE.CODEMISOR 	= LEFT(InputLocalEnvironment.File.Name,3);
+
+		SET Environment.flgEncrip = CAST(THE (SELECT ITEM E.FLG_ENCRIPTA_ACTUALIZACION_TARJETA FROM cacheListaEmisores.Emisores[] AS E WHERE E.COD_EMISOR = OutputRoot.XMLNSC.MENSAJE.CODEMISOR) AS CHARACTER);
+		SET Environment.flgEncrip = COALESCE(Environment.flgEncrip,'');
+		IF (Environment.flgEncrip='') THEN   
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_2005() VALUES(getMSJ_ERROR_2005());	
+		ELSE    
+
+			SET OutputRoot.XMLNSC.MENSAJE.RUTAORIGEN 		= InputLocalEnvironment.File.Directory || UDP_SEPARADOR_DIRECTORIO;
+			SET OutputRoot.XMLNSC.MENSAJE.ARCHIVO 			= InputLocalEnvironment.File.Name;
+			SET OutputRoot.XMLNSC.MENSAJE.FLGENCRIP			= COALESCE(Environment.flgEncrip,'');
+			SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOARCHIVE	= UDP_DIRECTORIO_MQSIARCHIVE || UDP_SEPARADOR_DIRECTORIO;
+			SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOTARJETA	= UDP_DIRECTORIO_CARGA_TARJETAS;
+		
+		END IF;
+		
+		RETURN TRUE;
+	END;
+
+	
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_DesencriptarArchivosPgp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+											
+		SET OutputRoot.XMLNSC.MENSAJE.FLGARCHIVOPGP 	= 'S';											
+		SET OutputRoot.XMLNSC.MENSAJE.RUTAORIGEN 		= InputLocalEnvironment.File.Directory || UDP_SEPARADOR_DIRECTORIO;
+		SET OutputRoot.XMLNSC.MENSAJE.ARCHIVO 			= InputLocalEnvironment.File.Name;		
+		SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOARCHIVE	= UDP_DIRECTORIO_MQSIARCHIVE || UDP_SEPARADOR_DIRECTORIO;
+		SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOTARJETA	= UDP_DIRECTORIO_CARGA_TARJETAS;
+															
+		RETURN TRUE;
+		
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviarArchivosErrorPorPgp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			--((1)) Obtener remitente y destinatarios
+			ROUTING : BEGIN ATOMIC
+				 
+				IF cacheListaCorreoError.started IS NULL THEN
+					
+					CALL obtenerParametrosServicioBD('00000','REMITENTE',cacheListaCorreoError.servicio.REMITENTE[]);
+					CALL obtenerParametrosServicioBD('01004','CORREO',	 cacheListaCorreoError.servicio.CORREO[]);
+					
+					SET cacheListaCorreoError.started = TRUE;
+					
+				END IF;
+				
+			END ROUTING;
+			
+			--((2)) Envío de correo	
+			CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+			CREATE FIELD OutputRoot.XMLNSC.Email;
+			DECLARE refEmail REFERENCE TO OutputRoot.XMLNSC.Email;
+			
+			SET refEmail.Header.From 	= cacheListaCorreoError.servicio.REMITENTE[1].VALOR;
+			SET refEmail.Header.To 	 	= cacheListaCorreoError.servicio.CORREO[1].VALOR;
+			SET refEmail.Header.Subject = 'Error en recepción de archivo actualizador tarjetas';
+			
+			SET refEmail.Body 		 = 'Estimado(a) Sr.(a): Le informamos que se produjo un error en el archivo de respuesta del actualizador de tarjetas en el sistema de pago recurrente.';
+
+			SET refEmail.Attachment.Content			= InputBody.BLOB;
+			SET refEmail.Attachment.ContentName		= InputLocalEnvironment.File.Name;
+			SET refEmail.Attachment.ContentType		= 'text/plain';
+			SET refEmail.Attachment.ContentEncoding	= 'Base64';
+			
+		RETURN TRUE;
+		
+	END;
+END MODULE;

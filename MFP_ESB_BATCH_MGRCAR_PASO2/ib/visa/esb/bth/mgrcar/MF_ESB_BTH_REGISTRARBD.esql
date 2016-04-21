@@ -1,0 +1,181 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGISTRARBD_MigrarCargos
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET Environment.MQRFH2 = InputRoot.MQRFH2;
+		SET Environment.CorrelId = CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);					
+		SET OutputRoot.MQMD.CorrelId = Environment.CorrelId;
+
+		 
+		
+		SET Environment.cantidadRegistros = InputBody.MENSAJE.TOTALREGISTROS;
+		--Bucle para obtener todos los registros un grupo del archivo cargado
+		
+		CREATE FIELD Environment.XMLNSC.resultado.error;
+		DECLARE refError REFERENCE TO Environment.XMLNSC.resultado.error;	
+		
+		
+		--????????????????????????????????????????????????????????????????????????????????????????
+	
+		
+		
+
+		
+		DECLARE outResultado INT;
+		DECLARE outResultadoMsj CHARACTER;
+		DECLARE outResultOk INT 0;
+		DECLARE outResultFail INT 0;
+		
+		DECLARE refMqrfh2 REFERENCE TO Environment.MQRFH2.usr.Parametros.Batch;
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		
+		--SET Environment.Variables.correlIdctrlRegistro = CAST(refMqrfh2.Mgr.idTransaccion AS BLOB);
+
+		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
+		
+		SET Environment.Variables.contador = 0;
+
+		WHILE LASTMOVE(refRegis) DO		
+	
+		SET Environment.Variables.contador = Environment.Variables.contador +1;
+				
+			CALL insertarCargosTemporal(
+							BrokerName,
+							CURRENT_TIMESTAMP,
+							BrokerName,
+							CAST(refMqrfh2.Mgr.idTransaccion AS INTEGER),
+							refRegis.NRO_IDENTIFICACION_BENEFICIARIO,
+							refRegis.COD_PRODUCTO,
+							refRegis.COD_COMERCIO,
+							CASE WHEN refRegis.FEC_PROCESO_PAGO IS NOT NULL THEN obtenerTimestampSinHora(CAST(refRegis.FEC_PROCESO_PAGO AS DATE)) ELSE NULL END,
+							CASE WHEN refRegis.FEC_ESTIMADA_PAGO IS NOT NULL THEN obtenerTimestampSinHora(CAST(refRegis.FEC_ESTIMADA_PAGO AS DATE)) ELSE NULL END,
+							CASE WHEN refRegis.FEC_SUSPENSION IS NOT NULL THEN obtenerTimestampSinHora(CAST(refRegis.FEC_PROCESO_PAGO AS DATE)) ELSE NULL END,
+							CASE WHEN refRegis.FEC_AFILIACION IS NOT NULL THEN obtenerTimestampSinHora(CAST(refRegis.FEC_PROCESO_PAGO AS DATE)) ELSE NULL END,																	
+							CAST(refRegis.NRO_REINTENTO AS INTEGER),
+							CAST(refRegis.EST_CARGO AS INTEGER),
+							CAST(refRegis.MTO_PAGO AS DECIMAL),
+							refRegis.NRO_TARJETA_ENMASCARADO,
+							refRegis.NRO_TARJETA_ENCRIPTADO,
+							refRegis.NOM_TARJETAHABIENTE,
+							refRegis.APE_PATERNO_TARJETAHABIENTE,
+							refRegis.APE_MATERNO_TARJETAHABIENTE,
+							refRegis.NOM_BENEFICIARIO,
+							refRegis.APE_PATERNO_BENEFICIARIO,
+							refRegis.APE_MATERNO_BENEFICIARIO,
+							CAST(refRegis.MTO_MAXIMO_CARGO AS DECIMAL),
+							refRegis.COD_TRANSACCION,
+							refRegis.COD_RESULTADO,
+							refRegis.COD_RESPUESTA,
+							refRegis.DESC_MENSAJE_TERMINAL,							
+							outResultadoMsj,
+							outResultado);
+
+			IF outResultado = 0 THEN
+				SET outResultFail = 1;
+			ELSE
+				SET outResultOk = 1;
+			END IF;
+
+			SET Environment.cantidadRegistrosOk = CAST(COALESCE(Environment.cantidadRegistrosOk ,0)AS INTEGER) + outResultOk;
+			SET Environment.cantidadRegistrosFail = CAST(COALESCE(Environment.cantidadRegistrosFail ,0)AS INTEGER) + outResultFail;												  	
+
+			
+			--Arma una lista con los errores que ocurran para escribirlos en un archivo
+			IF (outResultado = 0) THEN --Imprime en el archivo log, solo aquellos que contengan error de lógica negocio
+				SET refError.nro_registro = COALESCE(refRegis.NRO_RECORD,'');
+				SET refError.mensaje = outResultadoMsj;
+				SET refError.codigo = obtenerRespuestaPorCodigo(outResultado);
+				CREATE LASTCHILD OF Environment.XMLNSC.resultado NAME 'error';
+				MOVE refError NEXTSIBLING;
+				
+			END IF;
+			SET outResultFail = 0;
+			SET outResultOk = 0;
+			
+			MOVE refRegis NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+		SET OutputRoot.XMLNSC.MENSAJE = Environment.Variables.contador;
+		PROPAGATE TO TERMINAL 4;
+		
+		DELETE LASTCHILD OF Environment.XMLNSC.resultado;
+			  
+ 		-- Envio de la lista de logs de los registros que tuvieron erores
+ 		
+ 		DECLARE refError1 REFERENCE TO Environment.XMLNSC.resultado.error;
+ 
+		WHILE LASTMOVE(refError1) DO
+ 		
+			SET OutputRoot.XMLNSC.resultado = refError1;
+			
+	
+			SET OutputLocalEnvironment.Destination.File.Directory = COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(refMqrfh2.Mgr.nombreArchivo,'.pgp','.dat') || '.log';
+			
+						
+	
+			PROPAGATE TO TERMINAL 3;
+			MOVE refError1 NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+	
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		
+		SET OutputRoot.MQMD.CorrelId = Environment.CorrelId;
+
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;
+
+		PROPAGATE TO TERMINAL 1;
+	
+		--Envio de los totales de registros que fueron impactados en BD
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRCAR2.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		--SET OutputRoot.MQMD.CorrelId = Environment.Variables.correlIdctrlRegistro;		
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = Environment.cantidadRegistros ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = Environment.cantidadRegistrosOk ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = Environment.cantidadRegistrosFail;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
+	
+		
+		
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGISTRARBD_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 1;
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRCAR2.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		--SET OutputRoot.MQMD.CorrelId = Environment.Variables.correlIdctrlRegistro;
+		SET OutputRoot.MQRFH2.usr = InputRoot.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = InputBody.MENSAJE.TOTALREGISTROS ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = 0 ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = InputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO ;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
+	END;
+END MODULE;

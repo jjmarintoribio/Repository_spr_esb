@@ -1,0 +1,824 @@
+/*
+ *
+ * Nombre		: LIB_MB_FUNCIONES.esql
+ * Proposito	: Funciones y procedimientos de ayuda para los flujos batch
+ * Fecha		: 2014-06-17
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+ 
+BROKER SCHEMA ib.visa.esb.bth
+
+
+
+	/*
+	* Devuelve un ojeto tipo Date
+	*/
+	CREATE FUNCTION obtenerDateConFormato(IN chrDate CHARACTER)
+	RETURNS DATE
+	BEGIN
+		RETURN CAST( chrDate AS DATE FORMAT getFORMATO_FECHA());
+	END;
+	
+	/*
+	* Devuelve un ojeto tipo Date con opcion de formato
+	*/
+	CREATE FUNCTION obtenerDateConOpcionFormato(IN chrDate CHARACTER, IN intTipoFecha INT)
+	RETURNS DATE
+	BEGIN
+		CASE 
+			WHEN intTipoFecha = 1 THEN
+				RETURN CAST( chrDate AS DATE FORMAT C_FORMATO_FECHA);
+			WHEN intTipoFecha = 2 THEN
+				RETURN CAST( chrDate AS DATE FORMAT C_FORMATO_FECHA2);		
+			WHEN intTipoFecha = 3 THEN
+				RETURN CAST( chrDate AS DATE FORMAT C_FORMATO_FECHA3);	
+			ELSE
+				RETURN NULL;
+		END CASE;
+		
+	END;
+	
+	/*
+	 * 	Devuele una fecha sin la info de la hora 
+ 	*/
+	CREATE FUNCTION obtenerTimestampSinHora(IN dteFecha DATE)
+	RETURNS TIMESTAMP
+	BEGIN
+		RETURN CAST((CAST(dteFecha AS CHARACTER FORMAT C_FORMATO_FECHA_BD) || C_HORA_VACIA) AS TIMESTAMP FORMAT C_FORMATO_FECHAHORA1_BD);
+	END;
+
+	/*
+	 * 	Devuele una fecha concatenada con hora (Formato: TIMESTAMP) 
+ 	*/
+	CREATE FUNCTION obtenerTimeStampConcatenadoConHora(IN dteHoraEjecucion CHARACTER)
+	RETURNS TIMESTAMP
+	BEGIN
+		RETURN CAST((CAST(CURRENT_DATE AS CHARACTER FORMAT C_FORMATO_FECHA_BD) || ' ' || dteHoraEjecucion) AS TIMESTAMP FORMAT C_FORMATO_FECHAHORA2_BD);
+	END;
+	
+	/*
+	* Devuelve el codigo de respuesta en texto
+	*/
+	CREATE FUNCTION obtenerRespuestaPorCodigo(IN codMensaje INT)
+	RETURNS CHARACTER
+	BEGIN
+		IF codMensaje = 1 THEN
+			RETURN C_MSJ_COD_0;
+		ELSEIF codMensaje = 0 THEN
+			RETURN C_MSJ_COD_1;
+		END IF;
+	END;
+	
+	
+	CREATE FUNCTION construirMsgErrorDfdl(IN msgError REFERENCE)
+	RETURNS CHARACTER
+		BEGIN
+		DECLARE leftChar CHARACTER;
+		DECLARE rightChar CHARACTER;
+		DECLARE fieldDfdl CHARACTER;
+		DECLARE assertMsgLeft CHARACTER;
+		DECLARE assertMsgRight CHARACTER;
+		DECLARE assertMsg CHARACTER;
+		DECLARE originalMsg CHARACTER;
+		
+		SET originalMsg = msgError;
+		
+		IF CONTAINS(msgError , '<F>') THEN
+			--ES UN ASSERT
+			SET assertMsgRight = SUBSTRING(msgError AFTER '<F>');
+			SET assertMsgLeft = SUBSTRING(assertMsgRight BEFORE '</F>');
+			SET assertMsg =  assertMsgLeft;			
+			RETURN assertMsg;
+		END IF;
+		
+		SET rightChar = SUBSTRING(msgError AFTER 'M_');
+		SET leftChar = SUBSTRING(rightChar BEFORE ')');		
+		SET fieldDfdl = leftChar;					
+		
+		CASE			
+			WHEN CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO) OR CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO_INT)
+				OR CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO_CHAR) THEN	 --0709		
+			RETURN  fieldDfdl || ' FORMATO INCORRECTO' ;
+			
+			WHEN CONTAINS(msgError ,C_CODE_DFDL_ERROR_MIN_OCUR) THEN			
+			RETURN  fieldDfdl || ' OBLIGATORIO' ;
+			
+		ELSE
+			RETURN originalMsg;
+					
+		END CASE;
+
+	END; 
+	
+	--0709
+	CREATE FUNCTION construirMsgErrorDfdlImport(IN msgError REFERENCE)
+	RETURNS CHARACTER
+		BEGIN
+		DECLARE leftChar CHARACTER;
+		DECLARE rightChar CHARACTER;
+		DECLARE fieldDfdl CHARACTER;
+		DECLARE assertMsgLeft CHARACTER;
+		DECLARE assertMsgRight CHARACTER;
+		DECLARE assertMsg CHARACTER;
+		DECLARE originalMsg CHARACTER;
+		
+		SET originalMsg = msgError;
+		
+		IF CONTAINS(msgError , '<F>') THEN
+			--ES UN ASSERT
+			SET assertMsgRight = SUBSTRING(msgError AFTER '<F>');
+			SET assertMsgLeft = SUBSTRING(assertMsgRight BEFORE '</F>');
+			SET assertMsg =  assertMsgLeft;			
+			RETURN assertMsg;
+		END IF;
+		
+		SET rightChar = SUBSTRING(msgError AFTER '/type::0/model::sequence/schemaElement::MENSAJE/type::0/model::sequence/schemaElement::');
+		SET leftChar = SUBSTRING(rightChar BEFORE ')');		
+		SET fieldDfdl = leftChar;					
+		
+		CASE			
+			WHEN CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO) OR CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO_INT)
+				OR CONTAINS(msgError ,C_CODE_DFDL_ERROR_FORMATO_CHAR) THEN		
+			RETURN  fieldDfdl || ' FORMATO INCORRECTO' ;
+			
+			WHEN CONTAINS(msgError ,C_CODE_DFDL_ERROR_MIN_OCUR) THEN			
+			RETURN  fieldDfdl || ' OBLIGATORIO' ;
+			
+		ELSE
+			RETURN originalMsg;
+					
+		END CASE;
+
+	END; 
+	
+	
+	/*
+	*Valida si una cadena es numero
+	*/	 
+	CREATE FUNCTION isNumeric(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+	RETURNS BOOLEAN 
+	BEGIN
+	
+		IF (bolVacio IS TRUE) THEN
+			IF (LENGTH(TRIM(chrNumber))=0) THEN
+				RETURN FALSE;
+			END IF;
+		END IF;
+		
+		IF LENGTH(TRANSLATE(TRIM(chrNumber), '0123456789', '')) <> 0 THEN 
+			RETURN FALSE ;
+		ELSE 
+			RETURN TRUE ;
+		END IF;	
+			
+	END; 
+	 
+	/*
+	* Devuleve sin zeros a los izquierda (Formato BCP - Archivo actualizador de tarjetas)
+	*/
+	CREATE FUNCTION devolverSinZerosBcp(IN nroTarjeta CHARACTER) 
+	RETURNS CHARACTER
+	BEGIN
+		DECLARE leftNumber INT CAST(SUBSTRING(nroTarjeta FROM 1 FOR 3) AS INTEGER);
+		IF leftNumber < 9 THEN				
+			RETURN REPLACE(CAST(leftNumber AS CHARACTER),'0','') || SUBSTRING(nroTarjeta FROM 4 FOR LENGTH(nroTarjeta) - 3);
+		ELSE
+			RETURN CAST(leftNumber AS CHARACTER) || SUBSTRING(nroTarjeta FROM 4 FOR LENGTH(nroTarjeta) - 3);
+		END IF;
+	END;
+	
+	CREATE FUNCTION obtenerFechaActual(IN intTipoFecha INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoFecha = 1 THEN
+				RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_FECHA);
+			WHEN intTipoFecha = 2 THEN
+				RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_FECHA2);
+			WHEN intTipoFecha = 3 THEN
+				RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_FECHA3);
+			WHEN intTipoFecha = 4 THEN
+				RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_FECHA_BD);				
+			ELSE
+				RETURN NULL;
+		END CASE;		
+		
+	END;	
+	
+	CREATE FUNCTION obtenerHoraActual(IN intTipoHora INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoHora = 1 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_HORA_BD);
+			WHEN intTipoHora = 2 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_HORA_BD2);
+			ELSE
+				RETURN NULL;
+		END CASE;		
+		
+	END; 
+	
+	CREATE FUNCTION obtenerFechaHoraActual(IN intTipoFecha INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoFecha = 1 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_FECHAHORA1_BD);
+			WHEN intTipoFecha = 2 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_FECHAHORA2_BD);
+			WHEN intTipoFecha = 3 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_FECHAHORA3_BD);
+			ELSE
+				RETURN NULL;
+		END CASE;		
+	END;
+ 
+ 	CREATE FUNCTION obtenerFechaHoraActualMasDias(IN intTipoFecha INTEGER, IN intDias INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoFecha = 1 THEN
+				RETURN CAST((CURRENT_TIMESTAMP + CAST(intDias AS INTERVAL DAY)) AS CHAR FORMAT C_FORMATO_FECHAHORA1_BD);
+			WHEN intTipoFecha = 2 THEN
+				RETURN CAST((CURRENT_TIMESTAMP + CAST(intDias AS INTERVAL DAY)) AS CHAR FORMAT C_FORMATO_FECHAHORA2_BD);
+			WHEN intTipoFecha = 3 THEN
+				RETURN CAST((CURRENT_TIMESTAMP + CAST(intDias AS INTERVAL DAY)) AS CHAR FORMAT C_FORMATO_FECHAHORA3_BD);
+			ELSE
+				RETURN NULL;
+		END CASE;		
+	END;
+	
+	CREATE FUNCTION convertirFormatoFecha(IN dteFecha DATE)
+	RETURNS CHARACTER
+	BEGIN
+		RETURN CAST(dteFecha AS CHARACTER FORMAT C_FORMATO_FECHA_BD);
+	END;	
+	
+	/*
+	 * Devuelve solo una cadena con el error
+	*/
+	CREATE FUNCTION obtenerMensajeError(IN refExceptionList REFERENCE) RETURNS CHARACTER
+	    BEGIN
+		DECLARE chrCodigoError CHARACTER '';
+		DECLARE chrDescripcionError CHARACTER '';
+		DECLARE chrMensajeError CHARACTER '';
+		CALL obtenerDetalleError(refExceptionList,chrCodigoError,chrDescripcionError);
+		SET chrMensajeError = chrCodigoError ||'-'||chrDescripcionError ;
+	
+		RETURN chrMensajeError;
+	END;	
+	
+	
+	CREATE PROCEDURE getLastExceptionDetail(IN InputExceptionList reference, INOUT codigoError INTEGER, INOUT
+mensajeError CHARACTER, INOUT detalleError CHARACTER)
+/*********************************************************************
+    * Un procedimiento que obtendrá los detalles de la última excepción de un mensaje
+    * IN start: La lista de excepciones entrante
+    * INOUT codigoError: El último número de mensaje
+    * INOUT mensajeError: El último texto de mensaje.
+    * INOUT detalleError: Detalles del error concatenados en un string
+********************************************************************/
+    BEGIN
+        -- Crear una referencia al primer hijo de la lista de excepciones
+        DECLARE start REFERENCE TO InputExceptionList.*[1];
+        -- Seguir con el bucle mientras actúan los desplazamientos
+        WHILE LASTMOVE(start) DO
+        -- Almacenar los valores actuales para el número de error y el texto
+        IF start.Number IS NOT NULL THEN
+              SET codigoError = start.Number;
+              SET mensajeError = start.Text;
+              DECLARE numInserts REFERENCE TO start.Insert;
+              IF ((TRIM(numInserts.Text) IS NOT NULL) AND (TRIM(numInserts.Text) <> '')) THEN
+                    SET detalleError = '#INFO: ' || numInserts.Text || '#';
+              END IF;
+              MOVE numInserts NEXTSIBLING;
+              WHILE LASTMOVE(numInserts) DO
+                    IF ((TRIM(numInserts.Text) IS NOT NULL) AND (TRIM(numInserts.Text) <> '')) THEN
+                          SET detalleError =   '#ERROR: ' || numInserts.Text || '#' || detalleError;
+                    END IF;
+                    MOVE numInserts NEXTSIBLING;
+              END WHILE;
+        END IF;
+        -- Ahora ir al último hijo, que debería ser la próxima lista de excepciones
+        MOVE start LASTCHILD;
+        END WHILE;
+    END;	
+	/*
+	* Devuelve una fecha con dias restados
+	*/
+	CREATE FUNCTION obtenerFechaMenosDias(IN fechaInput DATE, IN dia INTEGER)
+	RETURNS DATE
+	BEGIN
+		RETURN fechaInput - CAST(dia AS INTERVAL DAY);
+	END;
+	
+	/*
+	* Devuelve una fecha con dias restados
+	*/
+	CREATE FUNCTION restarFechaDias(IN fechaInput TIMESTAMP, IN dia INTEGER)
+	RETURNS TIMESTAMP
+	BEGIN
+		RETURN fechaInput - CAST(dia AS INTERVAL DAY);
+	END;
+	
+	/*
+	* Devuelve una fecha con dias restados
+	*/
+	CREATE FUNCTION obtenerFechaMasDias(IN fechaInput DATE, IN dia INTEGER)
+	RETURNS DATE
+	BEGIN
+		RETURN fechaInput + CAST(dia AS INTERVAL DAY);
+	END;
+	
+	/*
+	* Devuelve fecha con meses sumados
+	*/
+	CREATE FUNCTION obtenerFechaMasMeses(IN fechaInput DATE, IN mes INTEGER)
+	RETURNS DATE
+	BEGIN
+		RETURN fechaInput + CAST(mes AS INTERVAL MONTH);
+	END;
+	
+	/*
+	* Devuelve fecha con meses sumados
+	*/
+	CREATE FUNCTION obtenerFechaMenosMeses(IN fechaInput DATE, IN mes INTEGER)
+	RETURNS DATE
+	BEGIN
+		RETURN fechaInput - CAST(mes AS INTERVAL MONTH);
+	END;
+	
+	/*
+	* Valida que año de tarjeta sea mayor o menor a la fecha actual del sistema
+	*/
+	CREATE FUNCTION esMayorIgualAnioActual(IN anioTarjeta INTEGER)
+	RETURNS BOOLEAN
+	BEGIN
+		RETURN (CAST(anioTarjeta AS INTERVAL YEAR) >= CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTERVAL YEAR));
+	END;
+	
+	CREATE FUNCTION concatenarFechaMesDia(IN fechaInput DATE , IN mes INTEGER, IN dia INTEGER)
+	RETURNS DATE
+	BEGIN
+		DECLARE ANIO CHARACTER CAST(EXTRACT(YEAR FROM fechaInput) AS CHARACTER);
+		DECLARE MES  INTEGER -1;
+		SET MES =  CAST(EXTRACT(MONTH FROM fechaInput) AS INTERVAL MONTH);
+		DECLARE DIA_OUT CHARACTER CAST(dia AS CHARACTER);
+			IF MES > 0 AND MES < 10 THEN
+				IF dia < 10 THEN
+					DECLARE FECHA_OUT DATE;
+					SET FECHA_OUT = CAST ( ANIO || '0' || CAST(MES AS CHARACTER) || '0' || DIA_OUT AS DATE FORMAT 'yyyyMMdd'); 
+					RETURN FECHA_OUT + CAST(mes AS INTERVAL MONTH);
+				ELSE 
+					DECLARE FECHA_OUT DATE;
+					SET FECHA_OUT = CAST ( ANIO || '0' || CAST(MES AS CHARACTER) || DIA_OUT AS DATE FORMAT 'yyyyMMdd');
+					RETURN FECHA_OUT + CAST(mes AS INTERVAL MONTH);
+				END IF;
+			ELSE
+				IF dia < 10 THEN
+					DECLARE FECHA_OUT DATE;
+					SET FECHA_OUT = CAST ( ANIO || CAST(MES AS CHARACTER) || '0' || DIA_OUT AS DATE FORMAT 'yyyyMMdd');
+					RETURN FECHA_OUT + CAST(mes AS INTERVAL MONTH);
+				ELSE
+					DECLARE FECHA_OUT DATE;
+					SET FECHA_OUT = CAST ( ANIO || CAST(MES AS CHARACTER) || DIA_OUT AS DATE FORMAT 'yyyyMMdd'); 
+					RETURN 	FECHA_OUT + CAST(mes AS INTERVAL MONTH);
+				END IF;
+				
+			END IF;
+	END;
+	
+	CREATE FUNCTION obtenerDiaCargoSiguiente(IN fechaPago DATE, IN dia INTEGER)
+	RETURNS INTEGER
+	BEGIN
+		DECLARE DIA_PAGO INTEGER -1;
+		DECLARE FECHA_PAGO DATE  fechaPago + CAST(1 AS INTERVAL MONTH) - CAST(EXTRACT(DAY FROM fechaPago) AS INTERVAL DAY);
+		DECLARE FIN_MES INTEGER EXTRACT(DAY FROM FECHA_PAGO);
+		
+		IF dia <= 28 THEN
+			SET DIA_PAGO = dia;
+		ELSE 
+			IF dia >= FIN_MES THEN
+				SET DIA_PAGO = FIN_MES;
+			ELSE
+				SET DIA_PAGO = dia;
+			END IF;
+		END IF;
+		
+		RETURN DIA_PAGO;
+	END;
+	
+	/*
+	* Obtiene fecha posicionada en el último mes
+	*/
+	CREATE FUNCTION obtenerFechaUltimoDiaMes(IN fechaActual DATE)
+	RETURNS DATE
+	BEGIN
+		RETURN  fechaActual + CAST(1 AS INTERVAL MONTH) - CAST(EXTRACT(DAY FROM fechaActual) AS INTERVAL DAY);
+	END;
+	
+	/*
+	* Devuelve una fecha posicionado con el dia que se desea
+	*/
+	CREATE FUNCTION obtenerFechaPosicionarDia(IN fechaInput DATE , IN dia INTEGER)
+	RETURNS DATE
+	BEGIN
+		DECLARE FECHA_OUT DATE;
+		SET FECHA_OUT = fechaInput - CAST(EXTRACT(DAY FROM fechaInput) AS INTERVAL DAY) + CAST(dia AS INTERVAL DAY);
+		RETURN FECHA_OUT;
+		
+	END;
+	
+	/*
+	*
+	*/
+	CREATE FUNCTION obtenerFechaPagoFinMes(IN fechaActual DATE)
+	RETURNS INTEGER
+	BEGIN
+		DECLARE FIN_MES INTEGER;
+		SET FIN_MES =  EXTRACT(DAY FROM obtenerFechaUltimoDiaMes(fechaActual));
+		DECLARE DIA_PAGO_FIN_MES INTEGER 30;
+			IF FIN_MES < 30 THEN
+				SET DIA_PAGO_FIN_MES = FIN_MES;
+			END IF;
+		
+		RETURN DIA_PAGO_FIN_MES;
+	END;
+	
+	/*
+	* Obtener fechas siguiente
+	*/
+	CREATE FUNCTION obtenerSiguienteFechaCargo(IN FECHA_PAGO DATE, IN PERIOCIDAD INTEGER, IN DIA_PAGO_ORIGINAL INTEGER)
+	RETURNS DATE
+	BEGIN
+		
+		IF PERIOCIDAD = 0 THEN -- 0 == QUINCENAL
+			
+			DECLARE DIA INTEGER EXTRACT(DAY FROM FECHA_PAGO);
+			DECLARE DIA_PAGO_FIN_MES INTEGER EXTRACT(DAY FROM obtenerFechaUltimoDiaMes(FECHA_PAGO));
+			
+			IF DIA = 15 THEN
+				RETURN obtenerFechaPosicionarDia(FECHA_PAGO,DIA_PAGO_FIN_MES);
+			ELSE 
+				RETURN concatenarFechaMesDia(FECHA_PAGO,1,15);
+			END IF;
+		ELSE 
+			IF PERIOCIDAD = 1 THEN -- 1 == MENSUAL
+					DECLARE FECHA_TEMP DATE concatenarFechaMesDia(FECHA_PAGO,1,1);
+					DECLARE DIA_PAGO_TEMP INTEGER obtenerDiaCargoSiguiente(FECHA_TEMP,DIA_PAGO_ORIGINAL);
+				RETURN obtenerFechaPosicionarDia(FECHA_TEMP,DIA_PAGO_TEMP);
+			ELSE 
+				IF PERIOCIDAD = 2 THEN -- 2 == SEMESTRAL
+					
+						DECLARE FECHA_TEMP DATE concatenarFechaMesDia(FECHA_PAGO,6,1);
+						DECLARE DIA_PAGO_TEMP INTEGER obtenerDiaCargoSiguiente(FECHA_TEMP,DIA_PAGO_ORIGINAL);
+					RETURN obtenerFechaPosicionarDia(FECHA_TEMP,DIA_PAGO_TEMP);
+					
+				ELSEIF PERIOCIDAD = 3 THEN-- 3 == ANUAL 
+					
+						DECLARE FECHA_TEMP DATE concatenarFechaMesDia(FECHA_PAGO,12,1);
+						DECLARE DIA_PAGO_TEMP INTEGER obtenerDiaCargoSiguiente(FECHA_TEMP,DIA_PAGO_ORIGINAL);
+					RETURN obtenerFechaPosicionarDia(FECHA_TEMP,DIA_PAGO_TEMP);
+					
+				END IF;
+			END IF;			
+		END IF;
+		
+	END;
+	
+	/*
+	* Enmascarar número de tarjeta
+	*/
+	CREATE FUNCTION enmascararNumeroTarjeta(IN nroTarjeta CHARACTER)
+	RETURNS CHARACTER
+	BEGIN
+		RETURN LEFT(nroTarjeta,6) || REPLICATE('*',LENGTH(nroTarjeta)-10) || RIGHT(nroTarjeta,4);
+		
+	END;
+	
+	/*
+	*Obtiene el indice de la siguiente lista. Usado para el algoritmo de separacion de listas para balanceo del proceso
+	*/
+	CREATE FUNCTION obtieneIndice (IN intActual INTEGER, IN intMaximo INTEGER, IN intIndLista INTEGER)
+	RETURNS INTEGER
+	BEGIN
+		DECLARE intAux INTEGER;
+		IF (intActual < intMaximo) THEN
+			SET intAux = intActual +1;
+		ELSE
+			SET intAux = 1;
+		END IF; 
+		IF (intAux > 1) THEN
+			IF (intAux = intIndLista) THEN
+				SET intAux = obtieneIndice(intAux,intMaximo,intIndLista);
+			END IF;
+		END IF;
+		RETURN intAux;
+	END;
+
+
+	/*
+	 * Indica la cola de la cola temporal donde estaran los mensajes de grupo que no se pudieron registrar en BD
+	*/
+	CREATE FUNCTION obtenerColaRegBDTemp(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.REGARCHIVOTEMP.REQ.01';
+		RETURN chrNombreCola ;
+	END;	
+	
+	/*
+	 * Indica la cola de la cola temporal donde estaran los mensajes que no se pudieron registrar en BD
+	*/
+	CREATE FUNCTION obtenerColaRegDetBDTemp(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.REGARCHIVODETTEMP.REQ.01';
+		RETURN chrNombreCola ;
+	END;	
+	
+	/*
+	 * Indica la cola del primero flujo de un proceso
+	*/
+	CREATE FUNCTION obtenerColaInicioProceso(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.INICIO.REQ.01';
+		RETURN chrNombreCola ;
+	END;	
+
+	/*
+	 * Indica la cola temporal para el registro de mensajes de grupos leidos de un archivo
+	*/
+	CREATE FUNCTION obtenerColaRecepArchivo(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.RCVARCHIVO.REQ.01';
+		RETURN chrNombreCola ;
+	END;
+
+	/*
+	 * Indica la cola temporal para el registro del detalle de cada registro leidos de un arhicvo
+	*/
+	CREATE FUNCTION obtenerColaRecepArchivoDetalle(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.REGARCHIVODET.REQ.01';
+		RETURN chrNombreCola ;
+	END;
+ 
+ 	/*
+	 * Indica la cola para el control de la finalizacion de un proceso
+	*/
+	CREATE FUNCTION obtenerColaFinalizacionProceso(IN chrIdentProceso CHARACTER) 
+		RETURNS CHARACTER
+	BEGIN
+		DECLARE chrNombreCola CHARACTER;
+		SET chrNombreCola = 'IB.BTH.'  || chrIdentProceso || '.FINPROCESO.REQ.01';
+		RETURN chrNombreCola ;
+	END;
+ 
+
+	/*
+	 * genera mesgaid Unico para transacciones
+	*/
+	CREATE FUNCTION getMsgId() 
+		RETURNS BLOB
+	BEGIN
+			RETURN CAST(LEFT(BrokerName || '0000' ,8) AS BLOB CCSID 819) || UUIDASBLOB;
+		
+	END;
+ 
+
+	/*
+	 * genera mesgaid 
+	*/
+	CREATE FUNCTION getMsgIdValor(IN chrValor CHARACTER, IN bolLeft BOOLEAN) 
+		RETURNS BLOB
+	BEGIN
+			IF (bolLeft IS TRUE) THEN
+				RETURN CAST(LEFT(TRIM(chrValor) || REPLICATE('0',24),24) AS BLOB CCSID 819) ;
+			ELSE
+				RETURN CAST(RIGHT(REPLICATE('0',24) || TRIM(chrValor),24)  AS BLOB CCSID 819) ;
+			END IF;
+		
+	END;
+
+ 	
+	/*
+	*
+	*/
+	CREATE FUNCTION setAppendZerosToLeft(IN chrValor CHARACTER)
+		RETURNS CHARACTER
+	BEGIN
+		RETURN RIGHT(REPLICATE('0',2) || TRIM(chrValor),2);
+	END;
+	/*
+	Splits S on Delim into an array in Env (Environment.Split.Array[]) 
+	Removes Environment.Split before refilling it
+	*/
+	CREATE FUNCTION split(IN chrCad CHARACTER, IN refEnv REFERENCE, IN chrDelim CHARACTER) 
+	BEGIN 
+	   DECLARE chrP INTEGER; 
+	   DECLARE intIdx INTEGER 1; 
+	
+	   SET refEnv.Split = NULL; 
+	    
+	   REPEAT 
+	      SET chrP = POSITION(chrDelim IN chrCad);  
+	      IF chrP = 0 THEN 
+	         SET refEnv.Split.Array[intIdx] = chrCad; 
+	      ELSE 
+	         SET refEnv.Split.Array[intIdx] = LEFT(chrCad, chrP - 1); 
+	         SET chrCad = SUBSTRING(chrCad FROM chrP + LENGTH(chrDelim)); 
+	         SET intIdx = intIdx + 1; 
+	      END IF; 
+	   UNTIL chrP = 0 
+	   END REPEAT;
+	END;
+
+
+	/*
+	Inicia el proxy de seguridad
+	*/
+	CREATE FUNCTION  iniciarProxy(IN chrHost CHARACTER, IN intPort CHARACTER, IN chrLmkId CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.iniciarProxy";
+	
+	/* 
+	Desencripta las llaves para mantenerlo en memoria de las clases Java
+	*/
+	CREATE FUNCTION  desencriptarLlave(IN chrLlaveMaestra CHARACTER, IN chrLlaveHexEncriptada CHARACTER,IN chrCodEmisor CHARACTER, IN chrTipoLlave CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarLlave";
+ 	
+ 	
+
+ 	
+ 	/*
+	Inicia el encriptador de seguridad
+	*/
+	CREATE FUNCTION  iniciarEncriptador()
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.iniciarEncriptador";
+ 	
+ 	
+ 	 /*
+	Encriptar numero de tarjeta
+	*/
+	CREATE FUNCTION  encriptarNroTarjeta(IN chrNroTarjeta CHARACTER)
+	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.encriptarNroTarjeta";
+ 	 
+ 	/*
+	Desencripta un valor
+	*/
+	CREATE FUNCTION  desencriptarNroTarjeta(IN chrNroTarjetaEncriptado CHARACTER)
+	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarNroTarjeta";
+ 	
+ 	/*
+	Encripta la Sal
+	*/
+	CREATE FUNCTION  encriptarSal(IN chrSal CHARACTER)
+	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.encriptarSal";
+ 	
+ 	/*
+	Desencripta la Sal
+	*/
+	CREATE FUNCTION  desencriptarSal(IN chrSalEncriptado CHARACTER)
+	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarSal";
+
+ 	/*
+	Validar Firma digital
+	*/
+	CREATE FUNCTION  validarFirmaDigital(IN chrCodEmisor CHARACTER,IN chrTrama CHARACTER, IN chrFirmaDigital CHARACTER)
+	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.validarFirmaDigital";
+
+
+ 	/*
+	Encripta un archivo de tarjetas 
+	*/
+	CREATE FUNCTION  encriptarArchivoTarjetas(IN chrCodEmisor CHARACTER,IN chrPathFileClaro CHARACTER,IN chrNombreFileClaro CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.encriptarArchivoTarjetas";
+ 	
+ 	/*
+	Encripta un archivo de tarjetas PGP
+	*/
+	CREATE FUNCTION  encriptarArchivoTarjetasPgp(IN chrPathFileClaro CHARACTER,IN chrNombreFileClaro CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.encriptarArchivoTarjetasPgp";
+ 	
+ 
+ 	/*
+	Desencripta un archivo de tarjetas 
+	*/
+	CREATE FUNCTION  desencriptarArchivoTarjetas(IN chrCodEmisor CHARACTER,IN chrPathFileEncriptado CHARACTER,IN chrNombreFileEncriptado CHARACTER,
+												 IN chrPathFileDestino CHARACTER,IN chrDirectotyArchive CHARACTER, IN chrFileEncriptado CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarArchivoTarjetas";
+ 	
+ 	
+ 	
+ 	
+ 	/*
+	Desencripta un archivo de tarjetas de tipo PGP
+	*/
+	CREATE FUNCTION  desencriptarArchivoTarjetasPgp(IN chrPathFileEncriptado CHARACTER,
+													IN chrNombreFileEncriptado CHARACTER,
+												 	IN chrPathFileDestino CHARACTER,
+												 	IN chrDirectotyArchive CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarArchivoTarjetasPgp";
+ 	
+ 	
+ 	/*
+	Desencripta un archivo de Migracion de tipo PGP
+	*/
+	CREATE FUNCTION  desencriptarArchivoMigracionPgp(IN chrPathFileEncriptado CHARACTER,
+													IN chrNombreFileEncriptado CHARACTER,
+												 	IN chrPathFileDestino CHARACTER,
+												 	IN chrDirectotyArchive CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.Seguridad.desencriptarArchivoMigracionPgp";
+ 	
+ 	/*Cambios 14082015 Funcion para obtener la fecha del primer cargo para las importacion de afiliacion y confirmacion de solicitud*/
+ 	/*cambio importacion periodicidad*/
+ 	CREATE FUNCTION obtenerPrimeraFechaCargo(IN fechaInput DATE, IN periodicidad INTEGER)
+	RETURNS DATE
+	BEGIN
+		DECLARE DIA INTEGER EXTRACT(DAY FROM fechaInput);
+		DECLARE DIA_PAGO_FIN_MES INTEGER EXTRACT(DAY FROM obtenerFechaUltimoDiaMes(fechaInput));
+		
+		IF periodicidad = 0 THEN -- 0 == QUINCENAL
+			SET fechaInput = obtenerFechaMenosMeses(fechaInput,1); --xq en la funcion concatenar la suman un mes
+			
+			IF DIA <= 15 THEN
+				RETURN concatenarFechaMesDia(fechaInput,1,15); -- para que siempre sea 15 del mes
+			ELSE 
+				IF DIA <= DIA_PAGO_FIN_MES THEN
+					RETURN concatenarFechaMesDia(fechaInput,1,DIA_PAGO_FIN_MES); --para que siempre sea el fin de mes
+				ELSE
+					RETURN obtenerFechaPosicionarDia(fechaInput,DIA_PAGO_FIN_MES);--seria la siguiente quincena del mes que viene	
+				END IF;
+			END IF;
+			
+		END IF;
+		
+		RETURN fechaInput;
+	END;
+	
+	/*Cambio 0709 Funcion de validacion de numericosa correcto*/
+	CREATE FUNCTION isNumericValid(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+	RETURNS BOOLEAN 
+	BEGIN
+	
+		IF (bolVacio IS TRUE) THEN
+			IF (LENGTH(TRIM(chrNumber))=0) THEN
+				RETURN FALSE;
+			END IF;
+		END IF;
+		
+		--IF LENGTH(TRIM(TRANSLATE(chrNumber, '','0123456789'))) <> 0 THEN
+			IF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789',''))) <> 0 THEN 
+			RETURN FALSE ;
+		ELSEIF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789',''))) = 0 THEN
+			RETURN TRUE ;
+		END IF;	
+		
+	END; 
+	
+	CREATE FUNCTION isNumericValidLength(IN chrNumber CHARACTER)
+	RETURNS INTEGER 
+	BEGIN
+		--RETURN LENGTH(TRIM(TRANSLATE(chrNumber, '','0123456789')));
+		--RETURN TRIM(TRANSLATE(chrNumber, '','0123456789'));	
+		RETURN LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789','')));	
+	END; 
+	
+	CREATE FUNCTION isNumericValidChar(IN chrNumber CHARACTER)
+	RETURNS CHARACTER 
+	BEGIN
+		--RETURN TRIM(TRANSLATE(chrNumber, '','0123456789'));
+		RETURN 	chrNumber;
+	END; 
+ 	

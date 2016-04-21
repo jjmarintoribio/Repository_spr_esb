@@ -1,0 +1,107 @@
+BROKER SCHEMA ib.visa.esb.bth.gencar
+ PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_FINPROCESO_EjecutarFinalizacionCarga
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+		--((1)) Registro de Log del Proceso
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+								InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+								InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+								getTIP_LOG_INFO(),
+								MessageFlowLabel,
+								'Se termino de actualizar todos los lotes y cargos del archivo ' || InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo);
+		PROPAGATE TO TERMINAL 1;
+
+
+		--((2)) Generacion de reintentos de pagos
+		DECLARE intCantLotes INTEGER 0;
+		CALL generarReintentoPagos(getID_ESB_VISA(),
+								   CAST(InputRoot.MQRFH2.usr.Parametros.Batch.HorasPeriodoOpe AS INTEGER), 
+								   CURRENT_TIMESTAMP,
+								   BrokerName,
+								   intCantLotes);
+								   
+		--((2.1)) Cargos cobrados - Proceder a envío de correos
+		
+		CALL obtenerCargosAutorizados(Environment.resultSetAutorizados[]);								     
+
+		DECLARE refCargosAutorizados REFERENCE TO Environment.resultSetAutorizados;
+--Temporal0207	se envia sp con where que obtenga cero registros			
+		WHILE LASTMOVE(refCargosAutorizados) DO
+			--Modificacion:Valida correo de tarjetaHabiente
+			IF (refCargosAutorizados.EMAIL_TARJETAHABIENTE <> '') THEN	
+				CALL prepararMensajeCorreoCargoAutorizado(OutputRoot,InputRoot.MQRFH2.usr.Parametros.ESB.REMITENTE,refCargosAutorizados);
+				PROPAGATE TO TERMINAL 3;
+			END IF;
+			MOVE refCargosAutorizados NEXTSIBLING;
+			
+		END WHILE;	
+
+		CALL armarMensajeLogProceso(OutputRoot,
+								InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+								InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+								getTIP_LOG_INFO(),
+								MessageFlowLabel,
+								'Se realizo el reintento de Pagos para ' || CAST( intCantLotes AS CHARACTER) || ' Lotes');
+		PROPAGATE TO TERMINAL 1;
+
+
+		--((3)) Cambia de estado la instancia del proceso
+
+		CALL actualizarProcesoAutorizadorTransaccionBD(CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER),
+														CURRENT_TIMESTAMP,
+														NULL,
+														CURRENT_TIMESTAMP,
+														NULL,
+														InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo,
+														getEST_1_PROCESO()
+														) ;
+
+
+		--((4))Manda a inciar el proceso GENCAR3
+		
+		SET OutputRoot.Properties.MessageSet 	= 'MS_ESB_BATCH_GENERICO';
+		SET OutputRoot.Properties.MessageType 	= 'MSJ_LANZADOR';
+		SET OutputRoot.Properties.MessageFormat = 'CWF';
+		SET OutputRoot.MRM.MENSAJE.IDPROCESO 	= '0' || CAST(getID_PROCESO_5() AS CHARACTER);
+		SET OutputRoot.MRM.MENSAJE.FILLER 		= '';
+
+		PROPAGATE TO TERMINAL 2;			
+					
+		--((5)) Envio de alertas al fin  del proceso
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;		
+		SET Environment.Parametros.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 3;
+		END IF;		
+
+
+		--((6)) se cambia el semaforo a verde
+--		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+--		PROPAGATE TO TERMINAL 4;
+
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_FINPROCESO_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

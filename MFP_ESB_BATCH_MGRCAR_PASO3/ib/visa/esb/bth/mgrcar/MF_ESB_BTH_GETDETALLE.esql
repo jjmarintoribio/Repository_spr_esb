@@ -1,0 +1,164 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerPagos
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.codigo = getMsgIdValor('MGRCAR3',TRUE);
+		SET Environment.Variables.MQRFH2 = InputRoot.MQRFH2;
+		
+		DECLARE refParam REFERENCE TO Environment.Variables.MQRFH2.usr.Parametros;
+		DECLARE intFila,cantidadGrupos,cantidadRegistros,cantidadRegistrosPorGrupo INT;
+		
+		
+		--INICIO DEL PROCESO DE OBTENER CARGOS PFRA MIGRAR
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.Mgr.idTransaccion AS CHARACTER),    
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se Inicia la busqueda de pagos para migrar ');
+		
+		PROPAGATE TO TERMINAL 3;
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= refParam;		 
+		 				    
+		SET OutputRoot.XMLNSC.MENSAJE.TOTALREGISTROS= cantidadRegistros; --cantidad total del archivo
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;		
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAGETRECEP	= obtenerColaRecepArchivo('MGRCAR3');				
+		--SET OutputRoot.XMLNSC.MENSAJE.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAHORARIO 	= 'IB.BTH.MGRCAR3.REGARCHIVO.REQ.01';
+		SET OutputRoot.XMLNSC.MENSAJE.CANREGTRANS	= 25;
+		SET OutputRoot.XMLNSC.MENSAJE.CANGRUPOS		= cantidadRegistros;
+		SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= QueueManagerName;								
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESAR 		= getSI();		
+		--TODO :::fin
+	
+		PROPAGATE TO TERMINAL 0;
+		
+		
+		/*
+		SET intFila = 0;
+		SET cantidadGrupos = 0;
+		SET cantidadRegistros = 0;	
+		SET cantidadRegistrosPorGrupo = 0;
+					
+		CALL buscarPagosMigracion(Environment.ResultSet1[]);
+		
+		CREATE FIELD Environment.XMLNSC.Registros.REGISTRO;
+		
+		DECLARE refResult REFERENCE TO Environment.ResultSet1;
+	
+		
+	
+		WHILE LASTMOVE(refResult) DO
+			DECLARE refFila REFERENCE TO Environment.XMLNSC.Registros;
+			SET cantidadRegistros = cantidadRegistros +1 ;
+			SET cantidadRegistrosPorGrupo = cantidadRegistrosPorGrupo + 1;				
+			MOVE refFila LASTCHILD;																																	
+			SET refFila = refResult;
+			SET intFila = intFila + 1;	
+			MOVE refFila PARENT;
+			IF intFila = 200 THEN		
+				SET intFila = 0;
+				SET OutputRoot.MQMD.CorrelId				= CAST(refParam.Batch.msgIdTransaccion AS BLOB);
+				SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = refParam.Batch.msgIdTransaccion;
+				SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = refParam.Batch.msgIdTransaccion;	
+				SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = cantidadRegistrosPorGrupo;							
+				SET OutputRoot.XMLNSC.MENSAJE.REGISTROS = refFila;		
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo('MGRCAR3');	
+				--DELETE LASTCHILD OF refFila;
+							
+				PROPAGATE TO TERMINAL 1;		
+				DELETE FIELD Environment.XMLNSC.Registros;					
+			END IF;				
+									
+			CREATE LASTCHILD OF Environment.XMLNSC.Registros NAME 'REGISTRO';																
+			MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;		
+	
+								
+		
+	/*	WHILE LASTMOVE(refResult) DO
+			SET cantidadRegistros = cantidadRegistros +1 ;
+			SET cantidadRegistrosPorGrupo = cantidadRegistrosPorGrupo + 1;
+			DECLARE refFila REFERENCE TO Environment.XMLNSC.Registros;
+			MOVE refFila LASTCHILD;			
+			SET intFila  = intFila +1;
+			IF intFila = 200 THEN								
+				SET intFila = 0;
+				DELETE LASTCHILD OF Environment.XMLNSC.Registros;		
+				SET OutputRoot.MQMD.CorrelId				= CAST(refParam.Batch.msgIdTransaccion AS BLOB);
+				SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = refParam.Batch.msgIdTransaccion;
+				SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = refParam.Batch.msgIdTransaccion;	
+				SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = cantidadRegistrosPorGrupo;							
+				SET OutputRoot.XMLNSC.MENSAJE.REGISTROS = Environment.XMLNSC.Registros;		
+				SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo('MGRCAR3');
+				SET cantidadGrupos = cantidadGrupos+1;								
+				PROPAGATE TO TERMINAL 1;							
+				DELETE FIELD Environment.XMLNSC.Registros;	
+				CREATE FIELD Environment.XMLNSC.Registros.REGISTRO;	
+				SET cantidadRegistrosPorGrupo = 0;															
+			ELSE					
+				SET refFila = refResult;								
+				CREATE LASTCHILD OF Environment.XMLNSC.Registros NAME 'REGISTRO';					
+				
+			END IF;			
+			
+			MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;		
+		*/
+		
+		IF FIELDTYPE(Environment.XMLNSC.Registros.REGISTRO) IS NOT NULL THEN
+ 
+			DELETE LASTCHILD OF Environment.XMLNSC.Registros;
+			SET OutputRoot.MQMD.CorrelId				= CAST(refParam.Batch.msgIdTransaccion AS BLOB);
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = refParam.Batch.msgIdTransaccion;
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = refParam.Batch.msgIdTransaccion;				
+			SET OutputRoot.XMLNSC.MENSAJE.REGISTROS = Environment.XMLNSC.Registros;		
+			SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = cantidadRegistrosPorGrupo;
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo('MGRCAR3');
+			SET cantidadGrupos = cantidadGrupos+1;			
+			SET cantidadRegistrosPorGrupo = 0 ;										
+				PROPAGATE TO TERMINAL 1;							
+		END IF;
+		
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+								CAST(refParam.Batch.idProceso AS CHARACTER), 
+								CAST(refParam.Batch.Mgr.idTransaccion AS CHARACTER),    
+								getTIP_LOG_INFO(),
+								MessageFlowLabel,
+									'Se encontraron { ' || CAST(cantidadRegistros AS CHARACTER) ||' } registros');
+	
+		PROPAGATE TO TERMINAL 3;
+		
+		
+		
+		
+				
+		
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= refParam;		 
+		 				    
+		SET OutputRoot.XMLNSC.MENSAJE.TOTALREGISTROS= cantidadRegistros; --cantidad total del archivo
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;		
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAGETRECEP	= obtenerColaRecepArchivo('MGRCAR3');				
+		--SET OutputRoot.XMLNSC.MENSAJE.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAHORARIO 	= 'IB.BTH.MGRCAR3.REGARCHIVO.REQ.01';
+		SET OutputRoot.XMLNSC.MENSAJE.CANREGTRANS	= 25;
+		SET OutputRoot.XMLNSC.MENSAJE.CANGRUPOS		= cantidadRegistros;
+		SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= QueueManagerName;								
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESAR 		= getSI();		
+		--TODO :::fin
+	
+		PROPAGATE TO TERMINAL 2;
+		*/
+		RETURN FALSE;
+	END;
+END MODULE;

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO.msgflow"
+    nsPrefix="ib_visa_esb_bth_acttar_MF_ESB_BTH_RECEPARCHIVO_INICIO.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_SEPARADOR_DIRECTORIO" name="UDP_SEPARADOR_DIRECTORIO" defaultValueLiteral="/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_DIRECTORIO_CARGA_TARJETAS" name="UDP_DIRECTORIO_CARGA_TARJETAS" defaultValueLiteral="/app/visa/esb/batch/ftp/tarjetas/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_DIRECTORIO_MQSIARCHIVE" name="UDP_DIRECTORIO_MQSIARCHIVE" defaultValueLiteral="mqsiarchive">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/ACTTAR2_RECEPARCHIVO_INICIO_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_ErrorPgpArchivo" name="T_ErrorPgpArchivo" defaultValueLiteral="/app/visa/esb/batch/logs/ACTTAR2_RECEPARCHIVO_INICIO_PGPARCHIVO_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_RECEPARCHIVO_INICIO" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO2/icons/full/obj16/MF_ESB_BTH_RECEPARCHIVO_INICIO.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO2/icons/full/obj30/MF_ESB_BTH_RECEPARCHIVO_INICIO.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="355,85" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_RECEPARCHIVO_INICIO_ValidarArchivosEncriptados.Main">
+        <translation xmi:type="utility:ConstantString" string="ValidarArchivosEncriptados"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="349,162" destination="file" pattern="****************/Error Recepcion Archivos Encriptados /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="195,89" inputDirectory="/app/visa/esb/batch/ftp" filenamePattern="???R??????.dat" processedFileAction="moveToArchive" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivosEncriptados"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="548,86" queueName="IB.BTH.ACTTAR2.RECEPARCHIVO.REQ.01" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTTAR2.RECEPARCHIVO.REQ.01_OUTPUT"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="255,243" inputDirectory="/app/visa/esb/batch/ftp" filenamePattern="RPTA??????.pgp" processedFileAction="moveToArchive" replaceDuplicateArchives="true" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivosEncriptadosPgp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="557,261" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_RECEPARCHIVO_INICIO_DesencriptarArchivosPgp.Main">
+        <translation xmi:type="utility:ConstantString" string="DesencriptarArchivosPgp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="218,406" inputDirectory="/app/visa/esb/batch/ftp" filenamePattern="???S??????error.txt" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivosErrorPgp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="377,402" dataSource="DSESB_DB" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviarArchivosErrorPorPgp.Main">
+        <translation xmi:type="utility:ConstantString" string="EnviarArchivosErrorPorPgp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="116,320" inputDirectory="/app/visa/esb/batch/ftp" filenamePattern="RPTA-BCP??????.pgp" processedFileAction="moveToArchive" replaceDuplicateArchives="true" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivosEncriptadosPgpBcp"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="413,486" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR2_RECEPARCHIVO_INICIO_PGPARCHIVO_error.log" pattern="****************/Error Recepcion Archivos Encriptados /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_ErrorArchivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="602,403" queueName="IB.BTH.GENBTH.CORREO.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CORREO.REQ.01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in">
+        <bendPoints>20,-168,-99,-10</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in">
+        <bendPoints>47,-167,-128,-9</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in">
+        <bendPoints>224,-14,-26,67</bendPoints>
+      </connections>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_SEPARADOR_DIRECTORIO">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_SEPARADOR_DIRECTORIO" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_DIRECTORIO_CARGA_TARJETAS">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_DIRECTORIO_CARGA_TARJETAS" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+          <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_DIRECTORIO_MQSIARCHIVE">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_DIRECTORIO_MQSIARCHIVE" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+            <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+              <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_ErrorPgpArchivo">
+                <propertyName xmi:type="utility:TranslatableString" key="Property.T_ErrorPgpArchivo" bundleName="ib/visa/esb/bth/acttar/MF_ESB_BTH_RECEPARCHIVO_INICIO" pluginId="MFP_ESB_BATCH_ACTTAR_PASO2"/>
+              </propertyDescriptor>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_4">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_ErrorPgpArchivo" overriddenNodes="FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="73,-109">
+        <body xmi:type="utility:ConstantString" string="--Lee de la ruta compartida los archivos de tarjetas enviados por los emisores para poder desencriptarlo si es que el emisor envia su archivo encriptado&#xA;--Obtiene en memoria los emisores que enviaran los archivos encriptados&#xA;--Si el emisor envia el archivo encriptado el flujo desencripta el archivo y lo mueve al directorio de carga de tarjetas para que el flujo pueda cargarlo&#xA;--Si el emisor NO envia el archivo encriptado, el flujo solo lo mueve al directorio de carga de tarjetas para que el flujo pueda cargarlo&#xA;-- Ruta Produccion:  /storage_ib/tarjeta_emisores_rpta/tarjetas&#xA;-- Ruta Certificacion: /app/visa/esb/batch/ftp/tarjetas&#xA;-- ( Certificacion ) UDP_DIRECTORIO_CARGA_TARJETAS = &lt;Por definir>&#xA;-- ( Produccion )   UDP_DIRECTORIO_CARGA_TARJETAS = /app/visa/esb/batch/ftp"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

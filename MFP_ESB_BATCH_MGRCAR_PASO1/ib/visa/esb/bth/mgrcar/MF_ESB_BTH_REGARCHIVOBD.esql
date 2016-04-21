@@ -1,0 +1,110 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+ PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_InsertarTablaTemporal
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.CorrelId 		= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= Environment.CorrelId;
+		SET Environment.idGrupo			= InputBody.MENSAJE.IDGRUPO;
+		--Bucle para obtener todos los registros de un grupo del archivo cargado
+		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
+		CREATE FIELD Environment.Variables.Errores.error;			
+		DECLARE refError REFERENCE TO Environment.Variables.Errores.error;
+		
+		
+		
+		WHILE LASTMOVE(refRegis) DO	 	
+			
+			--HOMOLOGACION DE ESTADOS 
+			
+			DECLARE estadoAlignet INTEGER CAST(refRegis.M_ESTADO AS INTEGER);
+			DECLARE estadoSpr INTEGER 0 ;
+			
+			CASE
+			WHEN estadoAlignet = 1 THEN SET estadoSpr = 0 ; --PENDIENTE
+			WHEN estadoAlignet = 7 THEN SET estadoSpr = 4; --EN PROCESO
+			WHEN estadoAlignet = 6 THEN SET estadoSpr = 5; --AUTORIZADO
+			WHEN estadoAlignet = 2 THEN SET estadoSpr = 3; --DESAFILIADO
+			WHEN estadoAlignet = 4 THEN SET estadoSpr = 6; --DENEGADO
+			WHEN estadoAlignet = 5 THEN SET estadoSpr = 1; --SUSPENDIDO
+			END CASE;
+										
+			--INSERTA TODOS LOS CARGOS A MIGRAR EN LA TABLA TEMPORAL												
+			CALL  insertarCargosTablaTemporal(Environment.idGrupo,
+														TRIM(refRegis.M_ID_COMERCIO),	
+														TRIM(refRegis.M_COD_PRODUCTO),														
+														enmascararNumeroTarjeta(REPLACE(refRegis.M_NUMERO_TARJETA,'''''','')),
+														encriptarNroTarjeta(REPLACE(refRegis.M_NUMERO_TARJETA,'''''','')),
+														refRegis.M_NOMBRE_TITULAR,
+														refRegis.M_TITULAR_APELLIDO_PATERNO,
+														COALESCE(refRegis.M_TITULAR_APELLIDO_MATERNO,''),																						
+														REPLACE(refRegis.M_NRO_IDENTIFICACION,'''''',''),
+														refRegis.M_NOMBRE_USUARIO,
+														refRegis.M_USUARIO_APELLIDO_PATERNO,
+														COALESCE(refRegis.M_USUARIO_APELLIDO_MATERNO,''),														
+														--CAST(REPLACE(refRegis.M_IMPORTE,'''''','') AS DECIMAL),
+														CAST(refRegis.M_IMPORTE AS DECIMAL),
+														--CAST(refRegis.M_IMPORTE AS DECIMAL),
+														obtenerTimestampSinHora(CAST(refRegis.M_FEC_ESTIMADA AS DATE)),
+														obtenerTimestampSinHora(CAST(refRegis.M_FEC_PROCESO AS DATE)),
+														obtenerTimestampSinHora(CAST(refRegis.M_FEC_AFILIACION AS DATE)),
+														obtenerTimestampSinHora(CAST(refRegis.M_FEC_SUSPENSION AS DATE)),
+														obtenerTimestampSinHora(CAST(refRegis.M_FEC_DESAFILIACION AS DATE )),													
+														CAST(refRegis.M_NRO_REINTENTO AS INTEGER),
+														--CAST(REPLACE(refRegis.M_IMPORTE_MAXIMO,'''''','') AS DECIMAL),
+														CAST(refRegis.M_IMPORTE_MAXIMO AS DECIMAL),
+														estadoSpr,
+														refRegis.M_ID_TRANSACCION,
+														refRegis.M_CODIGO_RESULTADO, 
+														refRegis.M_CODIGO_RESPUESTA,
+														refRegis.M_MENSAJE_TERMINAL,
+														CAST(refRegis.NRO_RECORD AS INTEGER),
+														CAST(refRegis.M_ID_AFILIACION_ALIGNET AS INTEGER), --NUEVO REQUERIMIENTO ID_AFILIACION_ALIGNET
+														refRegis.M_NRO_RECIBO); -- Cambio 07/07			
+		MOVE refRegis NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;		
+		
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;		
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		
+		
+		--CAMBIOS :: FIN
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+	SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 1;
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.MGRCAR1.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQRFH2.usr = InputRoot.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROS = InputBody.MENSAJE.TOTALREGISTROS ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = 0 ;
+		SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = InputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO ;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
+	END;
+END MODULE;

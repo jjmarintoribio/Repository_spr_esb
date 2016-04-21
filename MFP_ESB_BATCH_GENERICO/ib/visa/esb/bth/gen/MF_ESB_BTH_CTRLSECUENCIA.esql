@@ -1,0 +1,252 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+PATH ib.visa.esb.bth;
+
+DECLARE UDP_DIRECTORIO_COMPARTIDO EXTERNAL CHARACTER '/app/visa/esb/batch/ftp/';
+DECLARE UDP_CONTROL_SECUENCIA EXTERNAL  CHARACTER 'CTRLSEC';
+
+DECLARE UDP_DIRECTORIO_MGR EXTERNAL CHARACTER '/app/visa/esb/batch/mgr/';
+DECLARE UDP_CONTROL_SECUENCIA_MGR EXTERNAL  CHARACTER 'CTRLSECMGR';
+
+DECLARE UDP_DIRECTORIO_AFI EXTERNAL CHARACTER '/app/visa/esb/batch/mgr/';
+DECLARE UDP_CONTROL_SECUENCIA_AFI EXTERNAL  CHARACTER 'CTRLSECAFI';
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_ActualizarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		    
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_COMPARTIDO; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA;
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getNO();  --cambia a luz verde
+		RETURN TRUE;		
+	END;
+
+	 
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_MgrActualizarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		    
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_MGR; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_MGR;
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getNO();  --cambia a luz verde
+		RETURN TRUE;		
+	END;
+
+	 
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_AfiActualizarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		    
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_AFI; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_AFI;
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getNO();  --cambia a luz verde
+		RETURN TRUE;		
+	END;
+
+	 
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_ValidarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_COMPARTIDO; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA;
+		
+
+		IF (POSITION('01' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=0) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+		IF (POSITION('02' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=1) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+				 
+		RETURN FALSE;	
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_MgrValidaControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_MGR; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_MGR;
+		
+
+		IF (POSITION('01' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=0) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+		IF (POSITION('02' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=1) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+				 
+		RETURN FALSE;	
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_AfiValidaControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_AFI; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_AFI;
+		
+
+		IF (POSITION('01' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=0) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+		IF (POSITION('02' IN BrokerName)<>0) THEN
+			IF (MOD( CAST( EXTRACT(SECOND FROM CURRENT_TIME) AS INTEGER),2 )=1) THEN
+				PROPAGATE TO TERMINAL 1;
+			END IF;
+		END IF;
+				 
+		RETURN FALSE;	
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_AfiEnviarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF (InputBody.MENSAJE.PROCESANDO = getNO()) THEN		
+			
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';	
+			SET OutputRoot.MQMD.CorrelId 		= getMsgIdValor(UDP_CONTROL_SECUENCIA_AFI,TRUE);
+			PROPAGATE TO TERMINAL 1;			
+		END IF;
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_MgrEnviarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF (InputBody.MENSAJE.PROCESANDO = getNO()) THEN		
+			
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';	
+			SET OutputRoot.MQMD.CorrelId 		= getMsgIdValor(UDP_CONTROL_SECUENCIA_MGR,TRUE);
+			PROPAGATE TO TERMINAL 1;			
+		END IF;
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_EnviarControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		IF (InputBody.MENSAJE.PROCESANDO = getNO()) THEN		
+			
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';	
+			SET OutputRoot.MQMD.CorrelId 		= getMsgIdValor(UDP_CONTROL_SECUENCIA,TRUE);
+			PROPAGATE TO TERMINAL 1;			
+		END IF;
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_PrepararMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= InputBody.MENSAJE.Parametros;
+		SET OutputRoot.XMLNSC.MENSAJE				= InputBody.MENSAJE.Cuerpo;
+				
+		PROPAGATE TO TERMINAL 1;
+
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_COMPARTIDO; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA;
+				
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getSI();  --cambia a luz roja
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_AfiPrepararMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= InputBody.MENSAJE.Parametros;
+		SET OutputRoot.XMLNSC.MENSAJE				= InputBody.MENSAJE;
+				
+		PROPAGATE TO TERMINAL 1;
+
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_AFI; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_AFI;
+				
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getSI();  --cambia a luz roja
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CTRLSECUENCIA_MgrPrepararMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= InputBody.MENSAJE.Parametros;
+		SET OutputRoot.XMLNSC.MENSAJE				= InputBody.MENSAJE.Cuerpo;
+				
+		PROPAGATE TO TERMINAL 1;
+
+
+		SET OutputLocalEnvironment.Destination.File.Directory 	= UDP_DIRECTORIO_MGR; 
+		SET OutputLocalEnvironment.Destination.File.Name 		= UDP_CONTROL_SECUENCIA_MGR;
+				
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = 	getSI();  --cambia a luz roja
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+

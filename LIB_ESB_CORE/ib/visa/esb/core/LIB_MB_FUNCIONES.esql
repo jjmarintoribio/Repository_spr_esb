@@ -1,0 +1,714 @@
+/*
+ *
+ * Nombre		: LIB_MB_FUNCIONES.esql
+ * Proposito	: Funciones y procedimientos de ayuda
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+
+BROKER SCHEMA ib.visa.esb.core
+
+	/*
+	 * Funciones que manejan la fecha y hora
+ 	*/
+
+	CREATE FUNCTION obteneFechaHoraActual(IN intTipoFechaHora INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoFechaHora = 1 THEN
+				RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_FECHAHORA_BD);				
+			ELSE
+				RETURN NULL;		 
+		END CASE;	
+	END;
+
+
+	/*
+	 * Funciones que manejan la fecha y hora de la auditoria en BD
+ 	*/
+	CREATE FUNCTION obtenerFechaHoraAuditoria()
+	RETURNS CHARACTER
+	BEGIN
+		RETURN CAST(CURRENT_TIMESTAMP AS CHAR FORMAT C_FORMATO_FECHAHORA_BD);				
+
+	END;
+
+
+	/*
+	 * Obtiene la hora en cadena
+ 	*/
+	CREATE FUNCTION obtenerHoraAuditoria()
+	RETURNS CHARACTER
+	BEGIN
+		RETURN CAST(CURRENT_TIME AS CHAR FORMAT C_FORMATO_HORA_BD);				
+	END;
+
+
+
+	/*
+	 * Obtiene el año y mes YYYYMM
+ 	*/
+	CREATE FUNCTION obtenerAnoMesAuditoria()
+	RETURNS CHARACTER
+	BEGIN
+		RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_ANOMES_BD);				
+	END;
+
+
+	CREATE FUNCTION obtenerHoraActual(IN intTipoHora INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoHora = 1 THEN
+				RETURN CAST(CURRENT_TIME AS CHAR FORMAT C_FORMATO_HORA_1);
+			WHEN intTipoHora = 2 THEN
+				RETURN CAST(CURRENT_TIME AS CHAR FORMAT C_FORMATO_HORA_2);
+			ELSE
+				RETURN NULL;
+		END CASE;		
+		
+		
+	END;
+
+	
+	CREATE FUNCTION obtenerFechaActual(IN intTipoFecha INTEGER)
+	RETURNS CHARACTER
+	BEGIN
+		CASE 
+			WHEN intTipoFecha = 1 THEN
+				RETURN CAST(CURRENT_DATE AS CHAR FORMAT C_FORMATO_FECHA);
+			ELSE
+				RETURN NULL;
+		END CASE;		
+		
+		
+	END;	
+	
+	
+	
+
+
+/*------------------------------------ 
+ *-Tipo			: FUNCTION
+ *-Nombre		: fill
+ *-Descripci�n	: agrega caracteres de relleno a una cadena hasta una longitud determinada y alinea dicha cadena a la izquierda o la derecha.
+ *-Parametros	:
+ 
+ * cadena CHARACTER		:cadena de entrada
+ * longitud INTEGER		:longitud total de retorno
+ * caracter CHARACTER	:cadena de relleno
+ * derecha BOOLEAN		:Alineaci�n del valor � cadena de entrada (FALSE = Izquierda, TRUE = Derecha)
+ * 
+ *-RETURN CHARACTER		:cadena con padding
+ *-Ejemplo:
+ * 			fill('4550697', 10, '0' , TRUE) = '0004550697'
+ *
+  ------------------------------------*/
+
+CREATE FUNCTION fill(cadena CHARACTER, longitud INTEGER, caracter CHARACTER, derecha BOOLEAN) RETURNS CHARACTER
+    BEGIN
+	IF(LENGTH(cadena) > longitud) THEN
+		SET cadena = SUBSTRING(cadena FROM 1 FOR longitud);
+	ELSE
+		IF derecha THEN
+			SET cadena = RIGHT((REPLICATE(caracter, longitud) || cadena),longitud);
+		ELSE
+			SET cadena = LEFT((cadena || REPLICATE(caracter, longitud)),longitud);			
+		END IF;
+	END IF;
+
+	RETURN cadena;
+END;	
+
+
+/*
+ * Devuelve un indicador para saber en que grupo de flujos se presento el error
+*/
+CREATE FUNCTION obtenerFuenteError(IN chrQName CHARACTER) RETURNS CHARACTER
+    BEGIN
+    	
+    DECLARE chrFuente CHARACTER '';
+    
+	IF STARTSWITH(chrQName,'IB.GEN.SALIDA')=TRUE OR STARTSWITH(chrQName,'IB.GEN.REPORTMQ.REQ.') =TRUE THEN
+		
+		SET chrFuente = '3';-- flujos de salida genericos;
+		
+	ELSEIF STARTSWITH(chrQName,'IB.SRV.')=TRUE THEN
+		
+		SET chrFuente = '2';-- flujos especificos;
+	
+	ELSEIF STARTSWITH(chrQName,'IB.GEN.RESPUESTA')=TRUE THEN
+		
+		SET chrFuente = '1';-- la parte de respuesta de los flujos de entrada genericos;
+	
+	ELSE
+	
+		SET chrFuente = '0';-- flujos core
+	
+	END IF;
+	
+		
+	RETURN chrFuente;
+	
+END;	
+	
+	
+/*
+Splits S on Delim into an array in Env (Environment.Split.Array[]) 
+Removes Environment.Split before refilling it
+*/
+CREATE FUNCTION split(IN S CHARACTER, IN Env REFERENCE, IN Delim CHARACTER) 
+BEGIN 
+   DECLARE P INTEGER; 
+   DECLARE Idx INTEGER 1; 
+
+   SET Env.Split = NULL; 
+    
+   REPEAT 
+      SET P = POSITION(Delim IN S); 
+      IF P = 0 THEN 
+         SET Env.Split.Array[Idx] = S;
+      ELSE 
+         SET Env.Split.Array[Idx] = LEFT(S, P - 1); 
+         SET S = SUBSTRING(S FROM P + LENGTH(Delim)); 
+         SET Idx = Idx + 1; 
+      END IF; 
+   UNTIL P = 0 
+   END REPEAT;
+END;	
+	
+
+/*
+ * Devuelve solo una cadena con el error
+*/
+CREATE FUNCTION obtenerMensajeError(IN refExceptionList REFERENCE) RETURNS CHARACTER
+    BEGIN
+	DECLARE chrCodigoError CHARACTER '';
+	DECLARE chrDescripcionError CHARACTER '';
+	DECLARE chrMensajeError CHARACTER '';
+	CALL obtenerDetalleError(refExceptionList,chrCodigoError,chrDescripcionError);
+	SET chrMensajeError = chrCodigoError ||'-'||chrDescripcionError ;
+
+	RETURN chrMensajeError;
+END;	
+	
+	
+/*
+ * Procedimiento que obtiene la el detalle completo de un exceptionList
+*/
+CREATE PROCEDURE obtenerDetalleError(IN InputTree REFERENCE, OUT messageNumber CHARACTER, OUT messageText CHARACTER)
+	BEGIN
+	-- Crea una referencia del "first child" del "ExceptionList"
+	DECLARE ptrException REFERENCE TO InputTree.*[1];
+	DECLARE numInserts INTEGER 0;
+	DECLARE intInsert INTEGER 1;	    
+	-- keep looping while the moves to the child of exception list work
+	WHILE LASTMOVE(ptrException) DO
+		-- store the current values for the error number and text
+		IF ptrException.Number IS NOT NULL THEN
+			SET intInsert = 1;
+			SET messageNumber = CAST(ptrException.Number AS CHARACTER);
+			SET messageText = ptrException.Text;
+			SET numInserts = CARDINALITY(ptrException.Insert[]);	    		
+
+			IF numInserts > 0 THEN	    			
+
+				SET messageText = messageText || '(';	    			
+
+				WHILE intInsert <= numInserts DO
+					SET messageText = messageText || ptrException.Insert[intInsert].Text;	    				
+
+					IF intInsert <> numInserts THEN
+						SET messageText = messageText || ', ';
+					END IF;	    				
+
+					SET intInsert = intInsert + 1;
+				END WHILE;	    			
+
+				SET messageText = messageText || ')';
+			END IF;
+		END IF;			
+		-- now move to the last child which should be the next exceptionlist
+		MOVE ptrException LASTCHILD;
+	END WHILE;
+END;
+	
+/*********************************************************************
+����* Este flujo obtiene el valor de un determinado campo en un mensaje XML no parseado.
+����* IN mensaje: mensaje de entrada
+����* IN patron: nombre de la etiqueta a buscar
+����* INOUT salida: valor del campo comprendido entre las dos etiquetas
+*********************************************************************/	
+	
+CREATE FUNCTION getValor(IN mensaje CHARACTER,IN patron CHARACTER) RETURNS CHARACTER
+BEGIN
+	DECLARE cadenaIni CHARACTER '';
+	DECLARE cadenaFin CHARACTER '';
+	DECLARE posIni INTEGER 0;
+	DECLARE posFin INTEGER 0;
+	DECLARE posValor INTEGER 0;
+	DECLARE salida CHARACTER '';
+	
+	SET cadenaIni = '<' || patron || '>';
+	SET cadenaFin = '</' || patron || '>';
+	SET posIni = POSITION(cadenaIni IN mensaje REPEAT -1);
+	SET posFin = POSITION(cadenaFin IN mensaje);
+	SET posValor = posIni + LENGTH(cadenaIni);
+	
+	
+	IF (posIni > 0 AND posFin > posIni) THEN
+		SET salida = SUBSTRING(mensaje FROM posValor FOR posFin - posValor);
+	END IF;
+	RETURN salida;
+END;	
+
+
+
+
+/*
+ * genera messaid Unico para transacciones
+*/
+CREATE FUNCTION getMsgId() 
+	RETURNS BLOB
+BEGIN
+		RETURN CAST(LEFT(BrokerName || '0000' ,8) AS BLOB CCSID 819) || UUIDASBLOB;
+	
+END;
+
+
+/*
+ * logica de respuesta a la aplicacion consumidora para las respuestas previas
+*/
+CREATE FUNCTION responderAlConsumidor(IN refMQRFH2usrParams REFERENCE) 
+	RETURNS CHARACTER
+BEGIN
+
+	DECLARE chrRes CHARACTER getNO();
+-- Si la aplicacion proveedora es asincrona y el servicio del esb es sincrono
+
+	IF COALESCE(refMQRFH2usrParams.TIPOSRVPRV,getCOD_SINCRONO()) = getCOD_ASINCRONO() THEN
+				
+		IF COALESCE(refMQRFH2usrParams.TIPOSRV,getCOD_SINCRONO()) = getCOD_SINCRONO() THEN
+			
+			SET chrRes  =getSI();
+			
+		END IF;
+		
+	END IF;
+	
+	RETURN chrRes ;
+	
+END;
+
+
+/*
+ * logica de respuesta a la aplicacion consumidora cuando se tiene la respuesta del servicio proveedor o cuando ocurrio un error en el flujo de salida
+*/
+CREATE FUNCTION responderSincronoAlConsumidor(IN refMQRFH2usrParams REFERENCE) 
+	RETURNS CHARACTER
+BEGIN
+
+	DECLARE chrRes CHARACTER getNO();
+-- Si la aplicacion proveedora es sincrono y el servicio del esb es sincrono
+
+	IF COALESCE(refMQRFH2usrParams.TIPOSRVPRV,getCOD_SINCRONO()) = getCOD_SINCRONO() THEN
+				
+		IF COALESCE(refMQRFH2usrParams.TIPOSRV,getCOD_SINCRONO()) = getCOD_SINCRONO() THEN
+			
+			SET chrRes  =getSI();
+			
+		END IF;
+		
+	END IF;
+	
+	RETURN chrRes ;
+	
+END;
+
+
+/*
+ * logica de respuesta a la aplicacion consumidora cuando se tiene la respuesta del servicio proveedor o cuando ocurrio un error en el flujo de salida
+*/
+CREATE FUNCTION renvioResponderConsumidor(IN usrParams REFERENCE) 
+	RETURNS CHARACTER
+BEGIN
+
+	DECLARE chrRes CHARACTER getNO();
+		-- Si se requiere responder al consumidor
+		IF usrParams.RESCON = getSI() THEN
+			SET chrRes  =getSI();
+		END IF;
+	RETURN chrRes ;
+	
+END;
+
+
+
+/*
+ * logica de respuesta a la aplicacion consumidora
+*/
+CREATE FUNCTION prepararCampoAuditTransac(IN chrDato CHARACTER,IN intLon INTEGER) 
+	RETURNS CHARACTER
+BEGIN
+	SET chrDato = COALESCE(chrDato,'');
+	RETURN LEFT(TRIM(chrDato),intLon);	
+END;
+
+/*
+ * Indica la cola de entrada del flujo generico de salida por protocolo
+*/
+CREATE FUNCTION obtenerColaEntradaFlujoSalida(IN refMQRFH2usr REFERENCE) 
+	RETURNS CHARACTER
+BEGIN
+
+	DECLARE chrProtocolo CHARACTER;
+	SET chrProtocolo = refMQRFH2usr.Parametros.Servicio.PROTOCOLO;
+	
+	--Descomentar para usar los NA especificos (PRODUCCION)
+	
+	--IF chrProtocolo = 'NA' THEN
+		--SET chrProtocolo = chrProtocolo || refMQRFH2usr.CodigoServicio;		
+	--END IF;
+
+	RETURN 'IB.GEN.SALIDA'  || chrProtocolo || '.REQ.01';
+	
+END;
+
+
+/*
+ * Indica la cola de entrada del flujo request  responde de un servicio
+*/
+CREATE FUNCTION obtenerColaFlujoRequest(IN chrCodServicio CHARACTER) 
+	RETURNS CHARACTER
+BEGIN
+	DECLARE chrNombreCola CHARACTER;
+	SET chrNombreCola = 'IB.SRV.'  || chrCodServicio || '.REQ.01';
+	RETURN chrNombreCola ;
+END;
+
+/*
+ * Indica la cola de entrada del flujo responde de un servicio
+*/
+CREATE FUNCTION obtenerColaFlujoResponse(IN chrCodServicio CHARACTER) 
+	RETURNS CHARACTER
+BEGIN
+	DECLARE chrNombreCola CHARACTER;
+	SET chrNombreCola = 'IB.SRV.'  || chrCodServicio || '.RES.01';
+	RETURN chrNombreCola ;
+END;
+
+
+/*
+ * Indica la cola temporal para el registro de los mensajes a reintentar por servicio
+*/
+CREATE FUNCTION obtenerColaReintentoServicio(IN chrCodServicio CHARACTER) 
+	RETURNS CHARACTER
+BEGIN
+	DECLARE chrNombreCola CHARACTER;
+	SET chrNombreCola = 'IB.SRV.RETRY'  || chrCodServicio || '.REQ.01';
+	RETURN chrNombreCola ;
+END;
+
+
+/*
+ * Validacion de los parametros de los servicios por protocolo de salida
+*/
+CREATE FUNCTION validarParametrosPorProtocolo(IN refParametros REFERENCE, IN chrCodServicio CHARACTER, IN chrTipoEntrada CHARACTER) 
+	RETURNS CHARACTER
+BEGIN
+	DECLARE chrMensajeVal CHARACTER '';
+	
+	CASE chrCodServicio
+		WHEN 'NA' THEN
+		    IF FIELDTYPE(refParametros.METODO) IS NULL THEN
+		    	SET chrMensajeVal = 'METODO';
+		    END IF;
+	  	WHEN 'MQ' THEN
+		    IF FIELDTYPE(refParametros.QDESSRV) IS NULL THEN
+		    	SET chrMensajeVal = 'QDESSRV';							    	
+		    END IF;
+		    
+		    IF chrTipoEntrada = 'HTTP' THEN
+		    	IF FIELDTYPE(refParametros.METODO) IS NULL THEN
+		    		SET chrMensajeVal = chrMensajeVal || ', METODO';
+		    	END IF;
+		    END IF;
+		
+	  	WHEN 'HTTP' THEN
+		    IF FIELDTYPE(refParametros.URLDEST) IS NULL THEN
+		    	SET chrMensajeVal = 'URLDEST ';
+		    END IF;
+		    IF FIELDTYPE(refParametros.METODO) IS NULL THEN
+		    	SET chrMensajeVal = chrMensajeVal || ', METODO';
+		    END IF;	  		
+	    WHEN 'TCP' THEN	
+		    IF FIELDTYPE(refParametros.HOSTDESSRV) IS NULL THEN
+		    	SET chrMensajeVal = 'HOSTDESSRV ';
+		    END IF;
+		    IF FIELDTYPE(refParametros.PORTDESSRV) IS NULL THEN
+		    	SET chrMensajeVal = chrMensajeVal || 'PORTDESSRV';
+		    END IF;		    
+	END CASE;
+	
+	SET chrMensajeVal = 'FALTA INDICAR EN BD LOS PARAMETOS: ' || chrMensajeVal;
+
+END;
+
+
+/*
+ * Indica la cola de entrada del flujo de respuesta por protocolo
+*/
+CREATE FUNCTION obtenerColaEntradaProtocoloRespuesta(IN refCabecera REFERENCE) 
+	RETURNS CHARACTER
+BEGIN
+	
+	RETURN 'IB.GEN.RESPUESTA'  || refCabecera.Parametros.Protocolo.TipoProtocolo || '.REQ.01';
+	
+END;
+
+
+/*
+ * Valida el valor de los campos de auditoria
+*/
+CREATE FUNCTION validarCampoAuditoria (IN refCampo REFERENCE)
+RETURNS CHARACTER
+BEGIN
+	DECLARE chrCodServicio CHARACTER refCampo;
+	IF FIELDVALUE(refCampo) IS NULL OR refCampo = '' THEN
+		SET chrCodServicio = '*';
+	END IF;
+	RETURN chrCodServicio; 
+END;
+
+
+
+CREATE FUNCTION setStringToEntero(IN chrValor2 CHARACTER)
+RETURNS CHARACTER
+BEGIN
+
+	DECLARE chrResp CHARACTER;		  
+	IF (chrValor2 IS NULL OR TRIM(chrValor2) = '') THEN 
+		 RETURN '0'; 
+		 
+	ELSE
+	
+		SET chrValor2 = replace(chrValor2, ' ');
+		SET chrResp = cast(cast(trim(chrValor2) as integer) as character);
+			--SET chrResp = chrValor2 ;
+	 
+			RETURN chrResp;
+			
+ 	END IF;
+	
+END;
+  
+	CREATE FUNCTION setCobolToEntero(IN chrValor CHARACTER,IN refParams REFERENCE)
+	RETURNS CHARACTER
+	BEGIN
+		  
+		IF COALESCE(refParams.CADEQUI1,'') = '' THEN  RETURN chrValor; END IF;
+			
+		DECLARE chrDigCobol,chrDigEntero,chrAux CHARACTER;
+		DECLARE intPos INTEGER;
+				
+		SET chrDigCobol = RIGHT(chrValor,1);
+		
+		SET intPos = POSITION(chrDigCobol IN refParams.CADEQUI1);
+		
+		IF intPos >0 THEN
+			SET chrAux = LEFT(chrValor,LENGTH(chrValor)-1);
+			SET chrDigEntero = SUBSTRING(refParams.CADEQUI2 FROM intPos FOR 1);
+			SET chrAux = chrAux || chrDigEntero;
+		ELSE
+			SET chrAux = chrValor;
+		END IF;
+ 
+		RETURN chrAux;
+ 		
+	END;
+
+	/*
+	 * -refParams.CADEQUI1: cadeba que contiene el conjunto de cadenas que se buscaran su equivalente segun la posicion en la variable  CADEQUI2
+	 * -refParams.CADEQUI2: cadeba que contiene el conjunto de cadenas que reemplazaran a los cadenas de CADEQUI1	 
+ 	*/
+	CREATE FUNCTION getEqvChr(IN chrSisOri CHARACTER, IN refParams REFERENCE, IN blbMsgId BLOB)
+	RETURNS BLOB
+	BEGIN
+		DECLARE chrMsgId CHARACTER '';
+		DECLARE chrPos CHARACTER'';
+		
+		SET chrPos= SUBSTRING(refParams.CADEQUI1 BEFORE chrSisOri FOR 2);
+		IF chrPos <> '' THEN
+			SET chrMsgId = SUBSTRING(refParams.CADEQUI2 AFTER chrPos);
+			SET chrMsgId = SUBSTRING(chrMsgId BEFORE '|');
+			RETURN CAST(chrMsgId AS BLOB CCSID 819);
+		ELSE
+			RETURN blbMsgId;
+		END IF;
+		
+			
+		
+		END;
+		
+	
+
+	
+/*
+*Valida si una cadena es numero
+*/	 
+CREATE FUNCTION isNumeric(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+RETURNS BOOLEAN 
+BEGIN
+	
+	IF (bolVacio IS TRUE) THEN
+		IF (LENGTH(TRIM(chrNumber))=0) THEN
+			RETURN FALSE;
+		END IF;
+	END IF;
+	
+	IF LENGTH(TRANSLATE(TRIM(chrNumber), '0123456789', '')) <> 0 THEN 
+		RETURN FALSE ;
+	ELSE 
+		RETURN TRUE ;
+	END IF;	
+		
+END;
+	
+/*
+*Valida si una cadena es decimal
+*/	 
+CREATE FUNCTION isDecimal(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+RETURNS BOOLEAN 
+BEGIN
+	
+	IF (bolVacio IS TRUE) THEN
+		IF (LENGTH(TRIM(chrNumber))=0) THEN
+			RETURN FALSE;
+		END IF;
+	END IF;
+	
+	IF LENGTH(TRANSLATE(TRIM(chrNumber), '0123456789,.', '')) <> 0 THEN 
+		RETURN FALSE ;
+	ELSE 
+		RETURN TRUE ;
+	END IF;	
+		
+END;
+		
+	
+/*
+*Valida si una cadena es fecha
+*/
+CREATE FUNCTION isDate(IN chrValor CHARACTER)
+RETURNS BOOLEAN 
+BEGIN 
+		
+	IF (isNumeric(SUBSTRING(chrValor FROM 1 FOR 2), TRUE) IS FALSE) THEN
+		RETURN FALSE;
+	END IF;
+	IF (SUBSTRING(chrValor FROM 3 FOR 1)<>'/') THEN
+		RETURN FALSE;
+	END IF;
+	IF (isNumeric(SUBSTRING(chrValor FROM 4 FOR 2), TRUE) IS FALSE) THEN
+		RETURN FALSE;
+	END IF;
+	IF (SUBSTRING(chrValor FROM 6 FOR 1)<>'/') THEN
+		RETURN FALSE;
+	END IF;
+	IF (isNumeric(SUBSTRING(chrValor FROM 7 FOR 4), TRUE) IS  FALSE) THEN
+		RETURN FALSE;
+	END IF;
+	RETURN TRUE;
+		
+END;
+
+	
+/*
+*Valida el valor de un campo definido como numerico
+*/
+CREATE FUNCTION validarCampoNumerico(IN chrValor CHARACTER, IN chrMensajeError CHARACTER,IN bolObligatorio BOOLEAN)
+RETURNS CHARACTER
+BEGIN
+	
+	DECLARE bolerror BOOLEAN;
+	SET bolerror = FALSE;
+	
+	--Si es obligatorio y esta vacio
+	IF ((bolObligatorio IS TRUE) AND TRIM(COALESCE(chrValor,'')) = '') THEN
+		SET bolerror = TRUE; 
+	END IF;
+	
+	IF 	(bolerror IS FALSE AND isNumeric(chrValor, TRUE)IS FALSE) THEN
+		SET bolerror = TRUE; 
+	END IF;
+	
+	IF (bolerror IS TRUE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1013() VALUES(chrMensajeError);
+	END IF;
+	
+	RETURN TRIM(chrValor);
+		
+END;
+
+/*
+*Valida el valor de un campo definido como decimal
+*/
+CREATE FUNCTION validarCampoDecimal(IN chrValor CHARACTER, IN chrMensajeError CHARACTER,IN bolObligatorio BOOLEAN)
+RETURNS CHARACTER
+BEGIN
+		 
+	DECLARE bolerror BOOLEAN;
+	SET bolerror = FALSE;
+
+	--Si es obligatorio y esta vacio
+	IF ((bolObligatorio IS TRUE) AND TRIM(COALESCE(chrValor,'')) = '') THEN
+		SET bolerror = TRUE; 
+	END IF;
+
+	IF 	(bolerror IS FALSE AND isDecimal(chrValor, TRUE)IS FALSE) THEN
+		SET bolerror = TRUE; 
+	END IF;
+		 
+	IF (bolerror IS TRUE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1013() VALUES(chrMensajeError);
+	END IF;
+	
+	RETURN TRIM(chrValor);
+		
+END;
+
+
+/*
+*Valida el valor de un campo definido como fecha dd/mm/yyyy
+*/	 
+CREATE FUNCTION validarCampoFecha(IN chrValor CHARACTER, IN chrMensajeError CHARACTER)
+RETURNS CHARACTER
+BEGIN
+	 
+	IF (LENGTH(chrValor) =  10 AND isDate(chrValor)IS TRUE) THEN
+		RETURN chrValor; 
+	ELSE
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1013() VALUES(chrMensajeError);
+	END IF;	
+		
+END;
+	
+/*
+*Valida si un campo esta vacio
+*/	 
+CREATE FUNCTION validarCampo(IN chrValor CHARACTER, IN chrMensajeError CHARACTER)
+RETURNS CHARACTER
+BEGIN
+	 
+	IF 	(chrValor IS NOT NULL OR TRIM(chrValor)<>'') THEN
+		RETURN chrValor; 
+	ELSE
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1013() VALUES(chrMensajeError);
+	END IF;	
+		
+END;	

@@ -1,0 +1,169 @@
+BROKER SCHEMA ib.visa.esb.bth.renovacion
+PATH ib.visa.esb.bth;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVA_AUTO_DB_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.CorrelId 		= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= Environment.CorrelId;
+
+		SET Environment.cantidadRegistros = InputBody.MENSAJE.TOTALREGISTROS;
+		-- ((1.0)) Bucle para obtener todos los registros un grupo del archivo cargado
+		DECLARE intInd INTEGER 0;
+		DECLARE intCantReg INTEGER CAST(InputRoot.MQRFH2.usr.Parametros.Servicio.CANREGTRANS1 AS INTEGER);
+
+		WHILE intInd < intCantReg DO
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+			SET intInd = intInd + 1;	
+		END WHILE;
+
+		-- ((2.0)) Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr 					= Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;		
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVA_AUTO_DB_RenovarAfiliacion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refDataRenovacion REFERENCE TO InputRoot.XMLNSC.MENSAJE.AfiliacionRenovacion;
+		
+		IF FIELDTYPE(refDataRenovacion) IS NOT NULL THEN
+			
+			DECLARE idAfiliacion INTEGER CAST(refDataRenovacion.ID_AFILIACION AS INTEGER);
+			DECLARE cantMesesVigencia INTEGER;
+			SET cantMesesVigencia = CAST(refDataRenovacion.CTD_MESES_VIGENCIA AS INTEGER) + CAST(refDataRenovacion.NRO_VIGENCIA_CADUCIDAD_AFILIACION AS INTEGER);
+			DECLARE fecPago DATE CAST(TRIM(SUBSTRING(refDataRenovacion.FEC_PAGO BEFORE 'T')) AS DATE FORMAT getFORMATO_FECHA_BD());
+			DECLARE fecCaducidad DATE obtenerFechaMasMeses(fecPago,cantMesesVigencia);--TODO XK porque está comentado?
+			DECLARE tipoPeriodicidad INTEGER CAST(refDataRenovacion.TIPO_PERIODICIDAD AS INTEGER);
+			DECLARE mtoCargo DECIMAL CAST(refDataRenovacion.MTO_CARGO AS DECIMAL FORMAT '##0.0');
+			DECLARE idProducto INTEGER CAST(refDataRenovacion.Producto.ID_PRODUCTO AS INTEGER);
+			
+			--Cambio fec_proceso 2802 primer cargo 12/11/2015
+			DECLARE anioCaducidad CHARACTER CAST(EXTRACT(YEAR FROM fecCaducidad) AS CHARACTER);
+			DECLARE mesCaducidad INTEGER -1;
+			SET mesCaducidad = EXTRACT(MONTH FROM fecCaducidad);
+			
+			DECLARE anioPago CHARACTER CAST(EXTRACT(YEAR FROM fecPago) AS CHARACTER);
+			DECLARE mesPago INTEGER -1;
+			SET mesPago = CAST(EXTRACT(MONTH FROM fecPago) AS INTERVAL MONTH);
+			
+			IF EXTRACT(MONTH FROM fecPago) = 2 AND (EXTRACT(DAY FROM fecPago)=28 OR EXTRACT(DAY FROM fecPago)=29) 
+				AND ((EXTRACT(MONTH FROM fecCaducidad) <> 2) AND (EXTRACT(DAY FROM fecCaducidad)=28 OR EXTRACT(DAY FROM fecCaducidad)=29)) THEN
+				IF mesCaducidad <10 THEN
+					SET fecCaducidad = CAST(anioCaducidad || '-' || '0' ||CAST(mesCaducidad AS CHARACTER)||'-'||'30' AS DATE);
+				ELSE
+					SET fecCaducidad = CAST(anioCaducidad || '-' || CAST(mesCaducidad AS CHARACTER)||'-'||'30' AS DATE);
+				END IF;
+			END IF;
+			--------------------------
+			CALL actualizarRenovarAfiliacion(idAfiliacion,
+											 cantMesesVigencia,
+											 CURRENT_TIMESTAMP,
+											 obtenerTimestampSinHora(fecCaducidad),
+											 CURRENT_TIMESTAMP,
+											 getID_ESB_VISA(),
+											 BrokerName);
+											 
+			
+			DECLARE fecUltimoCargo DATE; 
+			CALL obtenerFechaUltimoCargo(idAfiliacion,fecUltimoCargo);
+			--Cambio fec_proceso 2802 primer cargo 12/11/2015
+				DECLARE inMes INTEGER EXTRACT(MONTH FROM fecPago); 
+				DECLARE inDia INTEGER -1;
+				IF  inMes = 2 AND (EXTRACT(DAY FROM fecPago) = 28 OR EXTRACT(DAY FROM fecPago)=29) THEN
+					SET inDia = 30;
+				ELSE
+					SET inDia = EXTRACT(DAY FROM fecPago);
+				END IF;
+			
+			--DECLARE fecCargo DATE obtenerSiguienteFechaCargo(fecUltimoCargo,tipoPeriodicidad,EXTRACT(DAY FROM fecPago));
+			DECLARE fecCargo DATE obtenerSiguienteFechaCargo(fecUltimoCargo,tipoPeriodicidad,inDia);
+			-----------------------------------
+						
+			DECLARE contador  INTEGER 1;
+			DECLARE outIdLote INTEGER;
+			WHILE fecCargo < fecCaducidad  DO
+				
+--				CALL obtenerLoteIngresarActualizarSiExiste2(idProducto,
+--														   obtenerTimestampSinHora(fecCargo),
+--														   1,
+--														   mtoCargo,
+--														   0,-- ESTADO LOTE (PENDIENTE)
+--														   CURRENT_TIMESTAMP,
+--														   getID_ESB_VISA(),
+--														   BrokerName,
+--														   outIdLote);
+
+			--01032016 
+			  CALL obtenerLoteIngresarActualizarSiExiste(idProducto, 
+		                                                 obtenerTimestampSinHora(fecCargo),
+		                                                 1,-- NUM CARGOS
+		                                                 mtoCargo,
+		                                                 0,--ESTADO LOTE (PENDIENTE)
+		                                                 CURRENT_TIMESTAMP,
+		                                                 getID_ESB_VISA(),
+		                                                 'LOCAL',
+		                                                 null,
+                                                         outIdLote);
+                                                         
+				DECLARE outIdCargo INTEGER;										   
+				CALL insertarCargo(idAfiliacion,
+								   outIdLote,
+								   obtenerTimestampSinHora(fecCargo),
+								   mtoCargo,
+								   0,
+								   0,-- ESTADO CARGO (PENDIENTE),
+								   CURRENT_TIMESTAMP,
+								   getID_ESB_VISA(),
+								   'LOCAL',
+								   outIdCargo);
+								   														   
+				--SET fecCargo = obtenerSiguienteFechaCargo(fecCargo,tipoPeriodicidad,EXTRACT(DAY FROM fecCargo));
+				SET fecCargo = obtenerSiguienteFechaCargo(fecCargo,tipoPeriodicidad,inDia);--Cambio fec_proceso 2802 primer cargo 12/11/2015
+				--SET Environment.renovacion.FEC_CARGO[contador] = fecCargo;--IMPRIMIR
+																		   
+				SET contador = contador +1;
+			END WHILE;
+		END IF;
+
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVA_AUTO_DB_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 1;
+		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.RENOVAUTO.CTRLREGISTRO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;		
+		SET OutputRoot.MQMD.Format 	  = 'MQHRF2  ';
+		SET OutputRoot.MQMD.CorrelId  = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+		SET OutputRoot.MQRFH2.usr 	  = InputRoot.MQRFH2.usr;
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

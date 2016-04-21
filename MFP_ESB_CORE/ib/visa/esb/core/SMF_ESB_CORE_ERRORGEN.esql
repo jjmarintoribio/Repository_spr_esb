@@ -1,0 +1,35 @@
+/*
+ * 
+ * Nombre		: SMF_ESB_CORE_ERRORGEN.esql
+ * Proposito	: Sub Flujo de control de errores genericos del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.core
+PATH ib.visa.esb.core;
+
+CREATE COMPUTE MODULE SMF_ESB_CORE_ERRORGEN_ManejarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		
+		SET OutputRoot.MQMD.MsgId = InputRoot.MQMD.CorrelId;
+		
+		-- se crea en el mqrfh2 una tag con la descripcion del error
+		DECLARE chrMensajeError CHARACTER '';
+		SET chrMensajeError = obtenerMensajeError(InputExceptionList);
+		
+		CREATE FIELD OutputRoot.MQRFH2.usr.MensajeError;
+		SET OutputRoot.MQRFH2.usr.ManejoError.controlReenvio 	= Environment.ControlReenvio;
+		SET OutputRoot.MQRFH2.usr.ManejoError.fuenteError 		= obtenerFuenteError(InputRoot.MQMD.SourceQueue);
+		SET OutputRoot.MQRFH2.usr.ManejoError.descripcionError 	= chrMensajeError;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;

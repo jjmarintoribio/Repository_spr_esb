@@ -1,0 +1,715 @@
+LogicalFormat2
+==============
+
+Identification (1000)
+--------------
+
+100001 : Message Set Identifier
+100002 : Message Set Name
+100003 : Message Set Level
+100004 : Model Version (Major)
+100005 : Model Version (Minor)
+100006 : Timestamp
+100007 : Dictionary Type
+100008 : Format Level
+100009 : Compatibility Level
+100010 : Dependency Table
+100022 : Message Set Alias
+
+  100001        100002                100003 100004 100005 100006 100007 100008 100009 100010        100022 
+0 KNVNK94002001 MS_ESB_BATCH_GENERICO 1      2      0             1      610    4      KNVNK94002001        
+
+MessageSet (1)
+----------
+
+105 : Default Wire Format Identifier
+106 : Message Type Prefix
+107 : Use Namespaces
+
+  105 106 107 
+0         1   
+
+Tag (2)
+---
+
+201 : Tag Identifier
+202 : Tag Text Identifier
+203 : Type Identifier
+204 : Class
+205 : Min Length
+206 : Max Length
+207 : Nullable
+208 : Value Set Index
+209 : Default Value Index
+211 : Type Index
+212 : Namespace Index
+213 : Block
+214 : isAttribute
+215 : Interpret Value As
+
+   201 202                   203 204 205 206 207 208 209 211 212 213 214 215 
+0  50  MSJ_LANZADOR          51  M   0   -1  0   -1  -1  46  1   0   0   0   
+1  53  53^MENSAJE            54  S   0   -1  0   -1  -1  47  0   0   0   0   
+2  56  56^IDPROCESO          43  F   0   -1  0   -1  1   40  0   0   0   0   
+3  58  58^FILLER             43  F   0   -1  0   -1  0   40  0   0   0   0   
+4  59  MSJ_LANZADOR          51  S   0   -1  0   -1  -1  46  1   0   0   0   
+5  60  MSJ_LOGPROCESO        61  M   0   -1  0   -1  -1  48  1   0   0   0   
+6  63  63^MENSAJE            64  S   0   -1  0   -1  -1  49  0   0   0   0   
+7  66  66^IDPROCESO          43  F   0   -1  0   -1  -1  40  0   0   0   0   
+8  68  68^IDINSTANCIAPROCESO 43  F   0   -1  0   -1  -1  40  0   0   0   0   
+9  70  70^FECMENSAJE         43  F   0   -1  0   -1  -1  40  0   0   0   0   
+10 72  72^TIPOLOG            43  F   0   -1  0   -1  -1  40  0   0   0   0   
+11 74  74^NOMCOMPONENTE      43  F   0   -1  0   -1  -1  40  0   0   0   0   
+12 76  76^DESCMENSAJE        43  F   0   -1  0   -1  -1  40  0   0   0   0   
+13 77  MSJ_LOGPROCESO        61  S   0   -1  0   -1  -1  48  1   0   0   0   
+
+Type Member (4)
+-----------
+
+401 : Parent Type Identifier
+402 : Child Tag Identifier
+403 : Child Type Identifier
+404 : Child Class
+405 : Child Physical Name
+406 : Sequence Number
+407 : Min Occurs
+409 : Child Repeat Indicator
+410 : Member Identifier
+411 : Max Occurs
+412 : Child Tag Index
+413 : Child Type Index
+
+  401 402 403 404 405 406 407 409 410 411 412 413 
+0 51  53  54  S       1   1   0   52  1   1   47  
+1 54  56  43  F       1   1   0   55  1   2   40  
+2 54  58  43  F       2   0   0   57  1   3   40  
+3 61  63  64  S       1   1   0   62  1   6   49  
+4 64  66  43  F       1   1   0   65  1   7   40  
+5 64  68  43  F       2   1   0   67  1   8   40  
+6 64  70  43  F       3   1   0   69  1   9   40  
+7 64  72  43  F       4   1   0   71  1   10  40  
+8 64  74  43  F       5   1   0   73  1   11  40  
+9 64  76  43  F       6   1   0   75  1   12  40  
+
+Member Id to Type Member index (20)
+------------------------------
+
+Row count: 10
+
+2001 : Member Identifier
+2002 : Type Member Index
+
+  2001 2002 
+0 52   0    
+1 55   1    
+2 57   2    
+3 62   3    
+4 65   4    
+5 67   5    
+6 69   6    
+7 71   7    
+8 73   8    
+9 75   9    
+
+Type (21)
+----
+
+Row count: 50
+
+2101 : Type Identifier
+2102 : Type Text Identifier
+2103 : Type Composition
+2104 : Type Content
+2105 : Base Type Identifier
+2106 : Logical Type
+2107 : Type Member Index
+2108 : Namespace Index
+2109 : Parent Type Index
+2110 : Block
+2111 : Abstract
+2112 : Derivation Style
+2113 : Value Set Index
+2114 : Item Type Index
+2115 : Type Class
+
+   2101 2102                  2103 2104 2105 2106 2107 2108 2109 2110 2111 2112 2113 2114 2115 
+0  1    anyType               6    3    0    0    -1   2    -1   3    0    1    -1   -1   4    
+1  2    gDay                  0    0    0    15   -1   2    2    0    0    4    0    -1   1    
+2  3    anySimpleType         0    0    0    2    -1   2    -1   0    0    4    -1   -1   1    
+3  4    NMTOKENS              0    0    0    0    -1   2    -1   0    0    5    2    4    1    
+4  5    NMTOKEN               0    0    0    2    -1   2    16   0    0    4    16   -1   1    
+5  7    NCName                0    0    0    2    -1   2    6    0    0    4    4    -1   1    
+6  8    Name                  0    0    0    2    -1   2    16   0    0    4    71   -1   1    
+7  9    anyURI                0    0    0    2    -1   2    2    0    0    4    -1   -1   1    
+8  10   gYearMonth            0    0    0    15   -1   2    2    0    0    4    7    -1   1    
+9  11   NOTATION              0    0    0    2    -1   2    2    0    0    4    -1   -1   1    
+10 12   dateTime              0    0    0    15   -1   2    2    0    0    4    -1   -1   1    
+11 13   QName                 0    0    0    2    -1   2    2    0    0    4    -1   -1   1    
+12 14   nonPositiveInteger    0    0    0    16   -1   2    13   0    0    4    9    -1   1    
+13 15   integer               0    0    0    16   -1   2    36   0    0    4    56   -1   1    
+14 16   unsignedShort         0    0    0    4    -1   2    15   0    0    4    12   -1   1    
+15 17   unsignedInt           0    0    0    4    -1   2    37   0    0    4    62   -1   1    
+16 18   token                 0    0    0    2    -1   2    27   0    0    4    -1   -1   1    
+17 19   long                  0    0    0    4    -1   2    13   0    0    4    18   -1   1    
+18 20   date                  0    0    0    15   -1   2    2    0    0    4    22   -1   1    
+19 21   float                 0    0    0    6    -1   2    2    0    0    4    -1   -1   1    
+20 22   nonNegativeInteger    0    0    0    16   -1   2    13   0    0    4    24   -1   1    
+21 23   short                 0    0    0    4    -1   2    22   0    0    4    27   -1   1    
+22 24   int                   0    0    0    4    -1   2    17   0    0    4    58   -1   1    
+23 25   time                  0    0    0    15   -1   2    2    0    0    4    31   -1   1    
+24 26   base64Binary          0    0    0    10   -1   2    2    0    0    4    -1   -1   1    
+25 27   gYear                 0    0    0    15   -1   2    2    0    0    4    33   -1   1    
+26 28   gMonthDay             0    0    0    15   -1   2    2    0    0    4    35   -1   1    
+27 29   normalizedString      0    0    0    2    -1   2    40   0    0    4    -1   -1   1    
+28 30   byte                  0    0    0    4    -1   2    21   0    0    4    37   -1   1    
+29 31   hexBinary             0    0    0    10   -1   2    2    0    0    4    -1   -1   1    
+30 32   ID                    0    0    0    2    -1   2    5    0    0    4    41   -1   1    
+31 33   boolean               0    0    0    12   -1   2    2    0    0    4    -1   -1   1    
+32 34   gMonth                0    0    0    15   -1   2    2    0    0    4    44   -1   1    
+33 35   ENTITY                0    0    0    2    -1   2    5    0    0    4    46   -1   1    
+34 36   negativeInteger       0    0    0    16   -1   2    12   0    0    4    49   -1   1    
+35 37   unsignedByte          0    0    0    4    -1   2    14   0    0    4    52   -1   1    
+36 38   decimal               0    0    0    16   -1   2    2    0    0    4    -1   -1   1    
+37 39   unsignedLong          0    0    0    16   -1   2    20   0    0    4    78   -1   1    
+38 40   IDREFS                0    0    0    0    -1   2    -1   0    0    5    66   39   1    
+39 41   IDREF                 0    0    0    2    -1   2    5    0    0    4    75   -1   1    
+40 43   string                0    0    0    2    -1   2    2    0    0    4    -1   -1   1    
+41 44   double                0    0    0    6    -1   2    2    0    0    4    -1   -1   1    
+42 45   positiveInteger       0    0    0    16   -1   2    20   0    0    4    68   -1   1    
+43 46   ENTITIES              0    0    0    0    -1   2    -1   0    0    5    73   33   1    
+44 48   duration              0    0    0    14   -1   2    2    0    0    4    -1   -1   1    
+45 49   language              0    0    0    2    -1   2    16   0    0    4    82   -1   1    
+46 51   T_MSJ_LANZADOR        6    1    0    0    0    1    0    0    0    1    -1   -1   4    
+47 54   T_MSJ_LANZADOR_CUERPO 6    1    0    0    1    1    0    0    0    1    -1   -1   4    
+48 61   T_LOGPROCESO          6    1    0    0    3    1    0    0    0    1    -1   -1   4    
+49 64   T_LOGPROCESO_CUERPO   6    1    0    0    4    1    0    0    0    1    -1   -1   4    
+
+Value Set Table (24)
+---------------
+
+2000 : Row Count
+2401 : Value Index
+2402 : Role
+
+   2000 2401 2402 
+0  84   13   9    
+1       -1   0    
+2       11   3    
+3       -1   0    
+4       2    10   
+5       5    10   
+6       -1   0    
+7       18   9    
+8       -1   0    
+9       10   8    
+10      27   2    
+11      -1   0    
+12      10   8    
+13      22   2    
+14      10   1    
+15      -1   0    
+16      4    10   
+17      -1   0    
+18      10   8    
+19      25   2    
+20      6    1    
+21      -1   0    
+22      19   9    
+23      -1   0    
+24      10   8    
+25      27   1    
+26      -1   0    
+27      10   8    
+28      21   2    
+29      8    1    
+30      -1   0    
+31      12   9    
+32      -1   0    
+33      17   9    
+34      -1   0    
+35      15   9    
+36      -1   0    
+37      10   8    
+38      16   2    
+39      9    1    
+40      -1   0    
+41      2    10   
+42      5    10   
+43      -1   0    
+44      14   9    
+45      -1   0    
+46      2    10   
+47      5    10   
+48      -1   0    
+49      10   8    
+50      26   2    
+51      -1   0    
+52      10   8    
+53      20   2    
+54      10   1    
+55      -1   0    
+56      10   8    
+57      -1   0    
+58      10   8    
+59      23   2    
+60      7    1    
+61      -1   0    
+62      10   8    
+63      24   2    
+64      10   1    
+65      -1   0    
+66      11   3    
+67      -1   0    
+68      10   8    
+69      28   1    
+70      -1   0    
+71      5    10   
+72      -1   0    
+73      11   3    
+74      -1   0    
+75      2    10   
+76      5    10   
+77      -1   0    
+78      10   8    
+79      29   2    
+80      27   1    
+81      -1   0    
+82      3    10   
+83      -1   0    
+
+Values (25)
+------
+
+2000 : Row Count
+2501 : String Value
+2502 : Integer Value
+2507 : Decimal Value
+
+   2000 2501                              2502                 2507                 
+0  30                                     -9223372036854775808 -1                   
+1                                         -2147483648          0                    
+2       [\i-[:]][\c-[:]]*                 -32768               1                    
+3       [a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})* -128                 18446744073709551615 
+4       \c+                               0                                         
+5       \i\c*                             1                                         
+6                                         31                                        
+7                                         32                                        
+8                                         64                                        
+9                                         96                                        
+10                                        127                                       
+11                                        128                                       
+12                                        192                                       
+13                                        224                                       
+14                                        255                                       
+15                                        32767                                     
+16                                        65535                                     
+17                                        2147483647                                
+18                                        4294967295                                
+19                                        9223372036854775807                       
+
+Namespace (26)
+---------
+
+2000 : Row Count
+2601 : Namespace URI
+
+  2000 2601                             
+0 3                                     
+1      gen.bth.esb.visa.ib              
+2      http://www.w3.org/2001/XMLSchema 
+
+Message (27)
+-------
+
+Row count: 2
+
+2701 : Tag Identifier
+2702 : Message Alias
+
+  2701 2702 
+0 50        
+1 60        
+
+XMLWireFormat (XML1)
+=============
+
+Identification (1000)
+--------------
+
+100001 : Message Set Identifier
+100002 : Message Set Name
+100003 : Message Set Level
+100004 : Model Version (Major)
+100005 : Model Version (Minor)
+100006 : Timestamp
+100007 : Dictionary Type
+100008 : Format Level
+100009 : Compatibility Level
+100010 : Dependency Table
+100022 : Message Set Alias
+100020 : Format Name
+100021 : Format Identifier
+
+  100001        100002                100003 100004 100005 100006 100007 100008 100009 100010        100022 100020 100021 
+0 KNVNK94002001 MS_ESB_BATCH_GENERICO 1      2      0             2      610    4      KNVNK94002001        XML    XML1   
+
+MessageSet (1)
+----------
+
+105 : Default Wire Format Identifier
+106 : Message Type Prefix
+107 : Use Namespaces
+NP_0 : Suppress XML Declaration
+NP_1 : Standalone Document
+NP_2 : Suppress DOCTYPE
+NP_3 : DOCTYPE System ID
+NP_4 : DOCTYPE Public ID
+NP_5 : DOCTYPE Text
+NP_6 : Root Tag Name
+NP_7 : Enable Versioning Support
+NP_8 : Boolean True Value
+NP_9 : Boolean False Value
+NP_10 : Encoding Null Num
+NP_11 : Encoding Null Num Val
+NP_12 : Encoding Null Non-num
+NP_13 : Encoding Null Non-num Val
+NP_14 : Suppress Timestamp Comment
+NP_15 : Default DateTime Format
+NP_16 : Default Time Zone ID
+NP_17 : Century Window
+NP_18 : First Day of Week
+NP_19 : First Week of Year
+NP_20 : Allow Lenient Datetimes
+NP_21 : Output xsi:type policy
+NP_22 : XML Version Key
+NP_23 : Suppress XML Encoding
+NP_24 : Preserve UTC Format
+
+  105 106 107 NP_0  NP_1  NP_2  NP_3                           NP_4          NP_5  NP_6  NP_7  NP_8  NP_9  NP_10 NP_11 NP_12 NP_13 NP_14 NP_15                    NP_16 NP_17 NP_18 NP_19 NP_20 NP_21 NP_22 NP_23 NP_24  
+0         1   0           1     www.mrmnames.net/KNVNK94002001 KNVNK94002001             0     1     0     1           1           1     yyyy-MM-dd'T'HH:mm:ssZZZ       53          0     0     0     1.0   1     0      
+
+Tag (2)
+---
+
+201 : Tag Identifier
+203 : Type Identifier
+204 : Class
+207 : Nullable
+211 : Type Index
+212 : Namespace Index
+214 : isAttribute
+NP_0 : DOCTYPE System ID
+NP_1 : DOCTYPE Public ID
+NP_2 : DOCTYPE Text
+NP_3 : Root Tag Name
+NP_4 : XML Name
+NP_5 : Render
+NP_6 : ID Attribute Name
+NP_7 : ID Attribute Namespace
+NP_8 : ID Attribute Value
+NP_9 : Format
+NP_10 : Encoding
+NP_11 : Schema Location
+NP_12 : No Namespace Schema Location
+NP_13 : Output Namespace Declaration Policy
+NP_14 : Output xsi:type policy
+
+   201 203 204 207 211 212 214 NP_0                           NP_1          NP_2 NP_3 NP_4                  NP_5 NP_6 NP_7 NP_8           NP_9 NP_10 NP_11 NP_12 NP_13 NP_14 
+0  50  51  M   0   46  1   0   www.mrmnames.net/KNVNK94002001 KNVNK94002001           MSJ_LANZADOR          0    id   0    MSJ_LANZADOR        -1                1     0     
+1  53  54  S   0   47  0   0                                                          53_MENSAJE            0         -1                       -1                -1    -1    
+2  56  43  F   0   40  0   0                                                          56_IDPROCESO          0         -1                       -1                -1    -1    
+3  58  43  F   0   40  0   0                                                          58_FILLER             0         -1                       -1                -1    -1    
+4  59  51  S   0   46  1   0                                                          MSJ_LANZADOR          0         -1                       -1                -1    -1    
+5  60  61  M   0   48  1   0   www.mrmnames.net/KNVNK94002001 KNVNK94002001           MSJ_LOGPROCESO        0    id   0    MSJ_LOGPROCESO      -1                1     0     
+6  63  64  S   0   49  0   0                                                          63_MENSAJE            0         -1                       -1                -1    -1    
+7  66  43  F   0   40  0   0                                                          66_IDPROCESO          0         -1                       -1                -1    -1    
+8  68  43  F   0   40  0   0                                                          68_IDINSTANCIAPROCESO 0         -1                       -1                -1    -1    
+9  70  43  F   0   40  0   0                                                          70_FECMENSAJE         0         -1                       -1                -1    -1    
+10 72  43  F   0   40  0   0                                                          72_TIPOLOG            0         -1                       -1                -1    -1    
+11 74  43  F   0   40  0   0                                                          74_NOMCOMPONENTE      0         -1                       -1                -1    -1    
+12 76  43  F   0   40  0   0                                                          76_DESCMENSAJE        0         -1                       -1                -1    -1    
+13 77  61  S   0   48  1   0                                                          MSJ_LOGPROCESO        0         -1                       -1                -1    -1    
+
+Type Member (4)
+-----------
+
+401 : Parent Type Identifier
+402 : Child Tag Identifier
+403 : Child Type Identifier
+404 : Child Class
+406 : Sequence Number
+410 : Member Identifier
+412 : Child Tag Index
+413 : Child Type Index
+NP_0 : XML Name
+NP_1 : Render
+NP_2 : ID Attribute Name
+NP_3 : ID Attribute Namespace
+NP_4 : ID Attribute Value
+NP_5 : Value Attribute Name
+NP_6 : Value Attribute Namespace
+NP_7 : Format
+NP_8 : Encoding
+
+  401 402 403 404 406 410 412 413 NP_0               NP_1 NP_2 NP_3 NP_4               NP_5 NP_6 NP_7 NP_8 
+0 51  53  54  S   1   52  1   47  MENSAJE            0    id   0    MENSAJE            val  0         -1   
+1 54  56  43  F   1   55  2   40  IDPROCESO          0    id   0    IDPROCESO          val  0         -1   
+2 54  58  43  F   2   57  3   40  FILLER             0    id   0    FILLER             val  0         -1   
+3 61  63  64  S   1   62  6   49  MENSAJE            0    id   0    MENSAJE            val  0         -1   
+4 64  66  43  F   1   65  7   40  IDPROCESO          0    id   0    IDPROCESO          val  0         -1   
+5 64  68  43  F   2   67  8   40  IDINSTANCIAPROCESO 0    id   0    IDINSTANCIAPROCESO val  0         -1   
+6 64  70  43  F   3   69  9   40  FECMENSAJE         0    id   0    FECMENSAJE         val  0         -1   
+7 64  72  43  F   4   71  10  40  TIPOLOG            0    id   0    TIPOLOG            val  0         -1   
+8 64  74  43  F   5   73  11  40  NOMCOMPONENTE      0    id   0    NOMCOMPONENTE      val  0         -1   
+9 64  76  43  F   6   75  12  40  DESCMENSAJE        0    id   0    DESCMENSAJE        val  0         -1   
+
+Type (21)
+----
+
+Row count: 50
+
+2101 : Type Identifier
+2103 : Type Composition
+2104 : Type Content
+2105 : Base Type Identifier
+2106 : Logical Type
+2107 : Type Member Index
+2112 : Derivation Style
+2114 : Item Type Index
+2115 : Type Class
+
+   2101 2103 2104 2105 2106 2107 2112 2114 2115 
+0  1    6    3    0    0    -1   1    -1   4    
+1  2    0    0    0    15   -1   4    -1   1    
+2  3    0    0    0    2    -1   4    -1   1    
+3  4    0    0    0    0    -1   5    4    1    
+4  5    0    0    0    2    -1   4    -1   1    
+5  7    0    0    0    2    -1   4    -1   1    
+6  8    0    0    0    2    -1   4    -1   1    
+7  9    0    0    0    2    -1   4    -1   1    
+8  10   0    0    0    15   -1   4    -1   1    
+9  11   0    0    0    2    -1   4    -1   1    
+10 12   0    0    0    15   -1   4    -1   1    
+11 13   0    0    0    2    -1   4    -1   1    
+12 14   0    0    0    16   -1   4    -1   1    
+13 15   0    0    0    16   -1   4    -1   1    
+14 16   0    0    0    4    -1   4    -1   1    
+15 17   0    0    0    4    -1   4    -1   1    
+16 18   0    0    0    2    -1   4    -1   1    
+17 19   0    0    0    4    -1   4    -1   1    
+18 20   0    0    0    15   -1   4    -1   1    
+19 21   0    0    0    6    -1   4    -1   1    
+20 22   0    0    0    16   -1   4    -1   1    
+21 23   0    0    0    4    -1   4    -1   1    
+22 24   0    0    0    4    -1   4    -1   1    
+23 25   0    0    0    15   -1   4    -1   1    
+24 26   0    0    0    10   -1   4    -1   1    
+25 27   0    0    0    15   -1   4    -1   1    
+26 28   0    0    0    15   -1   4    -1   1    
+27 29   0    0    0    2    -1   4    -1   1    
+28 30   0    0    0    4    -1   4    -1   1    
+29 31   0    0    0    10   -1   4    -1   1    
+30 32   0    0    0    2    -1   4    -1   1    
+31 33   0    0    0    12   -1   4    -1   1    
+32 34   0    0    0    15   -1   4    -1   1    
+33 35   0    0    0    2    -1   4    -1   1    
+34 36   0    0    0    16   -1   4    -1   1    
+35 37   0    0    0    4    -1   4    -1   1    
+36 38   0    0    0    16   -1   4    -1   1    
+37 39   0    0    0    16   -1   4    -1   1    
+38 40   0    0    0    0    -1   5    39   1    
+39 41   0    0    0    2    -1   4    -1   1    
+40 43   0    0    0    2    -1   4    -1   1    
+41 44   0    0    0    6    -1   4    -1   1    
+42 45   0    0    0    16   -1   4    -1   1    
+43 46   0    0    0    0    -1   5    33   1    
+44 48   0    0    0    14   -1   4    -1   1    
+45 49   0    0    0    2    -1   4    -1   1    
+46 51   6    1    0    0    0    1    -1   4    
+47 54   6    1    0    0    1    1    -1   4    
+48 61   6    1    0    0    3    1    -1   4    
+49 64   6    1    0    0    4    1    -1   4    
+
+Member Id to Type Member index (20)
+------------------------------
+
+Row count: 10
+
+2001 : Member Identifier
+2002 : Type Member Index
+
+  2001 2002 
+0 52   0    
+1 55   1    
+2 57   2    
+3 62   3    
+4 65   4    
+5 67   5    
+6 69   6    
+7 71   7    
+8 73   8    
+9 75   9    
+
+Namespace (26)
+---------
+
+2000 : Row Count
+2601 : Namespace URI
+NP_0 : Preferred Prefix
+
+  2000 2601                                      NP_0   
+0 5                                                     
+1      gen.bth.esb.visa.ib                              
+2      http://www.w3.org/2001/XMLSchema          xsd    
+3      http://www.w3.org/2001/XMLSchema-instance xsi    
+4      http://www.w3.org/XML/1998/namespace      xml    
+
+CWFWireFormat (CWF)
+=============
+
+Message Count: 2
+
+Row Count: 12
+
+Identification (1000)
+--------------
+
+100001 : Message Set Identifier
+100002 : Message Set Name
+100003 : Message Set Level
+100004 : Model Version (Major)
+100005 : Model Version (Minor)
+100006 : Timestamp
+100007 : Dictionary Type
+100008 : Format Level
+100009 : Compatibility Level
+100010 : Dependency Table
+100022 : Message Set Alias
+100020 : Format Name
+100021 : Format Identifier
+
+  100001        100002                100003 100004 100005 100006 100007 100008 100009 100010        100022 100020 100021 
+0 KNVNK94002001 MS_ESB_BATCH_GENERICO 1      2      0             4      610    4      KNVNK94002001        CWF    CWF    
+
+MessageSet (1)
+----------
+
+104 : Byte Alignment Pad
+105 : Floating Point Format
+106 : Default Codepage
+107 : Byte Order
+108 : Boolean True
+109 : Boolean False
+112 : Date Time Format
+116 : Packed Decimal Byte Order
+117 : Default Timezone ID
+118 : Century Window
+119 : First Week Of Year
+120 : First Day Of Week
+121 : Boolean Null
+122 : Packed Decimal Positive Format
+123 : Allow Lenient Datetimes
+124 : Output Policy For Missing Elements
+125 : Preserve UTC Format
+126 : Truncate Fixed Length Strings
+
+  104 105 106 107 108      109      112                      116 117 118 119 120    121      122 123 124 125 126 
+0     S   500 B   00000001 00000000 yyyy-MM-dd'T'HH:mm:ssZZZ B       53  4   Monday 00000000    0   0   0   0   
+
+Message (2)
+-------
+
+3 : Message Identifier
+
+  3  
+0 50 
+
+Row (4)
+---
+
+401 : Row Number
+402 : Tag Identifier
+403 : Physical Type
+404 : Logical Type
+405 : Repeating Element
+406 : Field length
+407 : Parent Row
+408 : Sign Representation
+409 : Virtual Decimal Point
+410 : Justification
+411 : Padding
+412 : Byte Alignment
+413 : Format
+414 : Leading Skip Bytes
+415 : Member Id
+417 : Length Units
+418 : Type Composition
+419 : Default Value Index
+420 : Encoding Null
+421 : Encoding Null Value
+422 : Encoding Null Permitted
+423 : Trailing Skip Bytes
+424 : Sign EBCDIC Custom
+425 : Inclusive Length Reference
+
+  401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 417 418 419 420 421 422 423 424 425 
+0 0   50  0   0   0   0   -1  0   0   N       1       0   0   0   6   -1  -1      0   0   0   0   
+1 1   53  0   0   1   0   0   0   0   N       1       0   52  0   6   -1  -1      0   0   0   0   
+2 2   56  8   2   1   2   1   0   0   L       1       0   55  0   0   1   1       0   0   0   0   
+3 3   58  8   2   1   0   1   0   0   L       1       0   57  3   0   0   1       0   0   0   0   
+
+
+3 : Message Identifier
+
+  3  
+0 60 
+
+Row (4)
+---
+
+401 : Row Number
+402 : Tag Identifier
+403 : Physical Type
+404 : Logical Type
+405 : Repeating Element
+406 : Field length
+407 : Parent Row
+408 : Sign Representation
+409 : Virtual Decimal Point
+410 : Justification
+411 : Padding
+412 : Byte Alignment
+413 : Format
+414 : Leading Skip Bytes
+415 : Member Id
+417 : Length Units
+418 : Type Composition
+419 : Default Value Index
+420 : Encoding Null
+421 : Encoding Null Value
+422 : Encoding Null Permitted
+423 : Trailing Skip Bytes
+424 : Sign EBCDIC Custom
+425 : Inclusive Length Reference
+
+  401 402 403 404 405 406  407 408 409 410 411 412 413 414 415 417 418 419 420 421 422 423 424 425 
+0 0   60  0   0   0   0    -1  0   0   N       1       0   0   0   6   -1  -1      0   0   0   0   
+1 1   63  0   0   1   0    0   0   0   N       1       0   62  0   6   -1  -1      0   0   0   0   
+2 2   66  8   2   1   10   1   0   0   L       1       0   65  0   0   -1  1       0   0   0   0   
+3 3   68  8   2   1   10   1   0   0   L       1       0   67  0   0   -1  1       0   0   0   0   
+4 4   70  8   2   1   20   1   0   0   L       1       0   69  0   0   -1  1       0   0   0   0   
+5 5   72  8   2   1   2    1   0   0   L       1       0   71  0   0   -1  1       0   0   0   0   
+6 6   74  8   2   1   50   1   0   0   L       1       0   73  0   0   -1  1       0   0   0   0   
+7 7   76  8   2   1   5000 1   0   0   L       1       0   75  0   0   -1  1       0   0   0   0   
+
+
+Values (25)
+------
+
+2000 : Row Count
+2501 : String Value
+
+  2000 2501 
+0 2         
+1           
+

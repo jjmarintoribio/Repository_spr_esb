@@ -1,0 +1,57 @@
+
+BROKER SCHEMA ib.visa.esb.srv
+PATH ib.visa.esb.core;
+
+CREATE COMPUTE MODULE SMF_ESB_SRV_ERRORSRV_PrepararMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+
+		SET OutputRoot.MQMD.ReplyToQ	= getCOLA_ENTRADA_FLUJO_ERROR_SRV();		
+		SET OutputRoot.MQMD.ReplyToQMgr	= QueueManagerName;
+		
+		DECLARE chrCodigoErrorSrv INTEGER ;
+		DECLARE chrDescripcionErrorSrv CHARACTER '';	
+		DECLARE refInput REFERENCE TO InputRoot.MQRFH2.usr.ResultadoInvocacion;	
+		
+		--Si el error viene de una validacion controlada
+		IF FIELDTYPE(refInput.codigoRespuesta) IS NOT NULL THEN
+			
+			SET chrCodigoErrorSrv 		= refInput.codigoRespuesta;
+			SET chrDescripcionErrorSrv 	= refInput.descripcion;
+			
+		ELSE
+
+			--Si el error es por algo no controlado
+			
+			DECLARE chrCodigoError CHARACTER '';
+			DECLARE chrDescripcionError CHARACTER '';
+			DECLARE chrMensajeError CHARACTER '';
+			CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
+			
+			SET chrMensajeError = chrDescripcionError ;
+			  
+			--Si el error no es de una validacion de datos del servicio especifico 
+			IF (chrCodigoError <> getCOD_ERROR_1013() AND chrCodigoError <> getCOD_ERROR_1015() AND chrCodigoError <> getCOD_ERROR_1017()) THEN
+				SET chrCodigoErrorSrv = getCOD_ERROR_1018(); --Se asigna el error generico de los servicios especificos
+			ELSE 
+				SET chrCodigoErrorSrv = chrCodigoError;
+			END IF;
+					 	 
+			SET chrDescripcionErrorSrv = chrMensajeError;			
+			
+		END IF; 
+ 
+		CALL crearTagResultadoInvocacion(OutputRoot.MQRFH2.usr,getTIP_ERROR_CORE_ESB(),chrCodigoErrorSrv,chrDescripcionErrorSrv);
+		
+		SET OutputRoot.MQRFH2.usr.ResultadoInvocacion.nombreBroker = BrokerName;
+		SET OutputRoot.MQRFH2.usr.ResultadoInvocacion.nombreFlujo  = MessageFlowLabel;
+		
+
+		
+		RETURN TRUE;
+	END;
+
+
+END MODULE;

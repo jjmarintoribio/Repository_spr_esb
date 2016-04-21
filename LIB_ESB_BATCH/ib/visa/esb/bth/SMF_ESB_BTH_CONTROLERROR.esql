@@ -1,0 +1,44 @@
+BROKER SCHEMA ib.visa.esb.bth
+
+
+CREATE COMPUTE MODULE SMF_ESB_BTH_CONTROLERROR_ValidarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) Envio de la validacion del fin de archivo
+		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 		
+		SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;	
+		
+		PROPAGATE TO TERMINAL 1;
+		
+		 --((2)) Envio del registro del mensaje del grupo a la cola temporal
+		 
+		SET Environment.colaRegTemp		= obtenerColaRegBDTemp(InputRoot.MQRFH2.usr.Parametros.General.IDENTIFICADOR);		
+		
+		SET OutputRoot = InputRoot;
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= Environment.colaRegTemp; 
+
+
+		PROPAGATE TO TERMINAL 2;
+				 
+		--((3)) Envio de correo de alerta con el error
+	
+		IF (COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN 
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_4(),InputRoot.MQRFH2.usr.Parametros,obtenerMensajeError(InputExceptionList),MessageFlowLabel);
+			PROPAGATE TO TERMINAL 3;
+		END IF;
+
+
+		
+
+	END;
+
+	
+END MODULE;

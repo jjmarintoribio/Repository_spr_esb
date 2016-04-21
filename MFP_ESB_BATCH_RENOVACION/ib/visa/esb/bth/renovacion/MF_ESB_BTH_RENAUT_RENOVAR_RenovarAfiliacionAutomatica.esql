@@ -1,0 +1,78 @@
+BROKER SCHEMA ib.visa.esb.bth.renovacion
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENAUT_RENOVAR_RenovarAfiliacionAutomatica
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refData REFERENCE TO InputRoot.XMLNSC.AfiliacionRenovacion;
+		
+		IF FIELDTYPE(refData) IS NOT NULL THEN
+			
+			DECLARE idAfiliacion INTEGER CAST(refData.ID_AFILIACION AS INTEGER);
+			DECLARE cantMesesVigencia INTEGER;
+			SET cantMesesVigencia = CAST(refData.CTD_MESES_VIGENCIA AS INTEGER) + CAST(refData.NRO_VIGENCIA_CADUCIDAD_AFILIACION AS INTEGER);
+			DECLARE fecPago DATE CAST(TRIM(SUBSTRING(refData.FEC_PAGO BEFORE 'T')) AS DATE FORMAT getFORMATO_FECHA_BD());
+			DECLARE fecCaducidad DATE obtenerFechaMasMeses(fecPago,cantMesesVigencia);--TODO XK porque está comentado?
+			DECLARE tipoPeriodicidad INTEGER CAST(refData.TIPO_PERIODICIDAD AS INTEGER);
+			DECLARE mtoCargo DECIMAL CAST(refData.MTO_CARGO AS DECIMAL FORMAT '##0.0');
+			DECLARE idProducto INTEGER CAST(refData.Producto.ID_PRODUCTO AS INTEGER);
+			
+			CALL actualizarRenovarAfiliacion(idAfiliacion,
+											 cantMesesVigencia,
+											 CURRENT_TIMESTAMP,
+											 obtenerTimestampSinHora(fecCaducidad),
+											 CURRENT_TIMESTAMP,
+											 getID_ESB_VISA(),
+											 'LOCAL');
+											 
+			
+			SET Environment.renovacion.ID_AFILIACION = idAfiliacion;
+			SET Environment.renovacion.CTD_MESES_VIGENCIA = cantMesesVigencia;
+			SET Environment.renovacion.FEC_PAGO = fecPago;
+			SET Environment.renovacion.TIPO_PERIODICIDAD = tipoPeriodicidad;
+			
+			DECLARE fecUltimoCargo DATE; 
+			CALL obtenerFechaUltimoCargo(idAfiliacion,fecUltimoCargo);
+			SET Environment.renovacion.FEC_CADUCIDAD = fecCaducidad;
+			SET Environment.renovacion.fecUltimoCargo = fecUltimoCargo;
+			
+			DECLARE fecCargo DATE obtenerSiguienteFechaCargo(fecUltimoCargo,tipoPeriodicidad,EXTRACT(DAY FROM fecPago));
+			SET Environment.renovacion.FEC_CARGO_PADRE = fecCargo;
+			
+			DECLARE contador  INTEGER 1;
+			DECLARE outIdLote INTEGER;
+			WHILE fecCargo < fecCaducidad  DO
+				
+				CALL obtenerLoteIngresarActualizarSiExiste2(idProducto,
+														   obtenerTimestampSinHora(fecCargo),
+														   1,
+														   mtoCargo,
+														   0,--ESTADO LOTE (PENDIENTE)
+														   CURRENT_TIMESTAMP,
+														   getID_ESB_VISA(),
+														   'LOCAL',
+														   outIdLote);
+														   
+				DECLARE outIdCargo INTEGER;										   
+				CALL insertarCargo(idAfiliacion,
+								   outIdLote,
+								   obtenerTimestampSinHora(fecCargo),
+								   mtoCargo,
+								   1,
+								   0,--ESTADO CARGO (PENDIENTE),
+								   CURRENT_TIMESTAMP,
+								   getID_ESB_VISA(),
+								   'LOCAL',
+								   outIdCargo);
+								   														   
+				SET fecCargo = obtenerSiguienteFechaCargo(fecCargo,tipoPeriodicidad,EXTRACT(DAY FROM fecCargo));
+				SET Environment.renovacion.FEC_CARGO[contador] = fecCargo;--IMPRIMIR
+																		   
+				SET contador = contador +1;
+			END WHILE;
+		END IF;
+		RETURN TRUE;
+	END;
+
+END MODULE;

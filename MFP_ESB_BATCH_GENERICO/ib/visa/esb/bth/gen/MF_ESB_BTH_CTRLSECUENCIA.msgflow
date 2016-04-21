@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmFileRead.msgnode="ComIbmFileRead.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTimeoutNotification.msgnode="ComIbmTimeoutNotification.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/gen/MF_ESB_BTH_CTRLSECUENCIA.msgflow"
+    nsPrefix="ib_visa_esb_bth_gen_MF_ESB_BTH_CTRLSECUENCIA.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_CONTROL_SECUENCIA" name="UDP_CONTROL_SECUENCIA" lowerBound="1" defaultValueLiteral="CTRLSEC">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_DIRECTORIO_COMPARTIDO" name="UDP_DIRECTORIO_COMPARTIDO" lowerBound="1" defaultValueLiteral="/app/visa/esb/batch/ftp/">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/GENBTH_CTRLSECUENCIA_error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_CTRLSECUENCIA" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CTRLSECUENCIA" pluginId="MFP_ESB_BATCH_GENERICO"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENERICO/icons/full/obj16/MF_ESB_BTH_CTRLSECUENCIA.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_GENERICO/icons/full/obj30/MF_ESB_BTH_CTRLSECUENCIA.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="17,164" uniqueIdentifier="ctlSecuencia" transactionMode="no" timeoutInterval="9">
+        <translation xmi:type="utility:ConstantString" string="Timeout Notification"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="1107,343" queueName="IB.BTH.GENBTH.RCVCONTROL.REQ.01" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROL.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="150,164" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_ValidarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ValidarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="6,356" queueName="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.01" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola que recibe las peticiones para actualizar el &quot;semaforo&quot; que controla las ejecuciones en secuencia de los procesos"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="531,356" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_ActualizarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ActualizarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="522,166" queueName="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no" waitInterval="3000">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="902,361" outputDirectory="/temp" outputFilename="temp">
+        <translation xmi:type="utility:ConstantString" string="EscribirControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="257,169" inputDirectory="/temp" filenamePattern="temp" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="LeerArchivoControlValidar"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="431,165" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_EnviarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="EnviarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="152,233" destination="file" pattern="========= Control de Secuencia =========&#xD;&#xA;**************/Error 2/**********************************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_17" location="821,165" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_PrepararMensaje.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="183,296" destination="file" pattern="========= Control de Secuencia =========&#xD;&#xA;**************/Error 1/**********************************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_24" location="31,536" uniqueIdentifier="MgrSecuencia" transactionMode="no" timeoutInterval="9">
+        <translation xmi:type="utility:ConstantString" string="Timeout NotificationMGR"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_25" location="28,675" queueName="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.02" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.02"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_26" location="627,438" queueName="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.02" messageDomainProperty="XMLNSC" transactionMode="no" waitInterval="3000">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.02"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_27" location="230,490" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_MgrValidaControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MgrValidaControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_28" location="375,492" inputDirectory="temp" filenamePattern="ntemp" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="MgrLeerArchivoControlValidar"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_29" location="570,519" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_MgrEnviarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MgrEnviarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_30" location="841,522" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_MgrPrepararMensaje.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MgrPrepararMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_31" location="226,582" destination="file" filePath="/app/visa/esb/batch/logs/GENBTH_CTRLMGRSECUENCIA_TIMER_error.log" pattern="========= Control de Secuencia =========&#xD;&#xA;**************/Error 1/**********************************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error_3"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_32" location="320,618" destination="file" filePath="/app/visa/esb/batch/logs/GENBTH_CTRLMGRSECUENCIA_error.log" pattern="========= Control de Secuencia =========&#xD;&#xA;**************/Error 1/**********************************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error_4"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_33" location="546,650" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_MgrActualizarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MgrActualizarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_34" location="975,648" outputDirectory="/temp" outputFilename="ntemp">
+        <translation xmi:type="utility:ConstantString" string="MgrEscribirControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="159,447" destination="file" filePath="/app/visa/esb/batch/logs/GENBTH_CTRLSECUENCIA_debug.log" pattern="-">
+        <translation xmi:type="utility:ConstantString" string="T_Debug02"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="369,455" destination="file" filePath="/app/visa/esb/batch/logs/GENBTH_CTRLSECUENCIA_debug02.log" pattern="--">
+        <translation xmi:type="utility:ConstantString" string="T_Debug_03"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="45,774" uniqueIdentifier="AfiSecuencia" transactionMode="no" timeoutInterval="27">
+        <translation xmi:type="utility:ConstantString" string="Timeout NotificationAFI"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="305,752" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_AfiValidaControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AfiValidaControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="776,719" queueName="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.03" messageDomainProperty="XMLNSC" transactionMode="no" waitInterval="3000">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROLSEC.REQ.03"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="414,747" inputDirectory="temp" filenamePattern="ntemp" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="AfiLeerArchivoControlValidar"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="1196,890" outputDirectory="/temp" outputFilename="ntemp">
+        <translation xmi:type="utility:ConstantString" string="AfiEscribirControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="628,747" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_AfiEnviarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AfiEnviarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="8,884" queueName="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.03" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.CTRLSECUENCIA.REQ.03"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_22" location="587,894" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_AfiActualizarControl.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AfiActualizarControl"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_23" location="965,811" computeExpression="esql://routine/ib.visa.esb.bth.gen#MF_ESB_BTH_CTRLSECUENCIA_AfiPrepararMensaje.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AfiPrepararMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_35" location="253,814" destination="file" filePath="/app/visa/esb/batch/logs/GENBTH_CTRLAFISECUENCIA_error.log" pattern="========= Control de Secuencia =========&#xD;&#xA;**************/Error 1/**********************************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="Trace"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_45" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_17" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_29" targetNode="FCMComposite_1_29" sourceNode="FCMComposite_1_28" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="FCMComposite_1_26" sourceNode="FCMComposite_1_29" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_30" sourceNode="FCMComposite_1_26" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_32" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_30" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_33" targetNode="FCMComposite_1_33" sourceNode="FCMComposite_1_28" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_34" targetNode="FCMComposite_1_34" sourceNode="FCMComposite_1_30" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_35" targetNode="FCMComposite_1_34" sourceNode="FCMComposite_1_33" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_36" targetNode="FCMComposite_1_32" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_37" targetNode="FCMComposite_1_32" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_38" targetNode="FCMComposite_1_33" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_40" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_41" targetNode="FCMComposite_1_31" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_27" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_27" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_28" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_18" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_23" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_23" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_23" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_22" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_26" targetNode="FCMComposite_1_22" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_22" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="FCMComposite_1_35" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_39" targetNode="FCMComposite_1_35" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_CONTROL_SECUENCIA">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_CONTROL_SECUENCIA" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CTRLSECUENCIA" pluginId="MFP_ESB_BATCH_GENERICO"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_DIRECTORIO_COMPARTIDO">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_DIRECTORIO_COMPARTIDO" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CTRLSECUENCIA" pluginId="MFP_ESB_BATCH_GENERICO"/>
+          <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/gen/MF_ESB_BTH_CTRLSECUENCIA" pluginId="MFP_ESB_BATCH_GENERICO"/>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_12 FCMComposite_1_15">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard>
+      <stickyNote location="273,20">
+        <body xmi:type="utility:ConstantString" string="--Controlador de ejecución en secuencia de los Procesos.&#xA;--En la cola IB.BTH.GENBTH.RCVCONTROLSEC.REQ.01 estan encolados los mensajes de control&#xA;que iniciaran la ejecucion del proceso si es que el semaforo esta en verde. Los mensajes aqui tienen&#xA;asignado una prioridad"/>
+      </stickyNote>
+    </stickyBoard>
+  </eClassifiers>
+</ecore:EPackage>

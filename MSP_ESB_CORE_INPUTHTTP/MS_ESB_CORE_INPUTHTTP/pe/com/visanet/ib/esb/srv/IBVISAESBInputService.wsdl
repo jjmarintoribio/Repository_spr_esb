@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="IBVISAESBInputService" targetNamespace="http://visanet.com.pe/ib/esb/srv" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://visanet.com.pe/ib/esb/srv" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:documentation>
+    <wsdl:appinfo source="WMQI_APPINFO">
+      <MRWSDLAppInfo imported="true">
+        <binding hasEncoding="false" imported="true" name="IBVISAESBInputService_Binding" originalBindingStyle="document"/>
+      </MRWSDLAppInfo>
+    </wsdl:appinfo>
+  </wsdl:documentation>
+	
+	
+	<wsdl:types> 
+		<xsd:schema>
+<xsd:import namespace="http://visanet.com.pe/ib/esb/srv" schemaLocation="IBVISAESBInputService.mxsd">
+			</xsd:import>			</xsd:schema>
+	</wsdl:types>
+
+	<wsdl:message name="OperationRequest">
+		<wsdl:part element="tns:MENSAJEREQ" name="MENSAJEREQ"/>
+	</wsdl:message>
+	
+	<wsdl:message name="OperationResponse">
+		<wsdl:part element="tns:MENSAJERES" name="MENSAJERES"/>
+	</wsdl:message>
+	
+	<wsdl:portType name="IBVISAESBInputService">
+		<wsdl:operation name="Operacion">
+			<wsdl:input message="tns:OperationRequest"/>
+			<wsdl:output message="tns:OperationResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	
+	
+	<wsdl:binding name="IBVISAESBInputService_Binding" type="tns:IBVISAESBInputService">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+					
+		<wsdl:operation name="Operacion">
+			<soap:operation soapAction="http://visanet.com.pe/ib/esb/srv/Operacion"/>
+			<wsdl:input>
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="IBVISAESBInputService">
+		<wsdl:port binding="tns:IBVISAESBInputService_Binding" name="IBVISAESBInputService_Port">
+			<soap:address location="http://visanetbus:7080/ib/visa/esb/Service"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,25 @@
+
+
+Importing file: F:\wsdl\SERV_VISA\IBVISAESBInputService.wsdl
+
+BIP0224W The message set has no XML Wire Format layer defined. Only the logical information will appear in the model.
+The WSDL import will proceed with bindings IBVISAESBInputService_Binding.
+Creating wsdl schema document for file:///F:/wsdl/SERV_VISA/IBVISAESBInputService.wsdl.
+Parsing wsdl binding {http://visanet.com.pe/ib/esb/srv}IBVISAESBInputService_Binding.
+Parsing wsdl binding input Operacion.
+Parsing wsdl binding output Operacion.
+Processing doc style for operation Operacion.
+Populating WSDL schema MS_ESB_CORE_INPUTHTTP/pe/com/visanet/ib/esb/srv/IBVISAESBInputService.mxsd.
+Removing unnecessary import statement with namespace IBVISAESBInputService.mxsd from schema MS_ESB_CORE_INPUTHTTP/pe/com/visanet/ib/esb/srv/IBVISAESBInputService.mxsd.  This statement was not resolved and is never used.
+Creating file MS_ESB_CORE_INPUTHTTP/pe/com/visanet/ib/esb/srv/IBVISAESBInputService.mxsd in the workspace.
+Creating file MS_ESB_CORE_INPUTHTTP/pe/com/visanet/ib/esb/srv/IBVISAESBInputService.mxsd in the workspace.
+Creating file MS_ESB_CORE_INPUTHTTP/pe/com/visanet/ib/esb/IBVISAESBInputServiceHeader.mxsd in the workspace.
+Copying source WSDL IBVISAESBInputService.wsdl to IBVISAESBInputService.wsdl.
+
+Elapsed time processing this message definition file: 0.236 seconds
+Number of warnings for this message definition file: 1
+
+
+Number of files processed: 1
+
+

@@ -1,0 +1,57 @@
+
+/*
+ *
+ * Nombre		: LIB_MB_PROCEDIMIENTOS.esql
+ * Proposito	: Procedimientos para funcionalidades especificas de las app
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */  
+
+BROKER SCHEMA ib.visa.esb.srv.is01
+PATH ib.visa.esb.core;
+
+/*
+ * Prepara la cabecera del mensaje Envelope request de los servicios de SPR Web
+*/ 
+CREATE PROCEDURE prepararEnvelopeSoapReqSPRWEBServices(IN refOutput REFERENCE, IN nsSoap NAMESPACE, IN nsSrv NAMESPACE, IN namMetodo NAME) 
+BEGIN
+	CREATE LASTCHILD OF refOutput DOMAIN 'XMLNS';
+	SET refOutput.XMLNS.nsSoap:Envelope.(XML.NamespaceDecl)xmlns:"soapenv" = getNS_SOAP();
+	SET refOutput.XMLNS.nsSoap:Envelope.(XML.NamespaceDecl)xmlns:soapenv = getNS_SOAP(); 
+	SET refOutput.XMLNS.nsSoap:Envelope.(XML.NamespaceDecl)xmlns:sch = nsSrv;
+	
+	CREATE FIELD refOutput.XMLNS.nsSoap:Envelope.nsSoap:Header;
+	CREATE FIELD refOutput.XMLNS.nsSoap:Envelope.nsSoap:Body.nsSrv:namMetodo.nsSrv:Cabecera;
+	DECLARE refCab REFERENCE TO refOutput.XMLNS.nsSoap:Envelope.nsSoap:Body.nsSrv:namMetodo.nsSrv:Cabecera;
+	
+	SET refCab.nsSrv:CodigoConsumidor 	= getID_ESB_VISA();
+	SET refCab.nsSrv:TipoConsumidor 		= getID_ESB_VISA();
+	SET refCab.nsSrv:FechaRequerimiento 	= CURRENT_TIMESTAMP; 
+	
+END;
+
+
+/*
+ * Valida la cacebcera de respuesta de los servicios de SPR Web.
+*/ 
+CREATE PROCEDURE validarRespuestaSPRWeb(IN chrResultCode CHARACTER, 
+										IN chrMessage CHARACTER,
+										IN refOutputRoot REFERENCE, 
+										IN refInputRoot REFERENCE, 
+										IN nsSoap NAMESPACE, 
+										IN nsSrv NAMESPACE) 
+BEGIN 
+	 
+	CALL prepararEnvelopeSoapRespESB(refOutputRoot,refInputRoot.MQRFH2.usr,nsSoap,nsSrv,refInputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.Namespace,
+										getTIP_EXITO_CORE_ESB(),
+										getNUM_EXITO_CORE_ESB(), 
+										getMSJ_EXITO_ESB()); 
+	
+END;
+
+
+ 
+

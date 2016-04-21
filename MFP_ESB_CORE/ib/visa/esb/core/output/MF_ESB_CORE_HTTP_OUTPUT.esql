@@ -1,0 +1,277 @@
+/*
+ *
+ * Nombre		: ME_ESB_CORE_HTTP_OUTPUT.esql
+ * Proposito	: Flujo de salida generica HTTP del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */ 
+BROKER SCHEMA ib.visa.esb.core.output
+PATH ib.visa.esb.core;
+
+CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararEnvio
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		-- Guardado del mensaje completo para el reintento
+		SET Environment.Reintento.InputRoot = InputRoot;
+		
+	
+		--((0)) Preparacion del mensaje de auditoria para el evento de reintento
+		
+		IF FIELDTYPE(InputRoot.MQRFH2.usr.Parametros.Reintento.Info) IS NOT NULL THEN 
+
+			SET OutputRoot.Properties = InputProperties;
+			SET OutputRoot.MQRFH2.usr.Parametros = InputRoot.MQRFH2.usr.Parametros;
+	
+			-- Generamos el mensaje para la primera auditoria
+		
+			CALL armarAuditoriaEventoReintento(OutputRoot,
+							InputRoot.MQMD.CorrelId,
+							InputRoot.MQRFH2.usr);
+			
+			--Asignacion dinamica de la cola de entrada del flujo especifico
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+			
+			PROPAGATE TO TERMINAL 1;
+
+		END IF;
+		
+		
+		--((1)) Respuesta previa a la aplicacion consumidora
+	
+		DECLARE refParams REFERENCE TO InputRoot.MQRFH2.usr.Parametros.Servicio;
+			 		
+
+		IF (FIELDTYPE(InputRoot.MQRFH2.usr.WebReenvio) IS NULL OR (renvioResponderConsumidor(refParams)=getSI()) ) THEN
+		
+		IF responderAlConsumidor(refParams)=getSI() THEN
+	
+			-->Si el servicio del proveedor es asincrono pero el servicio del ESB es sincrono entonces se devuelve el mismo mensaje de entrada al flujo especifico
+			-->Si el mensaje ya se esta reintentando no se debe de enviar nada al flujo especifico de respuesta
+			
+			IF FIELDTYPE(InputRoot.MQRFH2.usr.Parametros.Reintento.Info) IS NULL THEN
+		
+			 	SET OutputRoot.Properties 		= InputProperties;
+				SET OutputRoot.MQMD 			= InputRoot.MQMD;
+				SET OutputRoot.MQMD.CorrelId 	= InputRoot.MQMD.MsgId;
+				SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;
+				SET OutputRoot.XMLNSC = InputRoot.XMLNS;
+	
+				SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData.queueName = obtenerColaFlujoResponse(InputRoot.MQRFH2.usr.CodigoServicio);
+					 
+				PROPAGATE TO TERMINAL 2;
+						
+			END IF;
+		END IF;
+		END IF;
+		
+		
+		SET OutputRoot.Properties = InputProperties;
+		
+		--Preparado de parametros de la llamada al servicio Web
+		SET OutputRoot.HTTPRequestHeader."X-Original-HTTP-URL"  = InputRoot.MQRFH2.usr.Parametros.Servicio.URLDEST;
+		SET OutputRoot.HTTPRequestHeader.SOAPAction 			= InputRoot.MQRFH2.usr.Parametros.Servicio.METODO;
+		SET OutputLocalEnvironment.Destination.HTTP.Timeout 	= CAST(InputRoot.MQRFH2.usr.Parametros.Servicio.TIMEOUT AS INTEGER);
+
+		--Asignacion del Body del servicio
+		SET OutputRoot.XMLNS = InputRoot.XMLNS ;
+	
+		--Guardado de cabeceras
+		SET Environment.Properties 	= InputRoot.Properties;
+		SET Environment.MQRFH2 		= InputRoot.MQRFH2;
+		SET Environment.MQMD 		= InputRoot.MQMD;
+		
+		--Se envia la invocacion al servicio web del proveedor
+ 		PROPAGATE TO TERMINAL 3;
+		
+		
+		RETURN FALSE;
+		
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararRespuesta
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--Si el consumidor espera respuesta
+		DECLARE refParams REFERENCE TO Environment.MQRFH2.usr.Parametros.Servicio;
+
+
+		IF (FIELDTYPE(Environment.MQRFH2.usr.WebReenvio) IS NULL OR (renvioResponderConsumidor(refParams)=getSI()) ) THEN 
+			--((1))  Se envia el mensaje de respuesta a la aplicacion Consumidora si es que espera una respuesta sincrona.
+			IF responderSincronoAlConsumidor(refParams)=getSI() THEN
+			
+				-->Si el mensaje ya se esta reintentando no se debe de enviar nada al flujo especifico de respuesta
+				IF FIELDTYPE(Environment.MQRFH2.usr.Parametros.Reintento.Info) IS NULL THEN 
+
+			 		SET OutputRoot.Properties 		= Environment.Properties;
+					SET OutputRoot.MQMD 			= Environment.MQMD;
+
+					SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData.queueName = obtenerColaFlujoResponse(Environment.MQRFH2.usr.CodigoServicio);	
+
+					--Se reasigna la cabecera MQRFH2 
+					SET OutputRoot.MQRFH2 = Environment.MQRFH2;
+					SET OutputRoot.HTTPResponseHeader = NULL; 
+					SET OutputRoot.HTTPRequestHeader = NULL; 
+		
+					--Se coloca la cabecera de error 
+					IF FIELDTYPE(Environment.ERROR) IS NOT NULL THEN 
+						CALL crearTagResultadoInvocacion(OutputRoot.MQRFH2.usr,getTIP_ERROR_CORE_ESB(),CAST(Environment.CODERROR  AS INTEGER),Environment.ERROR);	
+					END IF;
+					
+					--Se asigna la respuesta del proveedor
+					SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+
+					PROPAGATE TO TERMINAL 1;
+				
+				END IF;
+
+			END IF;
+						
+		END IF;
+		
+		
+		--Registro de la auditoria con la respuesta del proveedor solo si no ocurrio un error al hacer el request al servicio
+		IF FIELDTYPE(Environment.ERROR) IS NULL THEN
+
+			SET OutputRoot.Properties = InputProperties;
+			SET OutputRoot.MQRFH2.usr.Parametros = Environment.MQRFH2.usr.Parametros;
+				 
+			CALL armarAuditoriaEventoRespuestaProveedor(OutputRoot,
+								Environment.MQMD.CorrelId,
+								Environment.MQRFH2.usr,
+								InputBody,
+								NULL); 
+	
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+			
+			PROPAGATE TO TERMINAL 2;
+			
+		END IF;
+		
+		RETURN FALSE;
+	END;
+
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararRespuestaError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--((1))Control de Reintentos y registro de mensajes con errores
+		
+		DECLARE chrRetry CHARACTER '';
+		
+		SET chrRetry = Environment.Reintento.InputRoot.MQRFH2.usr.Parametros.Servicio.RETRY;
+		
+		IF (chrRetry = getSI()) THEN
+								
+			-- Se prepara el envio de reintento
+			SET OutputRoot.Properties 		= Environment.Reintento.InputRoot.Properties;
+			SET OutputRoot.MQMD 			= Environment.Reintento.InputRoot.MQMD;
+			SET OutputRoot.MQMD.MsgId 		= Environment.Reintento.InputRoot.MQMD.CorrelId;
+			SET OutputRoot.MQMD.CorrelId 	= Environment.Reintento.InputRoot.MQMD.CorrelId;			
+			SET OutputRoot.MQRFH2 			= Environment.Reintento.InputRoot.MQRFH2;
+			
+			SET OutputRoot.MQRFH2.usr.Parametros.Reintento.RETRY 	= chrRetry;
+			SET OutputRoot.MQRFH2.usr.Parametros.Reintento.DELAY 	= Environment.Reintento.InputRoot.MQRFH2.usr.Parametros.Servicio.DELAY;
+			SET OutputRoot.MQRFH2.usr.Parametros.Reintento.NRORETRY	= Environment.Reintento.InputRoot.MQRFH2.usr.Parametros.Servicio.NRORETRY;
+			
+			
+			SET OutputRoot.XMLNS 		= Environment.Reintento.InputRoot.XMLNS;
+			
+			PROPAGATE TO TERMINAL 1;	
+				
+		ELSE
+		
+			--Se envia al subflujo que registra los mensajes en la cola de errores o registra para el reenvio
+			SET OutputRoot.Properties 		= Environment.Reintento.InputRoot.Properties;
+			SET OutputRoot.MQMD 			= Environment.Reintento.InputRoot.MQMD;
+			SET OutputRoot.MQMD.MsgId 		= Environment.Reintento.InputRoot.MQMD.CorrelId;
+			SET OutputRoot.MQMD.CorrelId 	= Environment.Reintento.InputRoot.MQMD.CorrelId;			
+			SET OutputRoot.MQRFH2 			= Environment.Reintento.InputRoot.MQRFH2;
+			
+			SET OutputRoot.XMLNS 			= Environment.Reintento.InputRoot.XMLNS;
+
+			SET Environment.controlReenvio = getSI();
+							
+			PROPAGATE TO TERMINAL 4;
+
+			
+		END IF;
+		
+	
+		--((2)) Registro de auditoria
+		
+		SET OutputRoot.Properties = InputProperties;
+		SET OutputRoot.MQMD = Environment.MQMD;
+		SET OutputRoot.MQRFH2 = NULL;
+		SET OutputRoot.MQRFH2.usr.Parametros = Environment.MQRFH2.usr.Parametros;
+
+		--Control de la respuesta de error del Http Request.
+		
+		
+		DECLARE chrCodigoError CHARACTER '';
+		DECLARE intCodigoError INTEGER getCOD_ERROR_1010();
+		DECLARE chrDescripcionError CHARACTER '';
+		DECLARE chrMensajeError CHARACTER '';
+		CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
+
+		
+		IF chrCodigoError IS NULL THEN
+			
+			IF InputBody.BLOB IS NOT NULL THEN
+
+				SET chrMensajeError = CAST(InputBody.BLOB AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId);
+								
+			END IF;
+			
+		ELSE
+			
+			IF CONTAINS(UPPER(chrDescripcionError),'TIMEOUT')=TRUE THEN
+				SET chrMensajeError = getMSJ_ERROR_1012();
+				SET intCodigoError = getCOD_ERROR_1012();
+			ELSE
+				SET chrMensajeError = chrDescripcionError ;
+			END IF; 
+			
+			
+			
+		END IF; 
+		
+
+  
+		CALL armarAuditoriaEventoError(OutputRoot,
+						Environment.MQMD.CorrelId,
+						Environment.MQRFH2.usr,
+						intCodigoError,
+						chrMensajeError,
+						Environment.NULL,
+						NULL,NULL);
+
+		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+ 
+ 		PROPAGATE TO TERMINAL 2;		
+ 		
+		
+		-- Se guarda el error en una variable para el control en el siguiente compute
+
+		SET Environment.CODERROR = intCodigoError;
+		SET Environment.ERROR = getMSJ_ERROR_1010();--chrMensajeError;
+		
+		PROPAGATE TO TERMINAL 3;	
+		
+	END;
+
+	
+END MODULE;

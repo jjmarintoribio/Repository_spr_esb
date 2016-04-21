@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:AfiliacionDsSolicitud" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:AfiliacionDsSolicitud" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+
+	<xsd:element ibmSchExtn:docRoot="true" name="AfiliacionDsSolicitud">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+				<xsd:element dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+						<xsd:sequence dfdl:separatorSuppressionPolicy="trailingEmpty">
+							<xsd:element dfdl:textNumberPattern="#0" name="NRO_AFILIACION" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert message="&lt;F&gt;NRO_AFILIACION Max 15 caracteres&lt;/F&gt;">{fn:string-length(/ns0:AfiliacionDsSolicitud/MENSAJE[1]/NRO_AFILIACION) le (15)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element dfdl:textNumberPattern="#0" name="TITULAR_TELEFONO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Telefono Max. 15 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/TITULAR_TELEFONO)le(15)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element ibmDfdlExtn:sampleValue="a" name="TITULAR_EMAIL" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Correo Max. 75 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/TITULAR_EMAIL)le(75)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" name="NRO_IDENTIFICACION" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Nro Identificacion Max. 24 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/NRO_IDENTIFICACION)le(24)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" name="USUARIO_NOMBRES" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Usuario Nombre Max. 50 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/USUARIO_NOMBRES)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" name="USUARIO_APE_PATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Usuario Apellido Pat Max. 50 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/USUARIO_APE_PATERNO)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" minOccurs="0" name="USUARIO_APE_MATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Usuario Apellido Mat Max. 50 caracteres&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/USUARIO_APE_MATERNO)le(50)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" name="CARGO_TIPO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  
+                  
+                  <dfdl:assert message="&lt;F&gt;Tipo de Cargo Errado&lt;/F&gt;">{xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_TIPO) eq('V') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_TIPO) eq('F') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_TIPO) eq('v') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_TIPO) eq('f')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element ibmDfdlExtn:sampleValue="a" name="CARGO_MONTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/"/>
+                </xsd:annotation>
+              </xsd:element>
+                                                    <xsd:element dfdl:textNumberPattern="#0" name="CARGO_DIA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="CARGO_PERIODICIDAD" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  
+                  <dfdl:assert failureType="processingError" message="Periodicidad Errada solo 1,6,12,14">{xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('14') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('1') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('6') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('12')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="ESTADO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;Estado Errado solo A,R&lt;/F&gt;">{xs:string(/ns0:AfiliacionDsSolicitud/MENSAJE[1]/ESTADO) eq('A') or xs:string(/ns0:AfiliacionDsSolicitud/MENSAJE[1]/ESTADO) eq('R') or xs:string(/ns0:AfiliacionDsSolicitud/MENSAJE[1]/ESTADO) eq('a') or xs:string(/ns0:AfiliacionDsSolicitud/MENSAJE[1]/ESTADO) eq('r')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="MSG_DENEGACION" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  
+                  <dfdl:discriminator message="MSG Denegacion Max. 200 caracteres">{fn:string-length( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/MSG_DENEGACION)le(5)}</dfdl:discriminator>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="CARGO_MES" type="xsd:int">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/"/>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="CARGO_ANHO" type="xsd:int"/>
+                            <xsd:element minOccurs="0" name="TITULAR_TIPO_DOC" type="xsd:string"/>
+                            <xsd:element minOccurs="0" name="TITULAR_NRO_DOC" type="xsd:string"/>
+                            <xsd:element minOccurs="0" name="REINTENTO_AUTOMATICO" type="xsd:string"/>
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+</xsd:schema>

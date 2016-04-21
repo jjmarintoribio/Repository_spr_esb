@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="core.esb.visa.ib" xmlns:tns="core.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="MDF_CORE_AUDITORIA.mxsd"/>
+  <xsd:complexType name="T_MENSAJE_CORREO">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_EXTRUCTURA_CORREO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSG_CORREO" type="tns:T_MENSAJE_CORREO">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSG_CORREO;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_EXTRUCTURA_CORREO">
+    <xsd:sequence>
+      <xsd:element name="DATOSCORREO" type="tns:T_DATOS_CORREO"/>
+      <xsd:element name="AUDITORIA" type="tns:T_EXTRUCTURA_AUDITORIA"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="T_DATOS_CORREO">
+    <xsd:sequence>
+      <xsd:element name="TO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="200"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="CC" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="200"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="BCC" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="200"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="REENVIAR" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="200"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="FROM" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF1">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="200"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+ </xsd:schema>

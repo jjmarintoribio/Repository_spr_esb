@@ -1,0 +1,29 @@
+BROKER SCHEMA ib.visa.esb.bth.mgrcar
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_DISTMENSAJES_DistribuirMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET Environment.Variables.index = 0;
+		SET Environment.Variables.cantidadMensajes = InputBody.MENSAJE.CANTMENSAJE;
+		
+		WHILE Environment.Variables.index < Environment.Variables.cantidadMensajes DO
+			SET Environment.Variables.index = Environment.Variables.index + 1;
+			PROPAGATE TO TERMINAL 0;
+		END WHILE;
+		RETURN FALSE;
+	END;
+END MODULE; 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_DISTMENSAJES_SetearBody
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+			SET OutputRoot.MQRFH2.usr.Parametros		= InputRoot.MQRFH2.usr.Parametros;	
+			SET OutputRoot.XMLNSC.MENSAJE = InputBody.MENSAJE;	
+			PROPAGATE TO TERMINAL 1;
+			RETURN FALSE;
+	END;
+END MODULE;

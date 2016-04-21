@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="test/dfsl/imparch/MF_ESB_BTH_IMPARCH_TEST_DFDL.msgflow"
+    nsPrefix="test_dfsl_imparch_MF_ESB_BTH_IMPARCH_TEST_DFDL.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_IMPARCH_TEST_DFDL" bundleName="test/dfsl/imparch/MF_ESB_BTH_IMPARCH_TEST_DFDL" pluginId="MFP_EST_TEST_DFDL"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_EST_TEST_DFDL/icons/full/obj16/MF_ESB_BTH_IMPARCH_TEST_DFDL.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_EST_TEST_DFDL/icons/full/obj30/MF_ESB_BTH_IMPARCH_TEST_DFDL.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="186,265" destination="file" filePath="/app/visa/esb/batch/log.error" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xA;Environment = ${Environment}&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="83,123" inputDirectory="/app/visa/esb/batch/test" filenamePattern="*.csv" messageDomainProperty="BLOB" failedFileAction="delete" recordDetection="delimited">
+        <translation xmi:type="utility:ConstantString" string="ImportacionBines"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="324,118" dataSource="DSSPR_DB" computeExpression="esql://routine/test.dfsl.imparch#MF_ESB_BTH_IMPARCH_TEST_DFDL_ValidarArchivo.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ValidarArchivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="542,119" destination="file" filePath="/app/visa/esb/batch/logs/dfdl.log" pattern="Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="Trace"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="347,206" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-final-lectura.log" pattern="=============== IMPORTACION ARCHIVOS CARGO - FINAL DE LEER ARCHIVO ==========&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="Trace1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="530,280" outputDirectory="/temp" outputFilename="temporal.log" outputMode="append" recordDefinition="delimited">
+        <translation xmi:type="utility:ConstantString" string="EscribirArchivoImportacionError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="298,275" computeExpression="esql://routine/test.dfsl.imparch#MF_ESB_BTH_IMPARCH_TEST_DFDL_ControlarErrorRecepcion.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlarErrorRecepcion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="473,216" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-fin-test-dfdl-FILE.log" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR (APPEND FILE)==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root}&#xD;&#xA;Environment = ${Environment}&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="Trace3"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="348,419" computeExpression="esql://routine/test.dfsl.imparch#MF_ESB_BTH_IMPARCH_TEST_DFDL_ProbarChild.Main">
+        <translation xmi:type="utility:ConstantString" string="ProbarChild"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="514,405" destination="file" filePath="/app/visa/esb/batch/logs/dfdl2.log" pattern="------------ BEGIN -------------------------&#xA;Environment = ${Environment}&#xA;------------ END -------------------------">
+        <translation xmi:type="utility:ConstantString" string="Trace2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="32,367" queueName="IB.BTH.TEST.REQ02" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.TEST.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="216,363" destination="file" filePath="/app/visa/esb/batch/logs/dfdl2.log" pattern="Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="Trace4"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.EOD"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer/>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

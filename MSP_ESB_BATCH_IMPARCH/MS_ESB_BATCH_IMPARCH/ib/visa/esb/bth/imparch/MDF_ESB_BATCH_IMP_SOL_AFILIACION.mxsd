@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="imparch.bth.esb.visa.ib" xmlns:tns="imparch.bth.esb.visa.ib" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="T_MSJ_SOL_AFILIACION">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_MSJ_SOL_AFILIACION_CUERPO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_SOL_AFILIACION" type="tns:T_MSJ_SOL_AFILIACION">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_SOL_AFILIACION;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_MSJ_SOL_AFILIACION_CUERPO">
+    <xsd:sequence>
+            <xsd:element name="ID_GIRO" type="xsd:string"/>
+            <xsd:element name="COD_COMERCIO" type="xsd:string"/>
+            <xsd:element name="COD_PRODUCTO" type="xsd:string"/>
+            <xsd:element name="NRO_TARJETA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="20"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="NRO_MES_EXPIRACION_TARJETA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="3"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="NRO_ANHO_EXPIRACION_TARJETA" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="3"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="NOM_TARJETAHABIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="APE_PATERNO_TARJETAHABIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="APE_MATERNO_TARJETAHABIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="TELEFONO_TARJETAHABIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="15"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="EMAIL_TARJETAHABIENTE" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="75"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+            <xsd:element name="NRO_IDENTIFICACION_BENEFICIARIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="24"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="NOM_BENEFICIARIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="APE_PATERNO_BENEFICIARIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="APE_MATERNO_BENEFICIARIO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="50"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="MTO_MAXIMO_CARGO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="NUL" stringJustification="leftJustify" typeName="MRCWFStringRep" width="16"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+        </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

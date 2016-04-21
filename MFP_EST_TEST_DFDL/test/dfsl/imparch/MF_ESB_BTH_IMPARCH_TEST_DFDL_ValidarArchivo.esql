@@ -1,0 +1,208 @@
+BROKER SCHEMA test.dfsl.imparch
+PATH ib.visa.esb.bth;
+ 
+DECLARE cacheTest SHARED ROW;
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TEST_DFDL_ValidarArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--IF InputLocalEnvironment.File.Record > 1 THEN
+--			DECLARE msjBlob CHARACTER '';
+--			SET msjBlob= CAST(InputRoot.BLOB.BLOB as char CCSID InputRoot.Properties.CodedCharSetId Encoding InputRoot.Properties.Encoding);
+--			SET Environment.resultado.record = msjBlob;
+--			PROPAGATE TO TERMINAL 1;
+		--END IF;		
+		
+		--IF InputLocalEnvironment.File.Record > 1 THEN
+		/*
+		SET Environment.Variables.flgErr = FALSE;
+		THROW USER EXCEPTION MESSAGE 1013 VALUES('FUCK OFF MOTHERFUCKE');
+		
+		SET Environment.Variables.flgErr = TRUE;
+			*/
+	
+	/*		DECLARE inCCSID, inEncoding INT; 
+			SET inCCSID = CAST(InputRoot.Properties.CodedCharSetId AS INT); 
+			SET inEncoding = CAST(InputRoot.Properties.Encoding AS INT); 					
+			
+			
+		CREATE LASTCHILD OF Environment DOMAIN('DFDL') PARSE(InputRoot.BLOB.BLOB ENCODING 273 CCSID 819 SET '' TYPE '{myNs:MgrCargo}:MgrCargo' OPTIONS RootBitStream);
+		
+		SET Environment.Variables.error = COALESCE(FIELDVALUE(Environment.DFDL.[1].MENSAJE.M_CODIGO_RESULTADO),'XX');
+		
+			IF LENGTH(COALESCE(FIELDVALUE(Environment.DFDL.[1].MENSAJE.M_CODIGO_RESULTADO),'XX')) <> 2 THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES('CODIGO_RESULTADO DEBE TENER 2 DIGITOS');
+				END IF;
+		*/ 
+																     
+			--SET Environment.Variables.fecha = CAST(Environment.DFDL.[1].MENSAJE.M_FECHA_DESAFILIACION AS DATE);
+			
+			/*IF FIELDTYPE(Environment.DFDL.[1].MENSAJE.M_FECHA_DESAFILIACION) IS NOT NULL THEN
+				SET Environment.Variables.flgErr = 'NO EXISTE';
+			END IF;*/
+			
+			--SET Environment.Variables.flgErr = RIGHT('13/12/2012',4);
+		/*	DECLARE xdate CHARACTER '13/12/2012';
+			SET Environment.Variables.OTRO = SUBSTRING(xdate FROM 1 FOR 2);
+			SET Environment.Variables.flgErr = SUBSTRING(xdate FROM 7 FOR 4) || '-' || SUBSTRING(xdate FROM 4 FOR 2) || '-'|| SUBSTRING(xdate FROM 1 FOR 2);
+			*/
+			
+			--SET Environment.Variables.codigoComercio = SUBSTRING('AFILIACIONES_PRODUCTIVA_101039902_04_2015.pgp' AFTER 'AFILIACIONES_PRODUCTIVA_');
+			--SET Environment.Variables.codigoFinal = SUBSTRING(Environment.Variables.codigoComercio BEFORE '_');
+			
+			/*DECLARE xdata CHARACTER 'XXXXX|YYYYY#ZZZZZ';					
+			--SET Environment.Variables.flgErr = SUBSTRING(SUBSTRING(xdata AFTER '|') BEFORE '#');
+			SET Environment.Variables.flgErr = SUBSTRING( xdata AFTER '#');	
+																    
+			
+			THROW USER EXCEPTION MESSAGE 1013 VALUES('ERROR SPR');						
+			CREATE LASTCHILD OF OutputRoot DOMAIN('XMLNSC');
+			*/
+			--SET OutputRoot.XMLNSC.MENSAJE	= 'ASDASD';
+			
+			DECLARE campo NAME (getEST_ACTIVO());
+			
+			
+			CALL obtenerProductosComercio('COM0001',
+										Environment.Resultset1[]);
+		--			
+			
+			SET cacheTest.campo.productos[] = Environment.Resultset1[];
+			
+			
+			
+			DECLARE codigoProducto CHARACTER;
+			
+			SET Environment.ResultadoFinal = THE (SELECT  P.ID_PRODUCTO,P.TIPO_MONEDA FROM cacheTest.campo.productos[] AS P WHERE P.COD_PRODUCTO = '1520165');
+			---SET Environment.ResultadoFinal2 = SELECT ITEM P.ID_PRODUCTO FROM cacheTest.campo.productos AS P WHERE P.COD_PRODUCTO = '1520165';
+			PROPAGATE TO TERMINAL 0;
+		
+		--END IF;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TEST_DFDL_ProbarChild
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--IF InputLocalEnvironment.File.Record > 1 THEN
+--			DECLARE msjBlob CHARACTER '';
+--			SET msjBlob= CAST(InputRoot.BLOB.BLOB as char CCSID InputRoot.Properties.CodedCharSetId Encoding InputRoot.Properties.Encoding);
+--			SET Environment.resultado.record = msjBlob;
+--			PROPAGATE TO TERMINAL 1;
+		--END IF;		
+		
+		--IF InputLocalEnvironment.File.Record > 1 THEN
+		/*
+		SET Environment.Variables.flgErr = FALSE;
+		THROW USER EXCEPTION MESSAGE 1013 VALUES('FUCK OFF MOTHERFUCKE');
+		
+		SET Environment.Variables.flgErr = TRUE;
+			*/
+			
+			
+		/*	DECLARE inCCSID, inEncoding INT; 
+			SET inCCSID = CAST(InputRoot.Properties.CodedCharSetId AS INT); 
+			SET inEncoding = CAST(InputRoot.Properties.Encoding AS INT); 					
+			
+			
+		CREATE LASTCHILD OF Environment DOMAIN('DFDL') PARSE(InputRoot.BLOB.BLOB 
+																     ENCODING 273  -- inEncoding 
+																     CCSID 819--inCCSID 
+																     SET 'AfiliacionMigracion.xsd' 
+																     TYPE '{myNs:AfiliacionMigracion}:AfiliacionMigracion' 
+																     OPTIONS RootBitStream); 
+			*/
+			
+																     
+			--SET Environment.Variables.fecha = CAST(Environment.DFDL.[1].MENSAJE.M_FECHA_DESAFILIACION AS DATE);
+			
+			/*IF FIELDTYPE(Environment.DFDL.[1].MENSAJE.M_FECHA_DESAFILIACION) IS NOT NULL THEN
+				SET Environment.Variables.flgErr = 'NO EXISTE';
+			END IF;*/
+			
+			--SET Environment.Variables.flgErr = RIGHT('13/12/2012',4);
+		/*	DECLARE xdate CHARACTER '13/12/2012';
+			SET Environment.Variables.OTRO = SUBSTRING(xdate FROM 1 FOR 2);
+			SET Environment.Variables.flgErr = SUBSTRING(xdate FROM 7 FOR 4) || '-' || SUBSTRING(xdate FROM 4 FOR 2) || '-'|| SUBSTRING(xdate FROM 1 FOR 2);
+			*/
+			/*
+			DECLARE xdata CHARACTER 'XXXXX|YYYYY#ZZZZZ';					
+			--SET Environment.Variables.flgErr = SUBSTRING(SUBSTRING(xdata AFTER '|') BEFORE '#');
+			SET Environment.Variables.flgErr = SUBSTRING( xdata AFTER '#');	
+																    
+			
+			THROW USER EXCEPTION MESSAGE 1013 VALUES('ERROR SPR');						
+			CREATE LASTCHILD OF OutputRoot DOMAIN('XMLNSC');
+			SET OutputRoot.XMLNSC	= Environment.DFDL;
+			
+			PROPAGATE TO TERMINAL 0;*/
+		
+		--END IF;
+		
+		/* PRUEBA 2
+		CREATE FIELD Environment.XMLNSC.REGISTROS.AFILIACION;
+		
+		DECLARE refFila REFERENCE TO Environment.XMLNSC.REGISTROS;
+		DECLARE intCounter INTEGER 0;
+		
+		WHILE intCounter <= 20 DO			
+			MOVE refFila LASTCHILD;
+			SET refFila.CODPRODUCTO = 'COMD0001';
+			SET refFila.IDAFILIACION = '1';
+			SET refFila.CARGOS.FECHA = '01/02/2012';
+			
+			/*IF intCounter = 10 THEN
+				
+			END IF;
+			
+			IF intCounter = 20 THEN
+				
+			END IF;
+			*/
+			SET intCounter = intCounter +1;
+			MOVE refFila PARENT;
+			CREATE LASTCHILD OF refFila NAME 'AFILIACION';				
+		END WHILE;
+		 MOVE refFila LASTCHILD;
+		 SET refFila.IDAFILIACION = '0';
+		 --RESULT <FINAL>0<FINAL>
+		 SET Environment.Variables.FINAL[]= (SELECT ITEM REG.IDAFILIACION FROM Environment.XMLNSC.REGISTROS.AFILIACION[] AS REG WHERE REG.IDAFILIACION = '0');
+		 
+		 --RESULT <FINAL>
+		 --		 	<IDAFILIACION>0<IDAFILIACION>
+		 --	      <FINAL>
+		 --SET Environment.Variables.FINAL[]= (SELECT REG.IDAFILIACION FROM Environment.XMLNSC.REGISTROS.AFILIACION[] AS REG WHERE REG.IDAFILIACION = '0');
+		 */
+		 /* PRUEBA 3 */
+		 CREATE FIELD Environment.XMLNSC.REGISTROS;		 		
+		 DECLARE refFila REFERENCE TO Environment.XMLNSC.REGISTROS;		 
+		 DECLARE intCounter INTEGER 0;
+		 DECLARE intCounter2 INTEGER 1;
+		 
+		 WHILE intCounter <= 20 DO
+		 	CREATE LASTCHILD OF refFila NAME 'AFILIACION'; 		 	 		 
+		 	MOVE refFila LASTCHILD;--AFILIACION	
+		 	SET refFila.CODPRODUCTO = 'COMD0001';
+			SET refFila.IDAFILIACION = '1';						
+			--CREATE FIELD refFila NAME 'CARGO';			
+			WHILE intCounter2 <= 5 DO									
+				SET refFila.CARGO.FECHACARGO[intCounter2]	 = '12/12/2012';
+				SET intCounter2 = intCounter2 +1;		
+			END WHILE;		 			 	
+		 	SET intCounter = intCounter +1;
+		 	SET intCounter2 = 1;		 	
+		 	MOVE refFila PARENT;--REGISTROS		 	
+		 END WHILE;
+		 
+		  			
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+

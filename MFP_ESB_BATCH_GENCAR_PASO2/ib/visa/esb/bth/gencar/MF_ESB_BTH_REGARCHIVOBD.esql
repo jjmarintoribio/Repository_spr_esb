@@ -1,0 +1,172 @@
+BROKER SCHEMA ib.visa.esb.bth.gencar
+ PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.MQRFH2 			= InputRoot.MQRFH2;
+		SET Environment.CorrelId 		= CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQMD.CorrelId 	= Environment.CorrelId;
+		SET Environment.idGrupo			= InputBody.MENSAJE.IDGRUPO;
+		--Bucle para obtener todos los registros de un grupo del archivo cargado
+		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
+		DECLARE flgArchivoError REFERENCE TO InputRoot.XMLNSC.MENSAJE.ERRROARCHIVO;
+		DECLARE refParam REFERENCE TO Environment.MQRFH2.usr.Parametros;
+		CREATE FIELD Environment.Variables.Errores.error;			
+		DECLARE refError REFERENCE TO Environment.Variables.Errores.error;
+		
+		--2406
+		--DECLARE flagFinDeArchivo REFERENCE TO InputRoot.XMLNSC.MENSAJE.FINARCHIVO;
+		--DECLARE flagFinDeArchivo REFERENCE TO cacheProcesoGenCar.flagFinArchivo;
+		
+				
+		WHILE LASTMOVE(refRegis) DO
+			IF flgArchivoError IS NULL THEN
+			
+				IF (refRegis.TIPOREGISTRO = 'D') THEN --Cargos
+					
+				--DECLARE refInD REFERENCE TO InputBody.MENSAJE;
+				DECLARE chrFechaTransa,chrHoraTransa CHARACTER '';
+						
+				IF COALESCE(TRIM(refRegis.FECHATRANSACCION),'') = '' AND COALESCE(TRIM(refRegis.HORATRANSACCION),'') = '' THEN
+					SET chrFechaTransa = obtenerFechaActual(3);
+					SET chrHoraTransa  = '000000';
+				ELSE
+					SET chrFechaTransa = refRegis.FECHATRANSACCION;
+					SET chrHoraTransa  = refRegis.HORATRANSACCION;	
+				END IF;
+				
+				CALL  insertarPagosTemporalProcesoAutorizador(Environment.idGrupo,
+															CAST(refRegis.NROLOTE AS INTEGER),	
+															TRIM(refRegis.CODCOMERCIO),
+															encriptarNroTarjeta(refRegis.NROTARJETA),
+															enmascararNumeroTarjeta(TRIM(refRegis.NROTARJETA)),
+															CAST( SUBSTRING(refRegis.IMPORTE FROM 1 FOR 10) || '.' || SUBSTRING(refRegis.IMPORTE FROM 11 FOR 2) AS DECIMAL),
+															TRIM(refRegis.CODCLIENTE), 
+															CAST(refRegis.FECHACARGO || getHORA_VACIA() AS TIMESTAMP FORMAT getFORMATO_FECHA() ||' ' || getFORMATO_HORA_BD3()),
+															CAST(refRegis.MESVCTOTARJETA AS INTEGER),
+															CAST('20' || refRegis.ANOVCTOTARJETA AS INTEGER),
+															TRIM(refRegis.CODRESULTADO),
+															CAST(chrFechaTransa || ' ' || chrHoraTransa AS TIMESTAMP FORMAT getFORMATO_FECHA3() || ' ' || getFORMATO_HORA_3()),
+															refRegis.NROTERMINAL,
+															refRegis.MSJTERMINAL,
+															TRIM(refRegis.CODRESPUESTA),
+															TRIM(refRegis.NROREFERENCIA),
+															CAST(refRegis.CODCARGO AS INTEGER),
+															CAST(refRegis.CODPRODUCTO AS INTEGER),
+															TRIM(refRegis.CODTRANSACCION),
+															TRIM(refRegis.CODAUTORIZACION));
+																		
+				ELSEIF (refRegis.TIPOREGISTRO = 'H') THEN  --Lotes 
+				
+					IF (refRegis.CODRESULTADO <> '') THEN
+						
+							--Actualizar 
+							--24/06 IF refParam.flgArchivoAlignet IS TRUE THEN
+							--	CALL actualizarLotesProcesoAutorizadorErrorAlignet(TRIM(refRegis.CODCOMERCIO),
+							--													TRIM(refRegis.CODPRODUCTO),
+							--													TRIM(refRegis.CODCLIENTE),CAST(refRegis.FECHACARGO || getHORA_VACIA() AS TIMESTAMP FORMAT getFORMATO_FECHA() ||' ' || getFORMATO_HORA_BD3()));
+							--24/06ELSE
+								CALL actualizarLotesProcesoAutorizadorError(CAST(refRegis.NROLOTE AS INTEGER));
+							--END IF;
+							SET refError.MENSAJE = 'Se produjo un error en el lote n° ' || refRegis.NROLOTE || ' debido a ' || refRegis.MSJRESPUESTA || '.';
+							
+							--Envio de notificacion solo si el lote es incorrecto
+							--DECLARE msjError CHARACTER '';
+							--SET msjError = 'Se produjo un error en el lote n° ' || refRegis.NROLOTE || ' debido a ' || refRegis.MSJRESPUESTA || '.';
+							--CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_5(),Environment.MQRFH2.usr.Parametros,msjError,NULL);
+							--PROPAGATE TO TERMINAL 1;
+							CREATE LASTCHILD OF Environment.Variables.Errores NAME 'error';
+							MOVE refError NEXTSIBLING;
+							--SET OutputRoot.XMLNSC.MENSAJE = '{CON ERRORES }LOTE NRO '|| refRegis.NROLOTE ;
+					ELSE 
+							--24/06 IF refParam.flgArchivoAlignet IS TRUE THEN																														
+							--	CALL actualizarLotesProcesoAutorizadorAlignet(TRIM(refRegis.CODCOMERCIO),
+							--													TRIM(refRegis.CODPRODUCTO),
+							--													CAST(refRegis.FECHACARGO || getHORA_VACIA() AS TIMESTAMP FORMAT getFORMATO_FECHA() ||' ' || getFORMATO_HORA_BD3()),
+							--													getID_ESB_VISA(), 
+							--													CAST(Environment.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER), 
+							--													CURRENT_TIMESTAMP,BrokerName);
+							-- ELSE
+								CALL  actualizarLotesProcesoAutorizador(CAST(refRegis.NROLOTE AS INTEGER),
+																	getID_ESB_VISA(), 
+																	CAST(Environment.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER), 
+																	CURRENT_TIMESTAMP,BrokerName) ;
+							-- END IF;
+							--SET OutputRoot.XMLNSC.MENSAJE = '{DEBE ACTUALIZAR}LOTE NRO '|| refRegis.NROLOTE ;
+							--PROPAGATE TO TERMINAL 4; 				
+					END IF; 
+																				
+				END IF; 
+			ELSE
+				IF refRegis.TIPOREGISTRO = 'H' THEN
+					--24/06 IF refParam.flgArchivoAlignet IS TRUE THEN
+					--	CALL actualizarLotesArchivoErrorAlignet(TRIM(refRegis.CODCOMERCIO),TRIM(refRegis.CODPRODUCTO),CAST(refRegis.FECHACARGO || getHORA_VACIA() AS TIMESTAMP FORMAT getFORMATO_FECHA() ||' ' || getFORMATO_HORA_BD3()));								
+					--ELSE		
+						CALL actualizarLotesArchivoError(CAST(refRegis.NROLOTE AS INTEGER));	
+					--END IF;
+				END IF;
+			END IF;
+		MOVE refRegis NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+		
+		
+		--Ejecuta SP que vuelca todos los cargos que no fueron enviados a telefonica
+		DECLARE fechaProcesoPago CHARACTER SUBSTRING(Environment.MQRFH2.usr.Parametros.Batch.nombreArchivo FROM 10 FOR 8);		
+		
+		--2406 
+		IF InputBody.MENSAJE.FINARCHIVO IS TRUE THEN
+		--IF flagFinDeArchivo is TRUE THEN
+		--Temporal0207 --> se envia sp solo para estado 8
+ 		CALL insertarPagoTemporalCargosNoProcesados(obtenerTimestampSinHora(obtenerDateConFormato(fechaProcesoPago)),
+														CAST(Environment.idGrupo AS CHARACTER));
+		CALL actualizarLotesMontoCero();													
+													
+		END IF;																	
+		--Ejecuta el SP que vuelca los pagos temporales hacia la tabla pagoinsertarPagoTemporalCargosNoProcesados
+		CALL insertarPagosProcesoAutorizador(CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER), 
+												Environment.idGrupo,
+												getID_ESB_VISA(), CURRENT_TIMESTAMP,BrokerName);
+												
+		--Envio de correos
+		
+		DELETE LASTCHILD OF Environment.Variables.Errores;
+		DECLARE refListErr REFERENCE TO Environment.Variables.Errores.error;
+		
+		WHILE LASTMOVE(refListErr) DO
+			
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_5(),Environment.MQRFH2.usr.Parametros,refListErr.MENSAJE,NULL);
+			PROPAGATE TO TERMINAL 1;
+			MOVE refListErr NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+		PROPAGATE TO TERMINAL 4;
+		
+		
+		
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;		
+		
+		PROPAGATE TO TERMINAL 2;
+		
+		RETURN FALSE;
+			
+	END;
+
+	
+END MODULE;
+ 
+
+
+ 
+
+ 

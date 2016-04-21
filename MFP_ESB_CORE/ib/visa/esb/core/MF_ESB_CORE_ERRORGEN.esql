@@ -1,0 +1,60 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_ERRORGEN.esql
+ * Proposito	: Flujo de control de errores genericos del ESB.
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.core
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_ERRORGEN_PrepararRegistro
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refParams REFERENCE TO InputRoot.MQRFH2.usr.Parametros.Servicio;
+		
+		
+		-- para la logica de reenvios Preguntar por el valor  MQRFH2.usr.ManejoError.controlReenvio para saber si 
+		-- se debe de realizar el registro del mensaje para ser reenviado desde la ABRM
+		 
+		 IF COALESCE(InputRoot.MQRFH2.usr.ManejoError.controlReenvio,getNO()) = getSI() THEN
+		 	--registrar el mensaje en la ABRM
+		 	--1.- preguntar si la propiedad REENVIO esta en S para registrar en la ABRM
+		 	--2.- si la propiedad REENVIO esta en NO preguntar por DISCARD para saber si se registra en la cola de mensajes de error
+		 	-- si no se descartan los mensajes con errores
+			IF COALESCE(refParams.DISCARD,getNO()) = getNO() THEN
+			
+				SET OutputRoot = InputRoot;
+				SET OutputRoot.MQMD.MsgId 		= InputRoot.MQMD.CorrelId;
+				SET OutputRoot.MQMD.CorrelId 	= InputRoot.MQMD.CorrelId;
+			
+				PROPAGATE TO TERMINAL 1;
+				
+			END IF;
+		 	
+		 ELSE
+		 	
+			 --DISCARD por default es NO
+			 
+			-- si no se descartan los mensajes con errores
+			IF COALESCE(refParams.DISCARD,getNO()) = getNO() THEN
+			
+				SET OutputRoot = InputRoot;
+				SET OutputRoot.MQMD.MsgId 		= InputRoot.MQMD.CorrelId;
+				SET OutputRoot.MQMD.CorrelId 	= InputRoot.MQMD.CorrelId;
+			
+				PROPAGATE TO TERMINAL 1;
+				
+			END IF;
+	
+		END IF;
+		
+		RETURN FALSE;
+	END;
+ 
+END MODULE;

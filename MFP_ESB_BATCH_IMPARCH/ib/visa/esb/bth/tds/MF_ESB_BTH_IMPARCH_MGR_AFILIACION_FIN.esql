@@ -1,0 +1,139 @@
+BROKER SCHEMA ib.visa.esb.bth.tds
+ PATH ib.visa.esb.bth; 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_FIN_EjecutarFinalizacionCarga
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) hacer que cambie el estado de un proceso
+		
+		SET Environment.finArchivo.IdProceso		  = InputRoot.MQRFH2.usr.Parametros.Batch.idProceso;
+		SET Environment.finArchivo.IdTransaccion	  = InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion;
+		SET Environment.Parametros 					  = InputRoot.MQRFH2.usr.Parametros;
+		SET Environment.Comercio 					  = InputBody.MENSAJE.COMERCIO;
+		SET Environment.CantidadFilasInsertadas				  = 0;
+		SET Environment.NombreArchivo 				  = InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo;
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		
+		--CHEQUEA EXISTENCIA DE AFILIACIONES REPETIDAS , EN CASO HAYA LOS MANDA AL LOG DE ERRORES			
+		CALL insertarLogTemporalAfiliacion(CAST(Environment.Comercio AS CHARACTER));
+		
+		--MIGRA LAS AFILIACIONES					
+		CALL migrarAfiliacion(Environment.Comercio,Environment.CantidadFilasInsertadas);
+		
+		CALL actualizarProcesoMigracion(CAST(Environment.finArchivo.IdProceso AS INTEGER),
+										  CURRENT_TIMESTAMP,
+										  CAST(COALESCE(Environment.CantidadFilasInsertadas,0) AS INTEGER),
+										  CAST(InputBody.MENSAJE.CANTIDADREGISTROS AS INTEGER)-CAST(COALESCE(Environment.CantidadFilasInsertadas,0) AS INTEGER),
+										  CAST(InputBody.MENSAJE.CANTIDADREGISTROS AS INTEGER),
+										  2, 
+										  CAST( Environment.finArchivo.IdTransaccion AS INTEGER));
+				
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de actualizar en BD el archivo de Importacion ' || InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo);
+		
+		PROPAGATE TO TERMINAL 1;
+		
+		--OBTIENE TODO EL LOG GENERADO POR EL PROCESO	
+		CALL obtenerLogAfiliacionMigracion(Environment.Resultset1[]);
+		
+		DECLARE refResult REFERENCE TO Environment.Resultset1;			
+		
+		WHILE LASTMOVE(refResult) DO
+			SET OutputRoot.XMLNSC.resultado = refResult;			
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) ;
+			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.NombreArchivo,'csv','dat') || '.log';			
+			PROPAGATE TO TERMINAL 4;
+			MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) ;
+		SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.NombreArchivo,'csv','dat') || '.log';
+		PROPAGATE TO TERMINAL 0;
+		
+		--TRUNCA LAS TABLAS TEMPORALES Y LOGGERS
+		CALL truncarTabla('SPR','AFILIACION_TEMPORAL_MIGRACION');
+		CALL truncarTabla('SPR','LOG_AFILIACION_MIGRACION');
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de truncar el proceso ');
+		
+		PROPAGATE TO TERMINAL 1;
+		
+		--((2)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+		
+		PROPAGATE TO TERMINAL 2;			
+		
+		--((3)) Manda a sacar todos los mensajes de los registros impactados
+		
+	/*	SET Environment.flagFinArchivo = TRUE;
+		
+		WHILE Environment.flagFinArchivo IS TRUE DO
+			SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+			PROPAGATE TO TERMINAL 3;
+			
+		END WHILE;
+		
+		--((4)) Envio de alertas al fin  del proceso
+		SET refParam.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 4;
+		END IF;	
+		*/
+		
+			SET refParam.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 3;
+		
+		RETURN FALSE;	
+	END;
+END MODULE;
+
+ 
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_FIN_ControlError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;	
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_FIN_MoverArchivoTemp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.NombreArchivo,'csv','dat') || '.log';
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MGR_AFILIACION_FIN_MoverArchivoFinal
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) ;
+		SET OutputLocalEnvironment.Destination.File.Name = REPLACE(Environment.NombreArchivo,'csv','dat') || '.log';
+		RETURN TRUE;
+	END;
+END MODULE;
+

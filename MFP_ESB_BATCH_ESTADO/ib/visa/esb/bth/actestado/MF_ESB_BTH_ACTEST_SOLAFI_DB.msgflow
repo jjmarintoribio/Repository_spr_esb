@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQGet.msgnode="ComIbmMQGet.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_bth_SMF_ESB_BTH_CONTROLERROR.subflow="ib/visa/esb/bth/SMF_ESB_BTH_CONTROLERROR.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_DB.msgflow"
+    nsPrefix="ib_visa_esb_bth_actestado_MF_ESB_BTH_ACTEST_SOLAFI_DB.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/batch/logs/ACTEST_SOLAFI_DB-error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Debug" name="T_Debug" defaultValueLiteral="/app/visa/esb/batch/logs/ACTEST_SOLAFI_DB-debug.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_BTH_ACTEST_SOLAFI_DB" bundleName="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_DB" pluginId="MFP_ESB_BATCH_ESTADO"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ESTADO/icons/full/obj16/MF_ESB_BTH_ACTEST_SOLAFI_DB.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ESTADO/icons/full/obj30/MF_ESB_BTH_ACTEST_SOLAFI_DB.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="747,145" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.actestado#MF_ESB_BTH_ACTEST_SOLAFI_BD_ActualizarEstado.Main">
+        <translation xmi:type="utility:ConstantString" string="ActualizarEstado"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="378,201" queueName="IB.BTH.ACTESTSOLAFI.REGARCHIVODET.REQ.01" messageDomainProperty="XMLNSC" getWithCorrelID="true">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTESTSOLAFI.REGARCHIVODET.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="278,200" computeExpression="esql://routine/ib.visa.esb.bth.actestado#MF_ESB_BTH_ACTEST_SOLAFI_BD_PrepararLectura.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararLectura"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="154,69" destination="file" filePath="/app/visa/esb/batch/logs/actualizacion-estado-solafi-error.log" pattern="***************/ACTUALIZACION ESTADO (Sol Afiliacion BD ) /********************&#xD;&#xA;========================================================&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="19,200" queueName="IB.BTH.ACTESTSOLAFI.REGARCHIVO.REQ.01" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="IB.BTH.ACTESTSOLAFI.REGARCHIVO.REQ.01"/>
+        <longDescription xmi:type="utility:ConstantString" string="Cola que sera diferente dependiendo de las instancias que se le asignen"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="634,145" destination="file" filePath="/app/visa/esb/batch/logs/actestado-det-debug-in.log" pattern="============ ACTUALIZACION ESTADO - SOL. AFILIACION  (2)========&#xD;&#xA;*********************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${Root.XMLNSC}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_CONTROLERROR.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="371,74">
+        <translation xmi:type="utility:ConstantString" string="SMF_ESB_BTH_CONTROLERROR"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="252,69" computeExpression="esql://routine/ib.visa.esb.bth.actestado#MF_ESB_BTH_ACTEST_SOLAFI_BD_ControlarError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="ControlarError"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input1"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_DB" pluginId="MFP_ESB_BATCH_ESTADO"/>
+        <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Debug">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.T_Debug" bundleName="ib/visa/esb/bth/actestado/MF_ESB_BTH_ACTEST_SOLAFI_DB" pluginId="MFP_ESB_BATCH_ESTADO"/>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_7">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_Debug" overriddenNodes="FCMComposite_1_11">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

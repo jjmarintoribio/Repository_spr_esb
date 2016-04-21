@@ -1,0 +1,59 @@
+BROKER SCHEMA ib.visa.esb.bth.actestado
+PATH ib.visa.esb.bth; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_AFI_FIN_EjecutarFinalizacionCarga
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) hacer que cambie el estado de un proceso	
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de actualizar en BD la fecha fin en solicitud de afiliaciones.');
+		
+		PROPAGATE TO TERMINAL 1;		
+		
+		--((2)) Se cambia de estado la instancia del proceso 
+ 
+--		CALL actualizarProcesoMantenimientoBD(CURRENT_TIMESTAMP,
+--											  CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER)) ;
+		
+		----22012016 Actualizar la fecha de fin para el proceso
+		CALL actualizarProcesoActualizaEstados(CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER),
+													CURRENT_TIMESTAMP);
+													
+		--((3)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+		
+		PROPAGATE TO TERMINAL 2;			
+
+		--((4)) Envio de alertas al inicio del proceso}
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;		
+		SET Environment.Parametros.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 3;
+		END IF;	
+					
+		
+		RETURN FALSE;
+	END;
+CREATE PROCEDURE actualizarProcesoActualizaEstados(
+			   		IN I_ID_PROCESO_NOTIFICACION INTEGER,
+			   		IN I_FEC_FIN_PROCESO TIMESTAMP)
+LANGUAGE DATABASE
+EXTERNAL NAME "SPRESB.SP_PROCESO_ACTUALIZADOR_ESTADO_ACTUALIZAR";
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_ACTEST_AFI_FIN_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:AfiliacionMigracion" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:AfiliacionMigracion" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+
+	<xsd:element dfdl:encoding="ISO-8859-1" ibmSchExtn:docRoot="true" name="AfiliacionMigracion">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+				<xsd:element dfdl:encoding="ISO-8859-1" dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+						<xsd:sequence dfdl:separatorSuppressionPolicy="trailingEmpty">
+                            							<xsd:element name="M_ID_COMERCIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;ID_COMERCIO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_ID_COMERCIO)le(10)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element dfdl:textNumberPattern="#0" name="M_CODIGO_INTERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CODIGO_INTERNO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CODIGO_INTERNO)le(15)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            							                            <xsd:element dfdl:initiator="" ibmDfdlExtn:sampleValue="value2" name="M_NRO_TARJETA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;NRO_TARJETA FORMATO INCORRECTO&lt;/F&gt;">{fn:starts-with( /ns0:AfiliacionMigracion/MENSAJE[1]/M_NRO_TARJETA,"''" )}</dfdl:assert>
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;NRO_TARJETA LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_NRO_TARJETA)ge(18) or fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_NRO_TARJETA)le(21)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            							                            <xsd:element ibmDfdlExtn:sampleValue="value3" name="M_EXPIRACION_MES" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value4" name="M_EXPIRACION_ANHO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;EXPIRACION_ANHO FORMATO INCORRECTO&lt;/F&gt;">{xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_EXPIRACION_ANHO)gt(0)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element dfdl:nilValueDelimiterPolicy="terminator" name="M_TITULAR_NOMBRE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;TITULAR_NOMBRE LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_TITULAR_NOMBRE)le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+                                                                                                                                                                                              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value6" name="M_TITULAR_APELLIDO_PATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;TITULAR_APELLIDO_PATERNO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_TITULAR_APELLIDO_PATERNO)le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value7" minOccurs="0" name="M_TITULAR_APELLIDO_MATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value8" name="M_TITULAR_TELEFONO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;TITULAR_TELEFONO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_TITULAR_TELEFONO)le(20)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element dfdl:occursCountKind="implicit" ibmDfdlExtn:sampleValue="value9" minOccurs="0" name="M_TITULAR_CORREO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value10" name="M_USUARIO_NRO_IDENTIFICADOR" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_NRO_IDENTIFICADOR FORMATO INCORRECTO&lt;/F&gt;">{fn:starts-with( /ns0:AfiliacionMigracion/MENSAJE[1]/M_USUARIO_NRO_IDENTIFICADOR ,"''")}</dfdl:assert>
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_NRO_IDENTIFICADOR LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_USUARIO_NRO_IDENTIFICADOR)le(26)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value11" name="M_USUARIO_NOMBRE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_NOMBRE LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_USUARIO_NOMBRE)le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value12" name="M_USUARIO_APELLIDO_PATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_APELLIDO_PATERNO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_TITULAR_APELLIDO_PATERNO)le(100)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value13" minOccurs="0" name="M_USUARIO_APELLIDO_MATERNO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value14" name="M_USUARIO_MONTO_MAXIMO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_MONTO_MAXIMO FORMATO INCORRECTO&lt;/F&gt;">{fn:starts-with( /ns0:AfiliacionMigracion/MENSAJE[1]/M_USUARIO_MONTO_MAXIMO ,"''")}</dfdl:assert>
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;USUARIO_MONTO_MAXIMO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionMigracion/MENSAJE[1]/M_USUARIO_MONTO_MAXIMO)le(22)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value15" name="M_CARGO_TIPO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_TIPO INCORRECTO&lt;/F&gt;">{fn:upper-case( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_TIPO)eq('V') or fn:upper-case( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_TIPO)eq('F')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value16" name="M_CARGO_MONTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_MONTO FORMATO INCORRECTO&lt;/F&gt;">{fn:starts-with( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_MONTO,"''")}</dfdl:assert>
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_MONTO LONGITUD EXCEDIDA&lt;/F&gt;">{fn:string-length(/ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_MONTO)le(22)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value17" name="M_CARGO_PERIODICIDAD" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_PERIODICIDAD INCORRECTO&lt;/F&gt;">{xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('1') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('2') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('3') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('6') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('12') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('13') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PERIODICIDAD)eq('14')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value18" name="M_MONEDA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;MONEDA INCORRECTA&lt;/F&gt;">{xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_MONEDA)eq('604') or xs:string( /ns0:AfiliacionMigracion/MENSAJE[1]/M_MONEDA)eq('840')}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value19" name="M_CARGO_PAGO_DIA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;CARGO_PAGO_DIA FORMATO INCORRECTO&lt;/F&gt;">{xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_DIA)gt(0) and xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_DIA)lt(32)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value20" name="M_CARGO_PAGO_MES" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_PAGO_MES FORMATO INCORRECTO&lt;/F&gt;">{xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_MES)gt(0) and xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_MES)le(12)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value21" name="M_CARGO_PAGO_ANHO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;CARGO_PAGO_ANHO FORMATO INCORRECTO&lt;/F&gt;">{xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_ANHO)gt(1850) and xs:int( /ns0:AfiliacionMigracion/MENSAJE[1]/M_CARGO_PAGO_ANHO)le(9999)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element dfdl:calendarCheckPolicy="strict" dfdl:calendarObserveDST="no" dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" name="M_FECHA_AFILIACION" type="xsd:date"/>
+                                                                                    <xsd:element ibmDfdlExtn:sampleValue="value23" name="M_ESTADO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                                                                                    <xsd:element dfdl:byteOrder="{$dfdl:byteOrder}" dfdl:calendarCheckPolicy="strict" dfdl:calendarObserveDST="no" dfdl:calendarPattern="dd/MM/yyyy" dfdl:calendarPatternKind="explicit" dfdl:emptyValueDelimiterPolicy="none" minOccurs="0" name="M_FECHA_DESAFILIACION" type="xsd:string">
+                <xsd:annotation/>
+              </xsd:element>
+                                                                                                        <xsd:element minOccurs="0" name="M_ID_AFILIACION_ALIGNET" type="xsd:string"/>
+                                                    <xsd:element name="M_CANAL_AFILIACION" type="xsd:string"/>
+                            <xsd:element minOccurs="0" name="M_FECHA_SOLICITUD" type="xsd:string"/>
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+</xsd:schema>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema targetNamespace="myNs:ModificacionAfiliacion" xmlns:csv="http://www.ibm.com/dfdl/CommaSeparatedFormat" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:ns0="myNs:ModificacionAfiliacion" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+
+    <xsd:import namespace="http://www.ibm.com/dfdl/CommaSeparatedFormat" schemaLocation="IBMdefined/CommaSeparatedFormat.xsd"/>
+    <xsd:annotation>
+		<xsd:appinfo source="http://www.ogf.org/dfdl/">
+			<dfdl:format documentFinalTerminatorCanBeMissing="yes" encoding="{$dfdl:encoding}" escapeSchemeRef="csv:CSVEscapeScheme" ref="csv:CommaSeparatedFormat"/>
+		</xsd:appinfo>
+	</xsd:annotation>
+
+	<xsd:element ibmSchExtn:docRoot="true" name="AfiliacionModificacion">
+		<xsd:complexType>
+			<xsd:sequence dfdl:separator="">
+											<xsd:element dfdl:occursCountKind="implicit" dfdl:terminator="%CR;%LF;%WSP*;" maxOccurs="unbounded" name="MENSAJE">
+					<xsd:complexType>
+						<xsd:sequence> 
+							<xsd:element dfdl:textNumberPattern="#0" name="COD_PRODUCTO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                    <dfdl:assert failureType="processingError" message="&lt;F&gt;Cod. Producto Max. caracteres 40&lt;/F&gt;">{fn:string-length( /ns0:AfiliacionModificacion/MENSAJE[1]/COD_PRODUCTO)le(41)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element ibmDfdlExtn:sampleValue="value2" minOccurs="0" name="NRO_TARJETA" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Número Tarjeta inválida&lt;/F&gt;">{fn:string-length(/AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA )ge(16) and fn:string-length(/AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA )le(19)}</dfdl:assert>
+                  <dfdl:assert failureType="processingError" message="&lt;F&gt;La tarjeta tiene formato incorrecto&lt;/F&gt;">{fn:not(fn:contains(/ns0:AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA,' '))}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+							<xsd:element dfdl:textNumberPattern="#0" name="NRO_MES_EXPIRACION_TARJETA" type="xsd:integer">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Mes inválido&lt;/F&gt;">{xs:integer( /AfiliacionModificacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA)gt(0) and xs:integer( /AfiliacionModificacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA)le(12)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            						<xsd:element dfdl:textNumberPattern="#0" name="NRO_ANHO_EXPIRACION_TARJETA" type="xsd:integer">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Anho inválido&lt;/F&gt;">{xs:integer( /AfiliacionModificacion/MENSAJE[1]/NRO_ANHO_EXPIRACION_TARJETA)gt(1800) and xs:integer( /AfiliacionModificacion/MENSAJE[1]/NRO_ANHO_EXPIRACION_TARJETA)le(9999)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="TELEFONO_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Teléfono Max. 15 caracteres&lt;/F&gt;">{fn:string-length(/AfiliacionModificacion/MENSAJE[1]/TELEFONO_TARJETAHABIENTE )le(15)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element minOccurs="0" name="EMAIL_TARJETAHABIENTE" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    
+                  <dfdl:discriminator message="Correo Max. 75 caracteres">{fn:string-length( /ns0:AfiliacionModificacion/MENSAJE[1]/EMAIL_TARJETAHABIENTE)le(75)}</dfdl:discriminator>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                            <xsd:element name="NRO_IDENTIFICACION_BENEFICIARIO" type="xsd:string">
+                <xsd:annotation>
+                  <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                    <dfdl:assert message="&lt;F&gt;Usuario Identificador Max. 24 caracteres&lt;/F&gt;">{fn:string-length( /AfiliacionModificacion/MENSAJE[1]/NRO_IDENTIFICACION_BENEFICIARIO)le(24)}</dfdl:assert>
+                  </xsd:appinfo>
+                </xsd:annotation>
+              </xsd:element>
+                        </xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+
+</xsd:schema>

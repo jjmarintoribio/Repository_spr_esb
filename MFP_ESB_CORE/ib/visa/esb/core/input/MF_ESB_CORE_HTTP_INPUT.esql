@@ -1,0 +1,238 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_HTTP_INPUT.esql
+ * Proposito	: Flujo de entrada generica HTTP del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+ 
+BROKER SCHEMA ib.visa.esb.core.input
+PATH ib.visa.esb.core;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_HTTP_INPUT_AdaptarMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+				
+
+		SET OutputRoot.Properties = InputProperties;
+		
+		--Crear la Cabecera MQMD
+
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';
+
+		--Generacion del msgid unico de la transaccion
+		SET OutputRoot.MQMD.MsgId 		= getMsgId();
+
+		--Crear de la cabecera MQRHF2 para el paso de parametros y cabeceras
+	
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+
+		CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		DECLARE refParams REFERENCE TO OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		
+		SET refParams.Datos.RequestIdentifier	= COALESCE(InputLocalEnvironment.Destination.HTTP.RequestIdentifier,InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier);
+		SET refParams.Datos."X-Remote-Addr"		= InputRoot.HTTPInputHeader."X-Remote-Addr";
+		SET refParams.Datos."X-Remote-Host"		= InputRoot.HTTPInputHeader."X-Remote-Host";
+		SET refParams.Datos.Encoding			= InputRoot.Properties.Encoding;
+		SET refParams.Datos.CodedCharSetId		= InputRoot.Properties.CodedCharSetId;
+		SET refParams.Datos.ReplyProtocol		= InputRoot.Properties.ReplyProtocol;	
+			
+		SET refParams.IdProtocolo 			= getID_PROTOCOLO_ENTRADA_HTTP();
+		SET refParams.TipoProtocolo 		= getPROTOCOLO_ENTRADA_HTTP();
+			
+		--Guardado de datos de la auditoria
+		SET OutputRoot.MQRFH2.usr.Auditoria.fechaHora 	= obtenerFechaHoraAuditoria();
+		SET OutputRoot.MQRFH2.usr.Auditoria.hora 		= obtenerHoraAuditoria();
+		SET OutputRoot.MQRFH2.usr.Auditoria.indOrigen	= refParams.Datos."X-Remote-Addr";
+		SET OutputRoot.MQRFH2.usr.Auditoria.broker		= BrokerName;
+		
+		
+		--Validacion si la entrada fue a traves de HTTPInput (usuarios internos) o por SOAPInput (usuarios externos)
+		
+		DECLARE chrCodSrv CHARACTER;
+		DECLARE chrNamespace CHARACTER '';
+					
+			--Validacion del cuerpo
+			IF FIELDNAME(InputRoot.XMLNSC) IS NULL THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1000() VALUES(getMSJ_ERROR_1000());
+			END IF;			
+				
+			--Obtiene el namespace recibido
+			DECLARE nsSOAP NAMESPACE getNS_SOAP();  
+			
+			SET chrNamespace = COALESCE(FIELDNAMESPACE(InputBody.nsSOAP:Envelope.nsSOAP:Body.[1]),getNS_VISA());
+			
+			DECLARE nsVISA NAMESPACE chrNamespace;
+			
+			SET refParams.Datos.Namespace = chrNamespace;
+			
+			DECLARE refMsj REFERENCE TO InputBody.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJEREQ.INTEGREQ;
+			
+			SET chrCodSrv 	= COALESCE(refMsj.CABECERA.COD_SERVICIO, '');
+
+			--Control del codigo del servicio
+			IF chrCodSrv <> '' THEN
+				SET OutputRoot.MQRFH2.usr.IdentificadorServicio			= chrCodSrv;
+				SET OutputRoot.MQRFH2.usr.CabecerasInput.COD_SERVICIO 	= chrCodSrv;
+			
+			END IF;
+			
+			-- llenado de los tags de la CACEBERA
+			SET OutputRoot.MQRFH2.usr.CabecerasInput.APP_CONSUMIDORA = refMsj.CABECERA.APP_CONSUMIDORA;
+			
+			--Validacion del codigo de servicio
+			IF COALESCE(OutputRoot.MQRFH2.usr.IdentificadorServicio,'') ='' THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1001() VALUES(getMSJ_ERROR_1001());	
+			END IF;			
+					
+			--Paso de los tags del cuerpo
+			DECLARE blobMsg BLOB;
+			DECLARE intOptions INTEGER BITOR(FolderBitStream, ValidateContent,ValidateValue);
+	     	SET blobMsg = ASBITSTREAM(refMsj OPTIONS intOptions CCSID 1208);		
+	    	SET OutputRoot.BLOB.BLOB = blobMsg;
+
+		--Se envia al flujo de seguridad por ser HTTP		 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_RUTEO();
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_HTTP_INPUT_PrepararMensajeError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE chrCodigoError CHARACTER '';
+		DECLARE chrDescripcionError CHARACTER '';
+		CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
+				
+		SET OutputRoot.Properties = InputProperties;
+
+		DECLARE chrNamespace CHARACTER '';
+		 
+		SET chrNamespace = COALESCE(FIELDNAMESPACE(InputBody.nsSOAP:Envelope.nsSOAP:Body.[1]),getNS_VISA());
+
+						
+		DECLARE nsVISA NAMESPACE chrNamespace;
+		DECLARE nsSOAP NAMESPACE getNS_SOAP(); 
+		
+		--Preparacion de namespace del soap
+		SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:"soapenv" =  getNS_SOAP();
+		SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:soapenv =  getNS_SOAP();
+		SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:srv = chrNamespace;
+		
+		CREATE FIELD OutputRoot.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJERES.INTEGRES;
+		DECLARE refMsj REFERENCE TO OutputRoot.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJERES.INTEGRES;	
+
+		SET refMsj.CABECERA.COD_SERVICIO 	= COALESCE(InputBody.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJEREQ.INTEGREQ.CABECERA.COD_SERVICIO,'*');
+		SET refMsj.CABECERA.APP_CONSUMIDORA = COALESCE(InputBody.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJEREQ.INTEGREQ.CABECERA.APP_CONSUMIDORA,'*');
+	
+		SET refMsj.CABECERA.TIP_RESPUESTA = getTIP_ERROR_CORE_ESB();
+		SET refMsj.CABECERA.COD_RESPUESTA = chrCodigoError;
+		SET refMsj.CABECERA.DES_RESPUESTA = chrDescripcionError;
+
+		IF (InputRoot.Properties.ReplyProtocol= 'SOAP-HTTP') THEN --Ingreso a traves de un HTTPInput		
+			SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier = COALESCE(InputLocalEnvironment.Destination.HTTP.RequestIdentifier,CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB));
+			PROPAGATE TO TERMINAL 1;
+		ELSE
+			SET OutputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier = COALESCE(InputLocalEnvironment.Destination.SOAP.Reply.ReplyIdentifier,CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB));
+			PROPAGATE TO TERMINAL 2;
+		END IF ;	
+		
+		
+		--Preparacion de la informacion de la app consumidora y del protocolo en el MQRFH2
+		
+		SET OutputRoot.Properties = InputProperties;		
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQRFH2';
+		
+		CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		DECLARE refParams REFERENCE TO OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		
+		SET refParams.Datos.RequestIdentifier	= InputLocalEnvironment.Destination.HTTP.RequestIdentifier;
+		SET refParams.Datos."X-Remote-Addr"		= InputRoot.HTTPInputHeader."X-Remote-Addr";
+		SET refParams.Datos."X-Remote-Host"		= InputRoot.HTTPInputHeader."X-Remote-Host";
+		SET refParams.Datos.Encoding			= InputRoot.Properties.Encoding;
+		SET refParams.Datos.CodedCharSetId		= InputRoot.Properties.CodedCharSetId;
+		SET refParams.Datos.Namespace 			= chrNamespace;
+		SET refParams.Datos.ReplyProtocol		= InputRoot.Properties.ReplyProtocol;	
+		
+			
+		SET refParams.IdProtocolo 			= getID_PROTOCOLO_ENTRADA_HTTP();
+		SET refParams.TipoProtocolo 		= getPROTOCOLO_ENTRADA_HTTP();
+
+
+		 
+		-- Generamos el mensaje para la auditoria de error
+		CALL armarAuditoriaEventoError(OutputRoot,
+								getMsgId(),
+								InputRoot.MQRFH2.usr,
+								CAST(chrCodigoError AS INTEGER),
+								chrDescripcionError,
+								InputExceptionList,
+								NULL,
+								getID_PROTOCOLO_ENTRADA_HTTP());
+
+ 
+ 		--Asignacion dinamica de la cola de entrada del flujo de auditoria
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+		
+		PROPAGATE TO TERMINAL 3;
+		
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_HTTP_INPUT_PrepararRespuesta 
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.Properties 				= InputProperties;
+		SET OutputRoot.Properties.CodedCharSetId= 1208; --				= InputProperties;
+		SET OutputRoot.Properties.MessageSet 	= 'MS_ESB_CORE_INPUTHTTP';
+		SET OutputRoot.Properties.MessageType 	= 'MENSAJERES';
+		
+
+		--Si el error viene desde el flujo core de Ruteo o de Seguridad
+		IF COALESCE(InputRoot.MQRFH2.usr.ControlRuteo.codigo,'')<>''  THEN
+	
+			DECLARE nsVISA NAMESPACE InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.Namespace;
+			DECLARE nsSOAP NAMESPACE getNS_SOAP(); 
+			CREATE FIELD OutputRoot.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJERES.INTEGRES.CABECERA;
+			DECLARE refOut REFERENCE TO OutputRoot.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsVISA:MENSAJERES.INTEGRES.CABECERA;
+
+			SET OutputRoot.XMLNS.(XML.XmlDecl).(XML.Version) = '1.0';
+			SET OutputRoot.XMLNS.(XML.XmlDecl).(XML.Encoding) = 'iso-8859-1';
+
+			SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:"soapenv" =  getNS_SOAP();
+			SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:soapenv 	=  getNS_SOAP();
+			SET OutputRoot.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:srv 		= InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.Namespace;
+
+			SET refOut.COD_SERVICIO  	= InputRoot.MQRFH2.usr.CabecerasInput.COD_SERVICIO;
+			SET refOut.APP_CONSUMIDORA 	= InputRoot.MQRFH2.usr.CabecerasInput.APP_CONSUMIDORA;
+			SET refOut.TIP_RESPUESTA 	= getTIP_ERROR_CORE_ESB();
+			SET refOut.COD_RESPUESTA 	= InputRoot.MQRFH2.usr.ControlRuteo.codigo;
+			SET refOut.DES_RESPUESTA 	= InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
+
+		ELSE
+			SET OutputRoot.XMLNS = InputRoot.XMLNS;
+			
+		END IF;
+	
+		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier = CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB);
+		PROPAGATE TO TERMINAL 1;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

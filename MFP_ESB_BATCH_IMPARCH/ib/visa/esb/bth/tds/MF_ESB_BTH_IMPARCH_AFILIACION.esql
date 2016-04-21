@@ -1,0 +1,480 @@
+BROKER SCHEMA ib.visa.esb.bth.tds
+PATH ib.visa.esb.bth;
+
+DECLARE cacheProcesoImpAfiliacion SHARED ROW;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) solo con el primer registro se va a obtener parametros
+		
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		DECLARE refParam REFERENCE TO cacheProcesoImpAfiliacion.campo.Parametros;
+		
+		--0709
+		SET Environment.Variables.Validacion.flgError = FALSE; --POR SI HAY UN ERROR DE PARSEO DEL DFDL
+		--0709 fIN
+		
+		IF InputLocalEnvironment.File.Record = 1 THEN
+	
+		--1 OBTIENE LOS PARAMETROS
+		
+			SET OutputRoot.MQMD.MsgId	= getMsgId();
+			SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+			CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+			SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_7(); 
+		 
+			SET cacheProcesoImpAfiliacion.campo.cantidad 	= 0;
+			SET cacheProcesoImpAfiliacion.campo.grupo 	= 1;		 
+		 
+		 	SET Environment.File.Name 		= InputLocalEnvironment.File.Name;
+		  	SET Environment.File.TimeStamp	= RIGHT(InputLocalEnvironment.File.TimeStamp,16);
+		  
+		--2 PARSEAS EL PRIMERO ELEMENTO DEL ARCHIVO Y EL RESULTADO EN XML LO PONES DENTRO DE LA ESTRCTURA
+
+			CREATE LASTCHILD OF Environment DOMAIN('XMLNSC') PARSE(InputBody.BLOB,
+	                    InputProperties.Encoding,
+	                    InputProperties.CodedCharSetId);
+	         
+	        PROPAGATE TO TERMINAL 1;
+			--TODO :::inicio
+			CREATE FIELD cacheProcesoImpAfiliacion.campo.Registros.REGISTRO;
+			--TODO :::fin	        
+	            
+		ELSE
+			
+			IF InputLocalEnvironment.File.Record > 2 THEN -- Obviar la cabecera del archivo CSV
+				
+				--((2))Se envia un mensaje por cada grupo de mensajes
+				
+				IF ( cacheProcesoImpAfiliacion.campo.cantidad 	= refParam.Batch.cantRegistrosTransaccion) THEN
+						
+						SET OutputRoot.MQMD.CorrelId  		= refParam.Batch.msgIdTransaccion; -- para obtener todos los grupos con el get cuando se termine de leer el file
+					  
+						SET OutputRoot.MQRFH2.usr = refParam;  
+						SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+						SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		= getMsgIdValor((getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16)) || CAST(cacheProcesoImpAfiliacion.campo.grupo AS CHARACTER),FALSE);
+						SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = cacheProcesoImpAfiliacion.campo.cantidad;
+						SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;		
+
+						--TODO :::inicio
+						DELETE LASTCHILD OF cacheProcesoImpAfiliacion.campo.Registros;
+						SET OutputRoot.XMLNSC.MENSAJE.REGISTROS = cacheProcesoImpAfiliacion.campo.Registros;  
+		
+						ROUTING : BEGIN ATOMIC 
+							DELETE FIELD cacheProcesoImpAfiliacion.campo.Registros;	
+							CREATE FIELD cacheProcesoImpAfiliacion.campo.Registros.REGISTRO;															
+						END ROUTING ;
+						--TODO :::fin  
+						
+						SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+						
+						PROPAGATE TO TERMINAL 3; 
+		
+						SET cacheProcesoImpAfiliacion.campo.cantidad 	= 0;
+						SET cacheProcesoImpAfiliacion.campo.grupo 	= cacheProcesoImpAfiliacion.campo.grupo + 1;				
+						
+				END IF; 
+				
+				--((3)) Se arma la lista de registros agrupando los registros del archivo
+
+				SET cacheProcesoImpAfiliacion.campo.cantidad 		= cacheProcesoImpAfiliacion.campo.cantidad + 1;
+												
+				DECLARE inCCSID, inEncoding INT; 
+				SET inCCSID = CAST(InputRoot.Properties.CodedCharSetId AS INT); 
+				SET inEncoding = CAST(InputRoot.Properties.Encoding AS INT);
+				SET OutputRoot.Properties.MessageSet 	= 'Afiliacion.xsd';
+				SET OutputRoot.Properties.MessageType 	= '{myNs:Afiliacion}:Afiliacion';
+				
+				SET OutputRoot.MQMD.CorrelId  = getMsgIdValor((getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16)) || CAST(cacheProcesoImpAfiliacion.campo.grupo AS CHARACTER),FALSE);
+								
+				--Se parsea el mensaje
+				CREATE LASTCHILD OF Environment DOMAIN('DFDL') PARSE(InputRoot.BLOB.BLOB 
+																     ENCODING 273  -- inEncoding 
+																     CCSID 819--inCCSID 
+																     SET 'Afiliacion.xsd' 
+																     TYPE '{myNs:Afiliacion}:Afiliacion' 
+																     OPTIONS RootBitStream); 
+
+				--TODO :::inicio									                        
+				--Validaciones adicionales
+--				IF (esMayorIgualAnioActual(CAST( Environment.DFDL.[1].MENSAJE.NRO_ANHO_EXPIRACION_TARJETA AS INTEGER)) IS NOT TRUE ) THEN
+--					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+--				END IF;	
+				--0709
+				--IF (CAST(Environment.DFDL.[1].NRO_TARJETA AS FLOAT DEFAULT 0.0) = 0.0) THEN
+				/*IF (isNumericValid(REPLACE(Environment.DFDL.[1].NRO_TARJETA,'''',''), TRUE) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES('<F>EL FORMATO ES INCORRECTO</F>');
+				END IF;	*/
+				IF 	(isNumericValid(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''), FALSE) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+				END IF;
+				
+				IF 	(LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>16 AND LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>19) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA SOLO DEBE TENER 16 O 19 DIGITOS</F>');
+				END IF;
+				
+				IF (isNumericValid(Environment.DFDL.[1].MENSAJE.TELEFONO_TARJETAHABIENTE, FALSE) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES(getMSJ_ERROR_2010());					
+				END IF;	
+				
+				--2209
+				IF (isNumericValid(REPLACE(REPLACE(Environment.DFDL.[1].MENSAJE.MTO_MAXIMO_CARGO,'''',''),'.',''), FALSE) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO MAXIMO DEBE SER NUMERICO</F>');					
+				END IF;	
+				
+				IF (isNumericValid(REPLACE(REPLACE(Environment.DFDL.[1].MENSAJE.MTO_CARGO,'''',''),'.',''), FALSE) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO DEL CARGO DEBE SER NUMERICO</F>');					
+				END IF;	
+				
+				DECLARE tipoDoc CHARACTER Environment.DFDL.[1].MENSAJE.TITULAR_TIPO_DOCUMENTO;
+				DECLARE numDoc CHARACTER '';
+				SET numDoc = COALESCE(FIELDVALUE(Environment.DFDL.[1].MENSAJE.TITULAR_NRO_DOCUMENTO),'');
+				
+				IF (LENGTH(tipoDoc)>0) THEN
+					IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL TIPO DE DOCUMENTO SOLO PERMITE LOS VALORES 1(DNI), 2(CARNE DE EXTRANJERIA) Y 3(PASAPORTE) </F>');			
+					END IF;
+					
+					IF numDoc = '' THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>DEBE INGRESAR NRO DE DOCUMENTO SI INGRESO EL TIPO DE DOCUMENTO</F>');
+					END IF;	
+					IF tipoDoc = '1' THEN --dni
+						IF LENGTH(numDoc) <> 8  THEN
+							THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL NRO DE DOCUMENTO DEBE TENER 8 DIGITOS </F>');
+						END IF;
+						IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+							THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL NRO DE DOCUMENTO DEBE SER NUMERICO </F>');					
+						END IF;
+					END IF;
+					IF tipoDoc = '2' or tipoDoc = '3' THEN --pasaporte y carne de extranjeria
+						IF LENGTH(numDoc) > 12  THEN
+							THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL NRO DE DOCUMENTO DEBE TENER 12 DIGITOS </F>');
+						END IF;
+					END IF;
+				END IF;
+				
+				DECLARE reintento CHARACTER Environment.DFDL.[1].MENSAJE.REINTENTO_AUTOMATICO;
+				IF reintento is not null and (reintento <> '1' and reintento <> '0') THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL REINTENTO AUTOMATICO SOLO PERMITE LOS VALORES 0(NO) Y 1(SI)</F>');			
+				END IF;
+				--2209
+				
+				DECLARE montoMax FLOAT CAST(REPLACE(Environment.DFDL.[1].MENSAJE.MTO_MAXIMO_CARGO,'''','') AS FLOAT);
+				IF (montoMax = 0.0) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO MAXIMO DEBE SER MAYOR A CERO</F>');	
+				END IF;
+				
+				DECLARE monto FLOAT CAST(REPLACE(Environment.DFDL.[1].MENSAJE.MTO_CARGO,'''','') AS FLOAT);
+				IF (monto > montoMax) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO DEL CARGO NO DEBE SER MAYOR AL MAXIMO</F>');	
+				END IF;
+												
+				--PASA EL CASTEO O VALIDACION
+				/*SET Environment.Validacion.flgError = FALSE;	
+				SET Environment.Validacion.campo = '';
+				SET Environment.Validacion.mensaje = '';*/
+				--0709 FIN				 
+				
+				DECLARE refFila REFERENCE TO cacheProcesoImpAfiliacion.campo.Registros;
+  				MOVE refFila LASTCHILD;  
+				SET Environment.DFDL.[1].MENSAJE.NRO_RECORD = InputLocalEnvironment.File.Record - 1;
+				SET refFila = Environment.DFDL.[1].MENSAJE;
+ 				CREATE LASTCHILD OF  cacheProcesoImpAfiliacion.campo.Registros NAME 'REGISTRO';							 													                        
+				--TODO :::fin				
+								
+			END IF;
+			
+		END IF;
+									                        
+		RETURN FALSE;
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_GrabarParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) Registro del proceso
+
+		DECLARE campo NAME (getEST_ACTIVO() || Environment.File.TimeStamp);
+		CREATE FIELD cacheProcesoImpAfiliacion.campo.Parametros;
+		
+		DECLARE refParam REFERENCE TO cacheProcesoImpAfiliacion.campo.Parametros;
+		DECLARE refMetadata REFERENCE TO Environment.XMLNSC.importacion;
+
+		DECLARE intIdTransaccion INTEGER;
+		DECLARE intIdArchivoLog INTEGER;
+		DECLARE intIdArchivoImportacion INTEGER;
+		
+		--((1.1)) Registro del archivo log
+		CALL insertarArchivo(Environment.File.Name || '.log', --Req 26 - 021232015
+							CAST(refMetadata.tipoArchivoLog AS INTEGER),
+							CURRENT_TIMESTAMP,
+							intIdArchivoLog);
+							
+		--((1.2)) Registro del archivo de Importacion
+		CALL insertarArchivo(REPLACE(Environment.File.Name,'.dat','.csv'),
+							CAST(refMetadata.tipoArchivoImportacion AS INTEGER),
+							CURRENT_TIMESTAMP,
+							intIdArchivoImportacion);
+							 	
+		CALL insertarProcesoImportacion(getID_PROCESO_7(),
+										CAST(refMetadata.idComercio AS INTEGER),
+										NULL,--la afiliacion solo puede ser dada desde el comercio, por ende no tiene idEmisor
+										CURRENT_TIMESTAMP,
+										CURRENT_TIMESTAMP,
+										0,--exitosos
+										0,--fallidos
+										0,--total de registros
+										CAST(refMetadata.modulo AS INTEGER),
+										CAST(refMetadata.tipoImportacion AS INTEGER),
+										intIdArchivoImportacion,
+										intIdArchivoLog,
+										getEST_IMP_EN_PROCESO(),
+										refMetadata.codigoUsuarioCreacion,
+										refMetadata.ipCreacion,
+										intIdTransaccion);
+		--((2)) Guardado en memoria
+		  
+		ROUTING : BEGIN ATOMIC 
+
+			SET refParam.Servicio 	= InputBody.MENSAJE.PARAMETROS;
+			SET refParam.General	= InputBody.MENSAJE.SERVICIO;
+			SET refParam.ESB 		= InputBody.MENSAJE.PARAMETROSESB; 
+			
+			--((2)) Guardado de parametros del proceso batch 
+			SET refParam.Batch.idProceso 		= CAST(getID_PROCESO_7() AS INTEGER);		
+			SET refParam.Batch.cantNodos		= COALESCE(refParam.Servicio.CANTINST, refParam.ESB.CANTINST);
+			SET refParam.Batch.horaInicioProceso= obtenerFechaHoraActual(2);
+	   		SET refParam.Batch.fechaInicioProceso= obtenerFechaActual(4);   
+			SET refParam.Batch.fechaProceso		= obtenerTimestampSinHora(CURRENT_DATE);
+			SET refParam.Batch.nombreArchivo	= Environment.File.Name;			
+			SET refParam.Batch.idTransaccion	= intIdTransaccion;
+			SET refParam.Batch.msgIdTransaccion	= getMsgId(); --identificador unico del procesamiento de un archivo
+			SET refParam.Batch.Metadata		    = refMetadata;
+			
+			-- ((3)) Se obtiene el horario de proceso
+			
+			DECLARE chrColaHorario, chrNroHorario CHARACTER '';
+			CALL calcularProcesoPorHorario(refParam.General.IDENTIFICADOR, refParam.Servicio.INTVHORAPRC1,
+																		   refParam.Servicio.INTVHORAPRC2,
+																		   chrColaHorario, chrNroHorario);
+																				
+			DECLARE chrT1 CHARACTER refParam.Servicio.CANREGTRANS1;
+			DECLARE chrT2 CHARACTER refParam.Servicio.CANREGTRANS2;
+			DECLARE chrT3 CHARACTER refParam.Servicio.CANREGTRANS3;
+			IF (chrNroHorario = '1') THEN
+				SET refParam.Batch.cantRegistrosTransaccion =  chrT1;
+			ELSEIF (chrNroHorario = '2') THEN
+				SET refParam.Batch.cantRegistrosTransaccion =  chrT2;
+			END IF; 
+			
+			SET refParam.Batch.horario	 	= chrNroHorario;
+			SET refParam.Batch.colaHorario 	= chrColaHorario;		
+
+			SET Environment.refParam = refParam;
+			
+		END ROUTING ;
+		  
+		--((3)) Registro de Log del Proceso
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se inicio la lectura del archivo: ' || refParam.Batch.nombreArchivo);
+
+		PROPAGATE TO TERMINAL 1;
+		
+		--((4)) Envio de alertas al inicio del proceso
+		
+		IF (COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 2;
+		END IF;
+
+		--((5)) Envio de mensaje con los Parametros para el control de alertas 
+		
+		SET OutputRoot.XMLNSC 		= NULL;
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros = cacheProcesoImpAfiliacion.campo.Parametros;
+		PROPAGATE TO TERMINAL 3;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ControlarFinArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) Envio de mensajes para el control de la secuencia
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		DECLARE refParam REFERENCE TO cacheProcesoImpAfiliacion.campo.Parametros;
+		SET Environment.Variables.cacheparam = cacheProcesoImpAfiliacion;
+
+/*		
+		--TODO :::inicio   CON CONTROL DE SECUENCIA
+		SET OutputRoot.MQMD.Priority					= 1; --Prioridad con la que seran atendidos cuando el semaforo esta en verde
+		SET OutputRoot.MQMD.CorrelId					= getMsgIdValor(refParam.General.IDENTIFICADOR,TRUE);
+		
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.TOTALREGISTROS = InputLocalEnvironment.File.Record - 2;			    
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAGETRECEP	= obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.COLAHORARIO 	= refParam.Batch.colaHorario;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANREGTRANS	= refParam.Batch.cantRegistrosTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.CANGRUPOS		= cacheProcesoImpAfiliacion.campo.grupo;
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.QMPROCESO		= QueueManagerName;						
+		SET OutputRoot.XMLNSC.MENSAJE.Cuerpo.PROCESAR 		= getSI();	
+		SET OutputRoot.XMLNSC.MENSAJE.Parametros			= cacheProcesoImpAfiliacion.campo.Parametros; --Se pone los parametros aqui para que no de problemas en el mqget del controlador de secuencia
+		--TODO :::fin		
+*/
+
+		--TODO :::inicio    SIN CONTROL DE SECUENCIA
+		SET OutputRoot.MQMD.CorrelId				= getMsgIdValor(refParam.General.IDENTIFICADOR,TRUE);
+		
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr.Parametros 		= cacheProcesoImpAfiliacion.campo.Parametros;
+		 				    
+		SET OutputRoot.XMLNSC.MENSAJE.TOTALREGISTROS= InputLocalEnvironment.File.Record -2; --cantidad total del archivo
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	= refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	= refParam.Batch.fechaProceso;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAGETRECEP	= obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+		SET OutputRoot.XMLNSC.MENSAJE.HORARIO	 	= refParam.Batch.horario;
+		SET OutputRoot.XMLNSC.MENSAJE.COLAHORARIO 	= refParam.Batch.colaHorario;
+		SET OutputRoot.XMLNSC.MENSAJE.CANREGTRANS	= refParam.Batch.cantRegistrosTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.CANGRUPOS		= cacheProcesoImpAfiliacion.campo.grupo;
+		SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= QueueManagerName;								
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESAR 		= getSI();		
+		--TODO :::fin
+		
+		PROPAGATE TO TERMINAL 1;
+ 
+		--((2)) Envio del grupo de los ultimos registros del archivo
+		
+		SET OutputRoot.MQMD.CorrelId  	= refParam.Batch.msgIdTransaccion;		
+	
+		SET OutputRoot.MQRFH2.usr = refParam;  
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION	 = refParam.Batch.msgIdTransaccion;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO		 = getMsgIdValor(campo || CAST(cacheProcesoImpAfiliacion.campo.grupo AS CHARACTER),FALSE);
+		SET OutputRoot.XMLNSC.MENSAJE.REGISTROSGRUPO = cacheProcesoImpAfiliacion.campo.cantidad;
+		SET OutputRoot.XMLNSC.MENSAJE.FECHAPROCESO 	 = refParam.Batch.fechaProceso;
+		--TODO :::inicio  
+		DELETE LASTCHILD OF cacheProcesoImpAfiliacion.campo.Registros;
+		SET OutputRoot.XMLNSC.MENSAJE.REGISTROS = cacheProcesoImpAfiliacion.campo.Registros;  
+		--TODO :::fin 		
+
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaRecepArchivo(refParam.General.IDENTIFICADOR);
+
+		--TODO :::inicio 
+		SET cacheProcesoImpAfiliacion.campo.Registros = NULL;
+		--TODO :::fin
+
+		PROPAGATE TO TERMINAL 2 ;
+		
+
+		--((3)) Registro de Log del Proceso de fin de archivo
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),    
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de la lectura del archivo: ' || refParam.Batch.nombreArchivo);
+
+		PROPAGATE TO TERMINAL 3 ;		
+
+		--((4)) Registro de Log del Proceso si es que ocurrio algun error en la carga y se genero el archivo con errores
+		
+		IF (refParam.error IS TRUE) THEN
+			CALL armarMensajeLogProceso(OutputRoot,
+									CAST(refParam.Batch.idProceso AS CHARACTER), 
+									CAST(refParam.Batch.idTransaccion AS CHARACTER),    
+									getTIP_LOG_ERROR(),
+									MessageFlowLabel,
+									'Se genero el archivo ' ||  InputLocalEnvironment.File.Name || getSUFIJO_ARCHIVO_ERRORES() || ' con ' || CAST(refParam.registrosErrorDfdl AS CHARACTER) || ' registros que tuvieron error en la carga') ;
+
+			PROPAGATE TO TERMINAL 3 ;
+			
+		END IF;
+		
+		--((5))	 Se cierra el archivo de errores
+								
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log'; --Req 26 - 021232015
+											
+		PROPAGATE TO TERMINAL 4 ;
+		 
+		SET cacheProcesoImpAfiliacion.campo =NULL;
+		
+		RETURN FALSE;
+	END;
+	
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ControlarErrorRecepcion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) Controlar el error
+		DECLARE campo NAME (getEST_ACTIVO() || RIGHT(InputLocalEnvironment.File.TimeStamp,16));
+		DECLARE refParam REFERENCE TO cacheProcesoImpAfiliacion.campo.Parametros;		
+		
+		DECLARE chrCodError CHARACTER '';
+		DECLARE chrMsjError CHARACTER ''; 
+ 		DECLARE chrMsjErrorCleaner CHARACTER '';
+		SET refParam.error =  TRUE;
+		SET refParam.registrosErrorDfdl =  COALESCE(refParam.registrosErrorDfdl,0) + 1;
+
+		--0709
+		/*DECLARE codigoError INTEGER 0 ;
+		DECLARE refValidation REFERENCE TO Environment.Validacion;		
+		IF CAST(refValidation.flgError AS BOOLEAN) IS TRUE THEN	
+			SET chrMsjErrorCleaner = refValidation.mensaje;
+		END IF;	*/
+		--0709 FIN
+		
+		-- ((2)) Se obtiene el detalle del mensaje del error
+		CALL obtenerDetalleError(InputExceptionList,chrCodError,chrMsjError);
+		/*IF CAST(refValidation.flgError AS BOOLEAN) IS FALSE THEN			
+			CALL getLastExceptionDetail(InputExceptionList,codigoError,chrMsjError,chrMsjErrorCleaner);	
+		END IF;	*/--0709
+		
+		DECLARE intPosicion INTEGER POSITION('message ''' IN chrMsjError);
+		
+		IF intPosicion > 0 THEN
+			DECLARE intPosicionFinal INTEGER POSITION ('#' IN chrMsjError);
+			DECLARE chrMsjErrorTmp CHARACTER;
+			SET intPosicion = intPosicion + 9;
+			SET chrMsjErrorTmp = SUBSTRING(chrMsjError FROM intPosicion FOR LENGTH(chrMsjError)-intPosicion);
+			SET chrMsjErrorCleaner = SUBSTRING(chrMsjErrorTmp BEFORE '''');
+			SET chrMsjError = chrMsjErrorCleaner;
+		END IF; 
+		
+		SET Environment.XMLNSC = NULL;
+		CREATE LASTCHILD OF Environment DOMAIN 'XMLNSC';
+		SET Environment.XMLNSC.resultado.nro_registro = COALESCE(InputLocalEnvironment.File.Record-1,'');
+ 		--SET Environment.XMLNSC.resultado.mensaje = chrMsjError; 
+ 		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709
+ 		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';
+
+		DECLARE inCCSID INT getENCODING();                     
+		DECLARE inEncoding INT InputProperties.Encoding;
+		                        
+		SET OutputRoot.BLOB.BLOB = ASBITSTREAM(Environment.XMLNSC, inEncoding, inCCSID); 
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log'; --Req 26 - 021232015
+		
+		--0709
+		--SET Environment.Variables.errorMensaje = NULL;
+		--0709 fin
+		
+		PROPAGATE TO TERMINAL 1 ;
+		
+		RETURN FALSE;
+	END;
+END MODULE;

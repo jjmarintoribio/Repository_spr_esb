@@ -1,0 +1,20 @@
+Generating .xsdzip file for message set "MS_ESB_BATCH_GENERICO" 
+
+Generating schema for no XML Wire format
+Generating schema using the lax option
+
+
+Processing File : "/MSP_ESB_BATCH_GENERICO/MS_ESB_BATCH_GENERICO/ib/visa/esb/bth/gen/MDF_ESB_BATCH_LANZADOR.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENERICO/MS_ESB_BATCH_GENERICO/ib/visa/esb/bth/gen/MDF_ESB_BATCH_LOGPROCESO.mxsd"
+
+Saving File : "/MSP_ESB_BATCH_GENERICO/.GeneratedSchemas/ib/visa/esb/bth/gen/MDF_ESB_BATCH_LANZADOR.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENERICO/.GeneratedSchemas/ib/visa/esb/bth/gen/MDF_ESB_BATCH_LOGPROCESO.xsd" 
+
+Saving file "/MSP_ESB_BATCH_GENERICO/.KeywordsFile/meta-inf/keywords.txt" 
+
+Saving file "/MSP_ESB_BATCH_GENERICO/MS_ESB_BATCH_GENERICO/messageSet.mset" 
+

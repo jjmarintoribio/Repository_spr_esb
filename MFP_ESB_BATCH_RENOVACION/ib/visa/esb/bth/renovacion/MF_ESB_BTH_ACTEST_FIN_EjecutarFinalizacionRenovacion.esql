@@ -1,0 +1,52 @@
+BROKER SCHEMA ib.visa.esb.bth.renovacion
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVA_AUTO_FIN_EjecutarFinalizacionRenovacion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) hacer que cambie el estado de un proceso	
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de renovar las afiliaciones automáticas.');
+		
+		PROPAGATE TO TERMINAL 1;		
+		
+		--((2)) Se cambia de estado la instancia del proceso 
+ 
+		CALL actualizarProcesoMantenimientoBD(CURRENT_TIMESTAMP,
+											  CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER)) ;
+		
+		--((3)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+		
+		PROPAGATE TO TERMINAL 2;			
+
+		--((4)) Envio de alertas al inicio del proceso}
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;		
+		SET Environment.Parametros.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 3;
+		END IF;	
+					
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RENOVA_AUTO_FIN_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;
+	END;
+
+END MODULE;

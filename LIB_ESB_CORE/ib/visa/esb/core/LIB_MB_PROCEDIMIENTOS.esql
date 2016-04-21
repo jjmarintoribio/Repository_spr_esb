@@ -1,0 +1,614 @@
+/*
+ *
+ * Nombre		: LIB_MB_PROCEDIMIENTOS.esql
+ * Proposito	: Procedimientos y funciones genericas de ayuda para los flujos
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+ 
+BROKER SCHEMA ib.visa.esb.core
+
+
+/*
+ * Setea un mensaje en persistente
+*/
+CREATE PROCEDURE setearPersistenciaMensaje(IN refMQMD REFERENCE,IN refParams REFERENCE) 
+BEGIN
+ 						  
+	IF COALESCE(refParams.PERSIST,getNO())=getSI() THEN
+		SET refMQMD.Persistence =  1;
+	ELSE
+		SET refMQMD.Persistence =  0;
+	END IF;	
+					
+END;
+
+/*
+ * Asigna el tiempo de expiracion a un mensaje MQ
+*/
+CREATE PROCEDURE asignarTiempoExpiracion(IN refMQMD REFERENCE,IN refSegundos REFERENCE, IN intAumento INTEGER) 
+BEGIN
+				
+	DECLARE intSegundos INTEGER CAST(COALESCE(refSegundos.EXPIRAMSG,0)AS INTEGER);
+	SET intSegundos = (intSegundos * intAumento) * 10;
+	IF intSegundos > 0 THEN 		
+		SET refMQMD.Expiry =  intSegundos;
+	END IF;
+				
+END;
+
+/*
+ * Asigna el tiempo de expiracion a un mensaje MQ para el control de mensajes Report de mq
+*/
+CREATE PROCEDURE asignarTiempoExpiracionTemporalReport (IN refMQMD REFERENCE,IN refSegundos REFERENCE, IN intTiempoExpiraMsjTemp INTEGER, IN intAumento INTEGER) 
+BEGIN
+				
+	DECLARE intSegundos INTEGER CAST(COALESCE(refSegundos.EXPIRAMSG,0)AS INTEGER);
+	IF intSegundos =0 THEN
+		SET intSegundos =  intTiempoExpiraMsjTemp;
+	END IF;
+	
+	SET intSegundos = (intSegundos * intAumento) * 10;
+	IF intSegundos > 0 THEN 		
+		SET refMQMD.Expiry =  intSegundos;
+	END IF;
+				
+END;
+
+
+/*
+* Completa los campos de negocio de la auditoria
+* 
+*/
+CREATE PROCEDURE completarDatosNegocioAuditoria(IN refN REFERENCE,IN chrIndTransaccion CHARACTER, IN chrIndServicio CHARACTER, IN chrIndCliente CHARACTER,
+												IN chrIndExternoServicio CHARACTER, IN chrNroCuenta CHARACTER, IN chrFechaOrigen CHARACTER,
+												IN chrCodInformativo1 CHARACTER,IN chrCodInformativo2 CHARACTER,IN chrCodInformativo3 CHARACTER,IN chrCodInformativo4 CHARACTER)
+BEGIN
+		SET refN.INDTRANSACCION = chrIndTransaccion;
+		SET refN.INDSERVICIO = chrIndServicio;
+		SET refN.INDCLIENTE = chrIndCliente;
+		SET refN.INDEXTERNOSERVICIO = chrIndExternoServicio;
+		SET refN.NROCUENTA = chrNroCuenta;
+		SET refN.FECHAHORAORIGEN = chrFechaOrigen;
+		SET refN.CODINFORMATIVO1 = chrCodInformativo1;
+		SET refN.CODINFORMATIVO2 = chrCodInformativo2;
+		SET refN.CODINFORMATIVO3 = chrCodInformativo3;
+		SET refN.CODINFORMATIVO4 = chrCodInformativo4;
+END;
+
+/*
+ * Registrar Auditoria del mensaje de entrada desde la aplicacion consumidora
+ *
+*/
+CREATE PROCEDURE armarAuditoriaEventoEntrada(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE, 
+									IN refBody REFERENCE)
+BEGIN
+	
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+			
+		CALL completarDatosNegocioAuditoria(refN,'','','','','','','','','','');	
+		
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= '';
+		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
+		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
+		SET refA.RUTASERVICIO	= refMQRFH2usr.Auditoria.rutaServicio;
+		SET refA.GRUPOSERVICIO	= refMQRFH2usr.Auditoria.grupoServicio;
+		SET refA.ANOMES			= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_ENTRADA();
+		SET refA.TIPOMENSAJE 	= getMENSAJE_ENTRADA();
+		
+		SET refA.BROKER			= BrokerName;
+		SET refA.FLUJO			= MessageFlowLabel;
+		SET refA.CODERROR		= '';
+		
+		DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);  
+		DECLARE chrMensaje CHARACTER CAST(blobMensaje AS CHARACTER CCSID 819) ;
+ 
+	 	SET refA.DATO				= chrMensaje;
+	
+				
+END;
+
+
+
+/*
+ * Registrar Auditoria del mensaje formateado a enviarse al Proveedor
+ *
+*/
+CREATE PROCEDURE armarAuditoriaEventoFormateo(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE, 
+									IN refBody REFERENCE, 
+									IN refBodyBlob BLOB, 
+									IN chrINDTRANSACCION CHARACTER,
+									IN chrINDSERVICIO CHARACTER, 
+									IN chrINDCLIENTE CHARACTER, 
+									IN chrINDEXTERNOSERVICIO CHARACTER, 
+									IN chrNROCUENTA CHARACTER,
+									IN chrFECHAHORAORIGEN CHARACTER, 
+									IN chrCODINFORMATIVO1 CHARACTER, 
+									IN chrCODINFORMATIVO2 CHARACTER,
+									IN chrCODINFORMATIVO3 CHARACTER,
+									IN chrCODINFORMATIVO4 CHARACTER )
+BEGIN
+	
+		DECLARE charset CHARACTER ;	
+		set charset = CAST(refOutput.Properties.CodedCharSetId AS CHARACTER);
+		
+		CREATE FIRSTCHILD OF refOutput DOMAIN 'Properties';
+
+--		DECLARE charset REFERENCE TO refOutput.Properties.CodedCharSetId;
+		
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+			
+		CALL completarDatosNegocioAuditoria(refN,chrINDTRANSACCION,chrINDSERVICIO,chrINDCLIENTE,chrINDEXTERNOSERVICIO,chrNROCUENTA,
+											chrFECHAHORAORIGEN,chrCODINFORMATIVO1,chrCODINFORMATIVO2,chrCODINFORMATIVO3,chrCODINFORMATIVO4);
+												
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= refMQRFH2usr.Auditoria.indOrigen;
+		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
+		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
+		SET refA.RUTASERVICIO	= refMQRFH2usr.Auditoria.rutaServicio;
+		SET refA.GRUPOSERVICIO	= refMQRFH2usr.Auditoria.grupoServicio;
+		SET refA.ANOMES			= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_FORMATEO();
+		SET refA.TIPOMENSAJE 	= getMENSAJE_FORMATEADO();
+		SET refA.BROKER			= BrokerName;
+		SET refA.FLUJO			= MessageFlowLabel;
+		SET refA.CODERROR		= '';
+		
+		DECLARE chrMensaje CHARACTER ;	
+		IF refBodyBlob IS NULL THEN
+			
+			 IF (charset = '1208') THEN
+				DECLARE blobMensaje2 BLOB ASBITSTREAM(refBody CCSID 1208);  
+				SET chrMensaje = CAST(blobMensaje2 AS CHARACTER CCSID 1208) ;
+				
+			 ELSE
+				DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);  
+				SET chrMensaje = CAST(blobMensaje AS CHARACTER CCSID 819) ;			 	
+			 END IF;
+		ELSE
+			SET chrMensaje = CAST(refBodyBlob AS CHARACTER CCSID 819) ;
+		END IF;
+ 
+	 	SET refA.DATO			= chrMensaje;
+
+END;
+
+/*
+ * Registrar Auditoria del mensaje de respuesta de la aplicacion provedora
+ *
+*/
+CREATE PROCEDURE armarAuditoriaEventoRespuestaProveedor(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE, 
+									IN refBody REFERENCE,
+									IN refBodyBlob BLOB)
+BEGIN
+	
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+					
+		CALL completarDatosNegocioAuditoria(refN,'','','','','','','','','','');
+							
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= '';
+		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
+		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
+		SET refA.RUTASERVICIO	= '';
+		SET refA.GRUPOSERVICIO	= refMQRFH2usr.Auditoria.grupoServicio;
+		SET refA.ANOMES			= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_RESPPROV();
+		SET refA.TIPOMENSAJE 	= getMENSAJE_RESPPROV();
+		SET refA.BROKER			= BrokerName;		
+		SET refA.FLUJO			= MessageFlowLabel;
+		SET refA.CODERROR		= '';
+				
+		DECLARE chrMensaje CHARACTER;
+		IF refBodyBlob IS NULL THEN
+			DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);  
+			SET chrMensaje = CAST(blobMensaje AS CHARACTER CCSID 819) ;
+		ELSE
+			SET chrMensaje = CAST(refBodyBlob AS CHARACTER CCSID 819) ;
+		END IF;
+ 
+	 	SET refA.DATO				= chrMensaje;
+				
+END;
+
+
+
+/*
+ * Registrar Auditoria del mensaje formateado a enviarse como respuesta al consumidor
+ *
+*/
+CREATE PROCEDURE armarAuditoriaEventoRespuestaConsumidor(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE, 
+									IN refBody REFERENCE,
+									IN refBodyBlob BLOB)
+BEGIN
+	
+	
+		CREATE FIRSTCHILD OF refOutput DOMAIN 'Properties';
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+			
+		CALL completarDatosNegocioAuditoria(refN,'','','','','','','','','','');
+		
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= '';
+		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
+		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
+		SET refA.RUTASERVICIO	= '';
+		SET refA.GRUPOSERVICIO	= refMQRFH2usr.Auditoria.grupoServicio;
+		SET refA.ANOMES			= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_RESPCONS();
+		SET refA.TIPOMENSAJE 	= getMENSAJE_RESPCONS();
+		SET refA.BROKER			= BrokerName;		
+		SET refA.FLUJO			= MessageFlowLabel;
+		SET refA.CODERROR		= '';
+		
+		DECLARE chrMensaje CHARACTER;
+		IF refBodyBlob IS NULL THEN
+			IF refBody IS NOT NULL THEN
+				DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);
+				SET chrMensaje = CAST(blobMensaje AS CHARACTER CCSID 819) ;
+			ELSE
+				SET chrMensaje = '';
+			END IF;  
+			
+		ELSE
+			SET chrMensaje = CAST(refBodyBlob AS CHARACTER CCSID 819) ;
+		END IF;
+ 
+	 	SET refA.DATO				= chrMensaje;
+
+				
+END;
+
+
+
+/*
+ * Registrar Auditoria del evento de un reintento
+ * 
+*/
+CREATE PROCEDURE armarAuditoriaEventoReintento(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE)
+									
+BEGIN
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+	
+		CALL completarDatosNegocioAuditoria(refN,'','','','','','','','','','');
+			
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= '';
+		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
+		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
+		SET refA.RUTASERVICIO 	= '';
+		SET refA.GRUPOSERVICIO 	= refMQRFH2usr.Auditoria.grupoServicio;	
+		SET refA.ANOMES 		= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_REINTENTO();
+		SET refA.TIPOMENSAJE	= '';
+		SET refA.BROKER			= BrokerName;		
+		SET refA.FLUJO			= MessageFlowLabel;
+		SET refA.CODERROR		= '';
+		SET refA.DATO			= '';
+			
+							
+END;
+
+/* 
+ * Registrar Auditoria del evento de un error
+ *
+*/
+CREATE PROCEDURE armarAuditoriaEventoError(IN refOutput REFERENCE,
+									IN chrMsgId BLOB,
+									IN refMQRFH2usr REFERENCE,
+									IN chrCodError INTEGER,
+									IN chrMensajeError CHARACTER,
+									IN refExceptionList REFERENCE,
+									IN chrCodServicio CHARACTER,
+									IN chrProtocolo CHARACTER)
+									
+BEGIN
+
+		CALL setearPropiedadesMensaje(refOutput,'MS_ESB_CORE_GENERICOS','MSG_AUDITORIA','CWF1');
+		CREATE LASTCHILD OF refOutput DOMAIN 'MRM';
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		CREATE FIELD refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+		DECLARE refN REFERENCE TO refOutput.MRM.MENSAJE.DATOSNEGOCIO;
+		DECLARE refA REFERENCE TO refOutput.MRM.MENSAJE.DATOSAUDITORIA;
+
+		CALL completarDatosNegocioAuditoria(refN,'','','','','','','','','','');	
+			
+		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
+		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
+		SET refA.HORA			= obtenerHoraAuditoria();
+		SET refA.INDORIGEN		= validarCampoAuditoria(refMQRFH2usr.Auditoria.indOrigen);
+		IF chrProtocolo IS NULL THEN
+			SET refA.CODSERVICIO		= LEFT(validarCampoAuditoria(refMQRFH2usr.CodigoServicio),5);-- cambio 30/05/2013 (se aniade LEFT)
+			SET refA.PROTOCOLOENTRADA	= validarCampoAuditoria(refMQRFH2usr.Parametros.Protocolo.IdProtocolo);
+		ELSE
+			SET refA.CODSERVICIO		= LEFT(validarCampoAuditoria(chrCodServicio),5);-- cambio 30/05/2013 (se aniade LEFT)
+			SET refA.PROTOCOLOENTRADA	= chrProtocolo;			
+		END IF;
+	
+		SET refA.RUTASERVICIO 	= validarCampoAuditoria(refMQRFH2usr.Auditoria.rutaServicio);
+		SET refA.GRUPOSERVICIO 	= validarCampoAuditoria(refMQRFH2usr.Auditoria.grupoServicio);	
+		SET refA.ANOMES			= obtenerAnoMesAuditoria();
+		SET refA.TIPOEVENTO		= getEVENTO_ERROR();
+		SET refA.TIPOMENSAJE 	= getMENSAJE_ERROR();
+		SET refA.BROKER			= BrokerName;
+		SET refA.FLUJO			= MessageFlowLabel;
+			
+		IF chrMensajeError IS NULL THEN
+
+			DECLARE chrCodigoError CHARACTER '';
+			DECLARE chrDescripcionError CHARACTER '';
+			DECLARE chrMensajeErrorException CHARACTER '';
+			CALL obtenerDetalleError(refExceptionList,chrCodigoError,chrDescripcionError);
+			
+			SET refA.CODERROR	= chrCodigoError;
+			SET refA.DATO		= chrDescripcionError;
+							
+		ELSE
+
+			SET refA.CODERROR	= chrCodError;
+			SET refA.DATO		= chrMensajeError;
+			
+		END IF;
+								
+END;
+
+
+
+
+
+
+/*
+ * Setea las propiedades de la cabecera MQMD
+ * el parametro 'refParametrosServicio' debe ser MQRFH2.usr.Parametros.Servicio
+*/
+CREATE PROCEDURE setearPropiedadesMQMD(IN refMQMDOutput REFERENCE,IN refMQMDInput REFERENCE, IN refParametrosServicio REFERENCE)
+BEGIN
+	
+	SET refMQMDOutput.Format 	= 'MQSTR   ';			
+	IF FIELDTYPE(refParametrosServicio.PRIORIDAD) IS NOT NULL THEN
+		SET refMQMDOutput.Priority 	= CAST(refParametrosServicio.PRIORIDAD AS INTEGER);
+	ELSE
+		SET refMQMDOutput.Priority 	= 0;
+	END IF;
+	SET refMQMDOutput.MsgId 	= refMQMDInput.CorrelId;
+	SET refMQMDOutput.CorrelId 	= refMQMDInput.CorrelId;	
+				
+END;
+
+
+/*
+ * Setea el formato del mensaje 
+*/
+CREATE PROCEDURE setearPropiedadesMensaje(IN refOutputRoot REFERENCE,IN chrMessageSetName CHARACTER, IN chrMessageType CHARACTER, IN chrMessageFormat CHARACTER)
+BEGIN
+	
+	SET refOutputRoot.Properties.MessageSet 	= chrMessageSetName;			
+	SET refOutputRoot.Properties.MessageType 	= chrMessageType;	
+	SET refOutputRoot.Properties.MessageFormat 	= chrMessageFormat;	
+END;
+
+
+
+/*
+ * Agregar Indicador de existencia de un problema. 
+ * se debe de agregar el tag MQRHF2.usr.ResultadoInvocacion
+*/
+CREATE PROCEDURE crearTagResultadoInvocacion(IN refHeader REFERENCE,IN chrTipoCodigo CHARACTER,IN chrCodigo INTEGER, IN chrDescripcion CHARACTER)  
+BEGIN
+	CREATE FIELD refHeader.ResultadoInvocacion;  
+	SET refHeader.ResultadoInvocacion.tipoCodigo		=chrTipoCodigo;  	
+	SET refHeader.ResultadoInvocacion.codigoRespuesta	=chrCodigo;  		
+	SET refHeader.ResultadoInvocacion.descripcion		=chrDescripcion;  
+				
+END;
+
+
+/*
+ * Crea a partir de una lista nombres de campos
+*/
+CREATE PROCEDURE crearNombreCampos(IN refCampo REFERENCE,IN refSalida REFERENCE) 
+BEGIN
+				
+		WHILE LASTMOVE(refCampo)=TRUE 
+		DO
+			CREATE LASTCHILD OF refSalida NAME refCampo.CODIGO_ATRIBUTO VALUE refCampo.VALOR;
+			
+		   	MOVE refCampo NEXTSIBLING;
+		END WHILE;
+				
+END;
+
+
+/*
+ * Crea la cabecera TDP
+*/
+CREATE PROCEDURE crearCabeceraMQ(IN refCabeceraTDP REFERENCE,IN chrCaracter CHARACTER)
+BEGIN
+		DECLARE chrCaracter CHARACTER ' ';
+	
+		SET refCabeceraTDP.TIPO_FORMATO 		= fill('',3,chrCaracter,TRUE);
+		SET refCabeceraTDP.TIPO_MENSAJE 		= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.FLAG_HORARIO 		= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.FLAG_EXTORNO 		= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.FLAG_RETRANSMISION 	= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.VERSION_APP_CLIENTE 	= fill('',8,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_OPCION 			= fill('',5,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_RUTINA 			= fill('',5,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_CORPORACION 		= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_EMPRESA 			= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_SUCURSAL 		= fill('',3,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_AGENCIA 			= fill('',5,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_TERMINAL 		= fill('',10,chrCaracter,TRUE);
+		SET refCabeceraTDP.USUARIO 				= fill('',10,chrCaracter,TRUE);
+		SET refCabeceraTDP.FECHA_TRANSAC 		= fill('',8,chrCaracter,TRUE);
+		SET refCabeceraTDP.HORA_TRANSAC 		= fill('',6,chrCaracter,TRUE);
+		SET refCabeceraTDP.USUARIO_AUTORIZA 	= fill('',10,chrCaracter,TRUE);
+		SET refCabeceraTDP.PASSWORD_AUTORIZA 	= fill('',24,chrCaracter,TRUE);
+		SET refCabeceraTDP.IND_MAS_DATOS_APP 	= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.CANTIDAD_REGISTROS 	= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.IND_MAS_DATOS_TRAMA 	= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.CANTIDAD_MAX_REGISTRO= fill('',6,chrCaracter,TRUE);
+		SET refCabeceraTDP.AUTENTICACION_MENSAJE= fill('',16,chrCaracter,TRUE);
+		SET refCabeceraTDP.METODO_CIFRADO 		= fill('',2,chrCaracter,TRUE);
+		SET refCabeceraTDP.SECUENCIA 			= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.NUMERO_CONSULTA 		= fill('',12,chrCaracter,TRUE);
+		SET refCabeceraTDP.RESERVADO 			= fill('',2,chrCaracter,TRUE);
+		SET refCabeceraTDP.LONG_MENSAJE 		= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.DESC_MENSAJE 		= fill('',30,chrCaracter,TRUE);
+		SET refCabeceraTDP.TIPO_COD_RPTA 		= fill('',1,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_RPTA 			= fill('',4,chrCaracter,TRUE);
+		SET refCabeceraTDP.COD_FORMATO 			= fill('',4,chrCaracter,TRUE);
+
+	
+END;
+
+
+
+/*
+ * Completa la cabecera de respuesta MQ con codigo de respuesta. Usado para las respuestas al Consumidor
+*/
+CREATE PROCEDURE prepararCabeceraMQ(IN refCabeceraOut REFERENCE,IN refCabeceraIN REFERENCE, IN chrTipoCodigoError CHARACTER,IN chrCodigoError INTEGER, IN chrDescripcionError CHARACTER) 
+BEGIN
+
+		SET refCabeceraOut.TIP_MENSAJE			= 'O';				
+		SET refCabeceraOut.COD_SERVICIO 		= COALESCE(refCabeceraIN.COD_SERVICIO,'');
+		SET refCabeceraOut.APP_CONSUMIDORA 		= COALESCE(refCabeceraIN.APP_CONSUMIDORA,'');
+		SET refCabeceraOut.APP_PROVEEDORA 		= COALESCE(refCabeceraIN.APP_PROVEEDORA,'');
+
+		SET refCabeceraOut.COD_OPERACION 		= COALESCE(refCabeceraIN.COD_OPERACION,'');
+		SET refCabeceraOut.COD_USUARIO 			= COALESCE(refCabeceraIN.COD_USUARIO,'');
+		SET refCabeceraOut.PSW_USUARIO 			= COALESCE(refCabeceraIN.PSW_USUARIO,'');
+		
+		SET refCabeceraOut.TIP_RESPUESTA 		= COALESCE(refCabeceraIN.TIP_RESPUESTA,'');
+		SET refCabeceraOut.COD_RESPUESTA 		= COALESCE(refCabeceraIN.COD_RESPUEST,'');
+		SET refCabeceraOut.DES_RESPUESTA 		= COALESCE(refCabeceraIN.DES_RESPUESTA,'');
+		
+				
+END;
+ 
+
+
+/*
+ * Setea la respuesta en la cabecera TDP
+*/
+CREATE PROCEDURE setearRespuestaCabeceraMQ(IN refCabeceraOut REFERENCE,IN chrTipoCodigoError CHARACTER,IN chrCodigoError CHARACTER, IN chrDescripcionError CHARACTER) 
+BEGIN
+	SET refCabeceraOut.TIP_MENSAJE 				= 'O';
+	SET refCabeceraOut.TIP_RESPUESTA 			= chrTipoCodigoError;
+	SET refCabeceraOut.COD_RESPUESTA			= chrCodigoError;
+	SET refCabeceraOut.DES_RESPUESTA 			= chrDescripcionError;
+	
+END;
+	
+		
+/*
+ * Prepara la cabecera del mensaje Soap de resp del ESB
+*/
+CREATE PROCEDURE prepararEnvelopeSoapRespESB(IN refOutput REFERENCE,IN refMQRFH2usr REFERENCE, IN nsSOAP NAMESPACE, IN nsCAV NAMESPACE, IN chrNamespace CHARACTER, IN chrTipRespuesta CHARACTER,IN chrCodRespuesta INTEGER, IN chrDesRespuesta CHARACTER) 
+BEGIN
+		--Preparacion de namespace del soap
+		CREATE LASTCHILD OF refOutput DOMAIN 'XMLNS';
+
+--		SET refOutput.XMLNS.(XML.XmlDecl).(XML.Version) = '1.0';
+--		SET refOutput.XMLNS.(XML.XmlDecl).(XML.Encoding) = 'iso-8859-1';
+		
+		SET refOutput.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:"soapenv" = getNS_SOAP(); 
+		SET refOutput.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:soapenv = getNS_SOAP(); 
+		SET refOutput.XMLNS.nsSOAP:Envelope.(XML.NamespaceDecl)xmlns:srv = chrNamespace;
+	
+		--Llenado de los tags de cabeceras
+		CREATE FIELD refOutput.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsCAV:MENSAJERES.INTEGRES;
+		DECLARE refMsjRes REFERENCE TO refOutput.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsCAV:MENSAJERES.INTEGRES;
+		
+		SET refMsjRes.CABECERA.COD_SERVICIO = refMQRFH2usr.CabecerasInput.COD_SERVICIO; 
+		SET refMsjRes.CABECERA.APP_CONSUMIDORA = refMQRFH2usr.CabecerasInput.APP_CONSUMIDORA;
+		 
+		SET refMsjRes.CABECERA.TIP_RESPUESTA = chrTipRespuesta; 
+		IF (chrCodRespuesta = getNUM_EXITO_CORE_ESB()) THEN 
+			SET refMsjRes.CABECERA.COD_RESPUESTA = getCOD_EXITO_CORE_ESB();
+		ELSE
+			SET refMsjRes.CABECERA.COD_RESPUESTA = chrCodRespuesta;
+		END IF;
+		 
+		IF  chrCodRespuesta = getCOD_ERROR_1013() OR  --error de validaciones de campos de entrada del servicio
+			chrCodRespuesta = getCOD_ERROR_1010() OR  -- error al invocar el servicio proveedor
+			chrCodRespuesta = getCOD_ERROR_1012() OR  -- error de timeout
+			chrCodRespuesta = getCOD_ERROR_1019() THEN  --error controlado por las app proveedoras
+			SET refMsjRes.CABECERA.DES_RESPUESTA = chrDesRespuesta;			
+		ELSEIF (chrCodRespuesta = getNUM_EXITO_CORE_ESB()) THEN 
+			SET refMsjRes.CABECERA.DES_RESPUESTA = getMSJ_EXITO_ESB();
+		ELSE
+			SET refMsjRes.CABECERA.DES_RESPUESTA = getMSJ_ERROR_GEN();			
+		END IF;
+		
+					
+		
+		-- Creacion de la estructura para los datos de respuesta	
+		CREATE FIELD refOutput.XMLNS.nsSOAP:Envelope.nsSOAP:Body.nsCAV:MENSAJERES.INTEGRES.DETALLE.DATOS;			
+			 
+END;	 
+
+
+/*
+ * Validacion de la estructura de error de los flujos de salida genericos dentro de los flujos especificos de respuesta
+*/
+CREATE PROCEDURE validarRespuestaError(IN refInputRoot REFERENCE) 
+BEGIN
+	--Si viene creado el tag usr.ResultadoInvocacion desde los flujos de salida genericos significa que ocurrio un error ahi
+		IF FIELDTYPE(refInputRoot.MQRFH2.usr.ResultadoInvocacion) IS NOT NULL THEN
+					 
+			THROW USER EXCEPTION MESSAGE refInputRoot.MQRFH2.usr.ResultadoInvocacion.codigoRespuesta VALUES(refInputRoot.MQRFH2.usr.ResultadoInvocacion.descripcion);	
+			
+		END IF;
+	
+END;

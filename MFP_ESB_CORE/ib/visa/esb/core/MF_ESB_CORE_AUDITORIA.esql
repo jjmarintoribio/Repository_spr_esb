@@ -1,0 +1,300 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_AUDITORIA.esql
+ * Proposito	: Flujo de  Auditoria del ESB
+ * Fecha		: 2014-03-25
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+ 
+
+BROKER SCHEMA ib.visa.esb.core
+
+PATH ib.visa.esb.core;
+DECLARE cacheParametrosAudit SHARED ROW;
+CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_ObtenerParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1))	 Obtener los parametros de BD y guardarlos en cache del flujo
+		ROUTING : BEGIN ATOMIC 
+			IF cacheParametrosAudit.iniciado IS NULL THEN
+				
+				CALL obtenerParametrosAuditoriaBD (getTIPO_SERVICIO_ONLINE(), Environment.ResultSet1[]);
+		       	SET cacheParametrosAudit.Parametros[] = Environment.ResultSet1[];
+
+				SET cacheParametrosAudit.iniciado = TRUE;
+
+				SET Environment.ParametrosServicioESB[] = (SELECT P.CODIGO_ATRIBUTO, P.VALOR FROM cacheParametrosAudit.Parametros[] as P WHERE P.CODIGO_SERVICIO = '00000');
+												
+				CREATE FIELD cacheParametrosAudit.ParametrosESB;
+				CALL crearNombreCampos(Environment.ParametrosServicioESB[],cacheParametrosAudit.ParametrosESB);													
+												
+			END IF;
+		
+		END ROUTING ; 
+		
+		
+		--Validacion si se va a registrar auditoria
+		DECLARE chrAudita CHARACTER '';
+		DECLARE refIn REFERENCE TO InputRoot.MRM.MENSAJE.DATOSAUDITORIA;
+	
+		SET chrAudita  = THE (SELECT ITEM P.VALOR FROM cacheParametrosAudit.Parametros[] as P 
+												WHERE P.CODIGO_SERVICIO = refIn.CODSERVICIO AND 
+														P.CODIGO_ATRIBUTO = 'AUDITA');
+
+		--Si el ESB indica que se registren auditorias
+		IF cacheParametrosAudit.ParametrosESB.AUDITA = getSI() THEN
+
+			--Si el servicio indica que se registren auditoria
+			IF COALESCE(chrAudita,getSI()) = getSI() THEN
+		
+				--((2))Ruteo para registrar la auditoria
+				
+				SET OutputRoot = InputRoot;
+
+				IF refIn.TIPOEVENTO = getEVENTO_FORMATEO() THEN
+					
+						PROPAGATE TO TERMINAL 1;  --registra en transaccion, evento y mensaje
+						
+				ELSEIF refIn.TIPOEVENTO = getEVENTO_ENTRADA() OR  
+					   refIn.TIPOEVENTO = getEVENTO_RESPPROV() OR 
+					   refIn.TIPOEVENTO = getEVENTO_RESPCONS() OR
+	   				   refIn.TIPOEVENTO = getEVENTO_ERROR() THEN
+					   
+						PROPAGATE TO TERMINAL 2; -- registra en evento y mensaje
+				ELSE
+					
+					PROPAGATE TO TERMINAL 3; --registra solo evento
+					
+				END IF;
+					
+					
+					
+			ELSE
+			
+				--Si el servicio indica que no se registre auditoria pero se debe validar si se envia correo
+		
+				IF refIn.TIPOEVENTO = getEVENTO_ERROR() THEN
+					
+					DECLARE chrNotifica CHARACTER;		
+					--Si el servicio tiene configurado que se notifique por correo NOTIFICA = 'S'
+					SET chrNotifica  = THE (SELECT ITEM P.VALOR FROM cacheParametrosAudit.Parametros[] as P 
+										WHERE P.CODIGO_SERVICIO = InputRoot.MRM.MENSAJE.DATOSAUDITORIA.CODSERVICIO AND 
+										P.CODIGO_ATRIBUTO = 'NOTIFICA');
+					
+					IF COALESCE(chrNotifica,getSI()) = getSI() THEN
+						
+						SET OutputRoot = InputRoot;
+						
+						PROPAGATE TO TERMINAL 4; -- se envia correo
+						
+					END IF;
+					
+				END IF;
+				
+			END IF;
+					
+		END IF;
+				
+				
+		RETURN FALSE; 
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_RegistrarTransaccion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refIn REFERENCE TO InputRoot.MRM.MENSAJE;
+		
+		CALL registrarTransaccionBD (
+									refIn.DATOSAUDITORIA.MSGID,
+									refIn.DATOSAUDITORIA.FECHAHORA,
+									refIn.DATOSAUDITORIA.HORA,
+									refIn.DATOSAUDITORIA.INDORIGEN,
+									refIn.DATOSAUDITORIA.CODSERVICIO,
+									refIn.DATOSAUDITORIA.PROTOCOLOENTRADA,
+									refIn.DATOSNEGOCIO.INDTRANSACCION,
+									refIn.DATOSNEGOCIO.INDSERVICIO,
+									refIn.DATOSNEGOCIO.INDCLIENTE,
+									refIn.DATOSNEGOCIO.INDEXTERNOSERVICIO,
+									refIn.DATOSNEGOCIO.NROCUENTA,
+									refIn.DATOSNEGOCIO.FECHAHORAORIGEN,
+									refIn.DATOSNEGOCIO.CODINFORMATIVO1,
+									refIn.DATOSNEGOCIO.CODINFORMATIVO2,
+									refIn.DATOSNEGOCIO.CODINFORMATIVO3,
+									refIn.DATOSNEGOCIO.CODINFORMATIVO4,
+									refIn.DATOSAUDITORIA.RUTASERVICIO,
+									refIn.DATOSAUDITORIA.GRUPOSERVICIO,
+									refIn.DATOSAUDITORIA.ANOMES
+									);
+
+		IF SQLCODE <> 0 THEN
+			IF CONTAINS(SQLERRORTEXT,'NULL') =TRUE OR CONTAINS(SQLERRORTEXT,'truncated') =TRUE THEN
+				SET OutputRoot = InputRoot;
+				CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+				SET OutputRoot.MQRFH2.usr.MotivoError = SQLERRORTEXT;  
+				RETURN TRUE;				
+			ELSEIF SQLNATIVEERROR <> 0 THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1009() VALUES('SQLSTATE:',  SQLSTATE, 'SQLCODE:', SQLCODE, 'SQLNATIVEERROR:', SQLNATIVEERROR, 'SQLERRORTEXT:', SQLERRORTEXT);
+			END IF;	
+		END IF;
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_RegistrarEvento
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refIn REFERENCE TO InputRoot.MRM.MENSAJE.DATOSAUDITORIA;
+		
+		--Si es un evento de error entonces se envia un correo
+		
+		IF refIn.TIPOEVENTO = getEVENTO_ERROR() THEN
+			
+			DECLARE chrNotifica CHARACTER;		
+			--Si el servicio tiene configurado que se notifique por correo NOTIFICA = 'S'
+			SET chrNotifica  = THE (SELECT ITEM P.VALOR FROM cacheParametrosAudit.Parametros[] as P 
+								WHERE P.CODIGO_SERVICIO = InputRoot.MRM.MENSAJE.DATOSAUDITORIA.CODSERVICIO AND 
+								P.CODIGO_ATRIBUTO = 'NOTIFICA');
+			
+			IF COALESCE(chrNotifica,getSI()) = getSI() THEN
+				
+				SET OutputRoot = InputRoot;
+				
+				PROPAGATE TO TERMINAL 1 DELETE NONE;
+				
+			END IF;
+						
+		END IF;
+		
+		
+		CALL registrarEventoBD (
+							refIn.MSGID,
+							refIn.TIPOEVENTO,
+							refIn.CODSERVICIO,
+							refIn.PROTOCOLOENTRADA,
+							refIn.BROKER,
+							refIn.FLUJO,
+							refIn.FECHAHORA,
+							refIn.HORA,
+							refIn.GRUPOSERVICIO,
+							refIn.ANOMES
+							 
+							);
+		IF SQLCODE <> 0 THEN
+			IF CONTAINS(SQLERRORTEXT,'NULL') =TRUE OR CONTAINS(SQLERRORTEXT,'truncated') =TRUE THEN 
+				SET OutputRoot = InputRoot;
+				CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+				SET OutputRoot.MQRFH2.usr.MotivoError = SQLERRORTEXT;  			
+				RETURN TRUE;				
+			ELSEIF SQLNATIVEERROR <> 0 THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1009() VALUES('SQLSTATE:',  SQLSTATE, 'SQLCODE:', SQLCODE, 'SQLNATIVEERROR:', SQLNATIVEERROR, 'SQLERRORTEXT:', SQLERRORTEXT);
+			END IF;	
+		END IF;
+		RETURN FALSE;
+		
+	END;
+
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_RegistrarMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		DECLARE refIn REFERENCE TO InputRoot.MRM.MENSAJE.DATOSAUDITORIA;
+		
+		CALL registrarMensajeBD (
+								refIn.MSGID,
+								refIn.FECHAHORA,
+								refIn.HORA,
+								refIn.CODSERVICIO,
+								refIn.BROKER,								
+								refIn.TIPOMENSAJE,
+								refIn.DATO,
+								refIn.GRUPOSERVICIO,
+								refIn.ANOMES
+								);
+		IF SQLCODE <> 0 THEN
+			IF CONTAINS(SQLERRORTEXT,'NULL') =TRUE OR CONTAINS(SQLERRORTEXT,'truncated') =TRUE THEN 
+				SET OutputRoot = InputRoot;
+				CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+				SET OutputRoot.MQRFH2.usr.MotivoError = SQLERRORTEXT;   				
+				RETURN TRUE;				
+			ELSEIF SQLNATIVEERROR <> 0 THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1009() VALUES('SQLSTATE:',  SQLSTATE, 'SQLCODE:', SQLCODE, 'SQLNATIVEERROR:', SQLNATIVEERROR, 'SQLERRORTEXT:', SQLERRORTEXT);
+			END IF;	
+		END IF;
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_PrepararCorreo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		 
+		DECLARE chrCorreo CHARACTER; 
+		DECLARE chrDestinos, chrTo, chrCc CHARACTER;			
+		DECLARE intPosicion INTEGER;	
+		
+		SET chrCorreo  = THE (SELECT ITEM P.VALOR FROM cacheParametrosAudit.Parametros[] as P 
+							WHERE P.CODIGO_SERVICIO = InputRoot.MRM.MENSAJE.DATOSAUDITORIA.CODSERVICIO AND 
+							P.CODIGO_ATRIBUTO = 'CORREO');
+
+	
+		
+		--CREATE FIRSTCHILD OF OutputRoot DOMAIN 'Properties';
+		CALL setearPropiedadesMensaje(OutputRoot,'MS_ESB_CORE_GENERICOS','MSG_CORREO','CWF1');
+		
+		SET OutputRoot.Properties.Encoding 		 = CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.Encoding AS INTEGER);
+		SET OutputRoot.Properties.CodedCharSetId = CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.CodedCharSetId AS INTEGER);
+		
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'MQMD';
+		SET OutputRoot.MQMD.Encoding 	   = OutputRoot.Properties.Encoding;
+		SET OutputRoot.MQMD.CodedCharSetId = OutputRoot.Properties.CodedCharSetId;
+		
+		SET OutputRoot.MQRFH2.usr 		= InputRoot.MQRFH2.usr;
+						
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'MRM';
+		CREATE FIELD OutputRoot.MRM.MENSAJE.DATOSCORREO;
+		DECLARE refC REFERENCE TO OutputRoot.MRM.MENSAJE.DATOSCORREO;
+				
+		
+		--Si el servicio no tiene una cuenta de correo entonces se envia al correo del ESB
+		
+		SET chrDestinos = COALESCE(chrCorreo,cacheParametrosAudit.ParametrosESB.CORREO);
+		SET intPosicion = POSITION(',' IN chrDestinos);
+		
+		IF intPosicion > 0 THEN
+			SET chrTo = SUBSTRING(chrDestinos FROM 1 FOR intPosicion-1);
+			SET chrCc = SUBSTRING(chrDestinos FROM intPosicion+1 FOR LENGTH(chrDestinos)-intPosicion);
+		ELSE
+			SET chrTo = chrDestinos;
+			SET chrCc = '';
+		END IF;
+		
+		
+		SET refC.TO = chrTo;
+		SET refC.CC = chrCc;
+		SET refC.BCC = '';
+		SET refC.REENVIAR = '';
+		SET refC.FROM = '';
+		SET OutputRoot.MRM.MENSAJE.AUDITORIA = InputRoot.MRM.MENSAJE;
+		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+

@@ -1,0 +1,198 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerTarjetasEmisores
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--((0)) Registrar el autorizador de transacciones
+		DECLARE intIdTransaccion INTEGER; 	
+		CALL insertarProcesoActualizacionTarjetasBD(getID_PROCESO_1(),
+														CURRENT_TIMESTAMP,
+														'*archivos de emisores*',
+														NULL,
+														NULL,
+														getEST_0_PROCESO(),
+														CURRENT_TIMESTAMP,
+										 				intIdTransaccion);
+
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;
+		SET Environment.Parametros.Batch.idTransaccion = CAST(intIdTransaccion AS CHARACTER);
+		
+		--((0.2)) Envio de alertas al inicio del proceso
+		
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN   
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_1(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 4;
+		END IF;
+
+ 		SET OutputRoot.Properties 				= InputProperties;
+		SET OutputRoot.MQMD						= InputRoot.MQMD;
+		SET OutputRoot.MQRFH2.usr.Parametros	= Environment.Parametros;
+ 		
+		--((0.1)) Envio de mensaje con los Parametros para el control de alertas
+		
+		SET OutputRoot.XMLNSC 		= NULL; 
+		PROPAGATE TO TERMINAL 3 DELETE NONE;
+		
+		DECLARE valNumerico INTEGER 0;
+		DECLARE valCadena CHARACTER '';
+		
+		--39 ID PARAMETRO , DIAS PREVIOS ACTUALIZADOR DE TARJETA 
+		CALL obtenerParametroSpr(39,valNumerico,valCadena);
+		 
+
+ 		DECLARE refParam REFERENCE TO OutputRoot.MQRFH2.usr.Parametros;
+		 		
+		--((1)) Obtiene la cantidad de tarjetas por emisor.  
+		  	  
+		SET refParam.Batch.fechaProceso = CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) + CAST(valNumerico AS INTERVAL DAY); 
+		CALL buscarCantidadTarjetasEmisor(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+ 
+		--((2)) Agrupa los Emisores segun la cantidad de nodos del BUS y la cantidad de tarjetas que tiene.
+		
+		CREATE FIELD Environment.Proceso.InfoEmisores;
+		DECLARE refEmisores REFERENCE TO Environment.Proceso.InfoEmisores;
+		DECLARE refResul REFERENCE TO Environment.ResultSet1;
+		
+		DECLARE intInd INTEGER 0;
+		DECLARE intIni INTEGER 1;
+		DECLARE intAux INTEGER 1;
+	  
+		DECLARE intCantMayor INTEGER 0; 
+		DECLARE intIndLista INTEGER 1;
+		DECLARE intTempCant INTEGER 0;
+		 
+		DECLARE intCantNodos INTEGER CAST(refParam.Batch.cantNodos AS INTEGER);
+		    
+		WHILE intIni <= intCantNodos DO 
+			CREATE NEXTSIBLING OF refEmisores AS refEmisores REPEAT;
+			SET refEmisores.ComerciosUnidos 	= '';
+			SET refEmisores.cantTarjetas 	= 0;
+			SET intIni = intIni + 1;
+		END WHILE;
+
+		DELETE FIRSTCHILD OF Environment.Proceso;
+			  
+		WHILE LASTMOVE(refResul) DO
+			 
+			SET intInd = obtieneIndice(intInd,intCantNodos,intIndLista);
+			SET intTempCant = COALESCE(Environment.Proceso.InfoEmisores[intInd].cantCargos,0) +  refResul.NRO_TARJETAS;
+			
+			IF (intTempCant >= intCantMayor) THEN
+				SET intCantMayor 	= intTempCant;
+				SET intIndLista 	= intInd;
+			ELSE	
+				SET intInd = obtieneIndice(intInd,intCantNodos,intIndLista);
+			END IF;
+			 			
+ 			IF (FIELDTYPE(Environment.Proceso.InfoEmisores[intInd].ListadoEmisores.Emisor) IS NULL) THEN
+ 				CREATE FIELD Environment.Proceso.InfoEmisores[intInd].ListadoEmisores.Emisor[1];
+ 			ELSE
+ 				SET intAux = CARDINALITY(Environment.Proceso.InfoEmisores[intInd].ListadoEmisores.Emisor[])+1;
+ 				CREATE FIELD Environment.Proceso.InfoEmisores[intInd].ListadoEmisores.Emisor[intAux] ;
+ 			END IF;
+ 			
+ 			SET Environment.Proceso.InfoEmisores[intInd].ListadoEmisores.Emisor[intAux] = refResul;
+
+			MOVE refResul NEXTSIBLING REPEAT TYPE NAME;
+
+		END WHILE;
+
+		CREATE NEXTSIBLING OF OutputRoot.MQRFH2 DOMAIN 'XMLNSC';
+		
+		--Envio de lista agrupadas de Comercios 
+		
+		DECLARE refLis REFERENCE TO Environment.Proceso.InfoEmisores;
+		WHILE LASTMOVE(refLis) DO
+			
+			SET OutputRoot.XMLNSC.MENSAJE 			= refLis.ListadoEmisores;
+			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO = QueueManagerName;--QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
+			
+			
+			--Se envia a la cola que esta en cluster en ambos Nodos para que la carga de la creacion del archivo sea balanceada
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.ACTTAR1.ENVIARGEN.REQ.01';		 
+						  
+			MOVE refLis NEXTSIBLING REPEAT TYPE NAME;
+
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+
+		END WHILE;
+		 
+
+		--((3)) Registro de Log del Proceso
+		
+		SET OutputRoot.Properties 	= NULL;
+		SET OutputRoot.XMLNSC 		= NULL; 
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Obtuvo lista de Emisores y se crearan ' || CAST(CARDINALITY(Environment.ResultSet1[]) AS CHARACTER) || ' archivos de Tarjetas');
+		
+		PROPAGATE TO TERMINAL 2 ;
+		
+		RETURN FALSE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_EnviarGenerar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) Envio individual de los emisores
+				 	 
+	 	DECLARE refLis REFERENCE TO InputBody.MENSAJE.Emisor;
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		DECLARE blbMsgId BLOB getMsgIdValor(refParam.Batch.idTransaccion,FALSE);
+		DECLARE blbCorrelId BLOB ;		
+ 				 	
+		WHILE LASTMOVE(refLis) DO
+			
+			SET blbCorrelId = getMsgIdValor(refParam.Batch.idTransaccion || refLis.ID_EMISOR, FALSE);
+			SET OutputRoot.Properties = InputProperties;
+			SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;		
+			SET OutputRoot.XMLNSC.MENSAJE 	= refLis;
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= blbCorrelId;
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = blbMsgId;
+			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= InputBody.MENSAJE.QMPROCESO; --QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
+			
+					 						  
+			PROPAGATE TO TERMINAL 1;
+
+			--((2)) Registro de Log del Proceso
+
+			CALL armarMensajeLogProceso(OutputRoot,
+								refParam.Batch.idProceso, 
+								refParam.Batch.idTransaccion,   
+								getTIP_LOG_INFO(),
+								MessageFlowLabel,
+								'Se envio a generar el archivo de tarjetas para el emisor ' || refLis.ID_EMISOR);
+	
+			PROPAGATE TO TERMINAL 2;
+			
+			MOVE refLis NEXTSIBLING REPEAT TYPE NAME;
+
+
+			--((3)) Envio de mensaje para el control de finalizacion
+			
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.RCVARCHIVO.REQ.01'; 
+			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+			
+			SET OutputRoot.MQMD.MsgId 		= blbMsgId;
+			SET OutputRoot.MQMD.CorrelId 	= blbCorrelId;
+
+			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= blbCorrelId;
+			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = blbMsgId;
+			
+			PROPAGATE TO TERMINAL 3;			
+
+		END WHILE;
+		
+		RETURN FALSE;
+					
+	END;
+ 
+END MODULE;

@@ -1,0 +1,144 @@
+/*
+ * 
+ * Nombre		: MF_ESB_CORE_REINTENTO.esql
+ * Proposito	: Flujo de reintentos de mensajes del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.core
+
+DECLARE UDP_COLA_TEMPORAL_REINTENTO EXTERNAL CONSTANT CHARACTER '' ;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REINTENTO_PrepararNotificacionControl
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE intIntervaloReintento INTEGER 0;
+		DECLARE intHoraReintento CHARACTER;
+		DECLARE strColaTemporal CHARACTER '';
+			
+		--((1)) Se envia el mensaje completo a la cola temporal para el reintento
+
+		SET OutputRoot = InputRoot;
+
+		SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+
+		IF FIELDTYPE(OutputRoot.MQRFH2.usr.Parametros.Reintento.Info) IS NULL THEN
+			CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Reintento.Info;			
+			SET OutputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes = InputRoot.MQRFH2.usr.Parametros.Reintento.NRORETRY;
+		ELSE
+			IF CAST(OutputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes AS INTEGER) <= 0 THEN
+				
+				SET Environment.controlReenvio = getSI();
+				
+				PROPAGATE TO TERMINAL 3;
+				
+				RETURN FALSE;
+				
+			END IF;
+		END IF;
+		
+		
+		--((1.1)) Si el servicio manejara su propia cola de almacenamiento de mensaje temporal para reintento
+		IF COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.QRETRY,getNO())=getSI() THEN
+			
+		    SET strColaTemporal	= obtenerColaReintentoServicio(InputRoot.MQRFH2.usr.CodigoServicio);
+			
+		ELSE
+			
+			SET strColaTemporal	= UDP_COLA_TEMPORAL_REINTENTO;
+			
+		END IF;
+
+		SET OutputRoot.MQMD.ReplyToQ 	= strColaTemporal;		
+		SET OutputRoot.MQMD.ReplyToQMgr = QueueManagerName;
+		
+		PROPAGATE TO TERMINAL 1;
+		
+
+		--((2)) Se prepara el TimeoutRequest para el control de reintentos
+
+		SET intIntervaloReintento = InputRoot.MQRFH2.usr.Parametros.Reintento.DELAY;
+				
+		SET intHoraReintento =  CAST((CURRENT_TIME + CAST(intIntervaloReintento AS INTERVAL SECOND )) AS CHARACTER FORMAT 'HH:mm:ss');		
+		
+		SET OutputRoot.Properties 	 = InputProperties;
+		SET OutputRoot.MQMD 		 = InputRoot.MQMD;
+		SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+		CREATE FIRSTCHILD OF OutputRoot.XMLNSC TYPE Name NAME 'TimeoutRequest';
+		DECLARE refOutBody REFERENCE TO OutputRoot.XMLNSC.TimeoutRequest;	
+					
+		SET refOutBody.Action = 'SET';
+		SET refOutBody.Identifier = CAST(InputRoot.MQMD.MsgId AS CHARACTER);		
+		SET refOutBody.StartDate = CURRENT_DATE;				
+		SET refOutBody.StartTime = intHoraReintento;
+		SET refOutBody.Count = 1;		
+		SET refOutBody.IgnoreMissed =FALSE; 	--para cuando el broker o qm se detenga el mensaje vuelva a procesarse
+		SET refOutBody.AllowOverwrite = TRUE;	
+
+		SET refOutBody.ColaTemporal = strColaTemporal;	
+		
+		PROPAGATE TO TERMINAL 2;
+			
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REINTENTO_PrepararReintento
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CALL CopyMessageHeaders();
+		SET OutputRoot.MQMD.CorrelId = CAST(InputRoot.XMLNSC.TimeoutRequest.Identifier AS BLOB);
+		
+		--Asignacion de la cola de donde se sacara el mensaje temporal
+				
+		SET OutputLocalEnvironment.MQ.GET.QueueName = InputRoot.XMLNSC.TimeoutRequest.ColaTemporal;
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REINTENTO_EnviarReintento
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE intReintentosFaltantes INTEGER;
+		
+		SET OutputRoot = InputRoot;
+		
+		SET intReintentosFaltantes = InputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes;
+		SET intReintentosFaltantes = intReintentosFaltantes - 1; 
+		
+		SET OutputRoot.MQRFH2.usr.Parametros.Reintento.Info.reintentosFaltantes = intReintentosFaltantes ;
+		
+		-- En el InputRoot.MQMD.ReplyToQ esta la cola de entrada del flujo generico de salida que envia el mensaje a la aplicacion proveedora
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData[1].queueName = obtenerColaEntradaFlujoSalida(InputRoot.MQRFH2.usr);
+		
+		RETURN TRUE;
+	END;
+
+ 
+END MODULE;
+

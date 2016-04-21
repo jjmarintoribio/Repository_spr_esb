@@ -1,0 +1,22 @@
+
+/* 
+*
+* Nombre : LIB_MB_PROPIEDADES.esql
+* Proposito : Funciones para acceder a las constantes del proyecto
+* Fecha : 2011-01-12
+* Autores : Ruben Mejia - Synopsis
+* Version : 1.0
+*
+*--------------------------------------------------------------------
+*/
+
+BROKER SCHEMA ib.visa.esb.srv.is01 
+
+CREATE FUNCTION getNSSPRWEB_SCHEMA() RETURNS CHARACTER
+BEGIN
+	RETURN C_NSSPRWEB_SCHEMA;
+END;
+
+
+
+

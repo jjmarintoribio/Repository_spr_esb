@@ -1,0 +1,44 @@
+
+BROKER SCHEMA ib.visa.esb.bth.acttar
+ PATH ib.visa.esb.bth; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_FINPROCESO_EjecutarFinalizacionGeneracion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+		
+		--((1)) hacer que cambie el estado de un proceso	
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de crear los archivos de tarjetas de los emisores');
+		
+		PROPAGATE TO TERMINAL 1;
+		
+		
+		--((2)) Se cambia de estado la instancia del proceso 
+		
+		CALL actualizarProcesoActualizacionTarjetasBD(CAST(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion AS INTEGER),
+														CURRENT_TIMESTAMP,
+														CURRENT_TIMESTAMP,
+														NULL,
+														getEST_1_PROCESO()
+														) ;		
+					 
+		--((3)) Envio de alertas al inicio del proceso
+		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;		
+		SET Environment.Parametros.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),Environment.Parametros,NULL,NULL);
+			PROPAGATE TO TERMINAL 2;
+		END IF;	
+				
+
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+

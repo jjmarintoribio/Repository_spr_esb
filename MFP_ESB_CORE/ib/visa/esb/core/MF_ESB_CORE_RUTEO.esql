@@ -1,0 +1,173 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_RUTEO.esql
+ * Proposito	: Flujo de ruteo del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+BROKER SCHEMA ib.visa.esb.core
+PATH ib.visa.esb.core;
+
+
+DECLARE cacheParametros SHARED ROW;
+DECLARE cacheServicios SHARED ROW;
+
+CREATE COMPUTE MODULE MF_ESB_CORE_RUTEO_ObtenerParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+			
+		--((1))	 Obtener los parametros de BD y guardarlos en cache del flujo
+		ROUTING : BEGIN ATOMIC 
+			IF cacheServicios.iniciado IS NULL THEN
+				
+				CALL obtenerParametrosBD (getTIPO_SERVICIO_ONLINE(),Environment.ResultSet1[]);
+				CALL obtenerServiciosBD (getTIPO_SERVICIO_ONLINE(),Environment.ResultSet2[]);
+		       	SET cacheParametros.Parametros[] = Environment.ResultSet1[];
+		       	SET cacheServicios.Servicios[] = Environment.ResultSet2[];
+				SET cacheServicios.iniciado = TRUE;				
+												
+			END IF;
+		
+		END ROUTING ; 
+		
+		--((1.1)) Se obtiene el servicio a traves del identificador de la aplicacion consumidora
+		SET Environment.DatosServicio[] =  (SELECT  P.CODIGO,P.NOMBRE,P.ESTADO, P.GRUPOSERVICIO,P.RUTASERVICIO FROM cacheServicios.Servicios[] as P WHERE P.IDENTIFICADOR = InputRoot.MQRFH2.usr.IdentificadorServicio);		
+		--SET Environment.DatosServicio[] =  (SELECT  P.CODIGO,P.NOMBRE,P.ESTADO,P.SEGURIDAD,P.GRUPOSERVICIO,P.RUTASERVICIO FROM cacheServicios.Servicios[] as P WHERE P.IDENTIFICADOR LIKE '%'||InputRoot.MQRFH2.usr.IdentificadorServicio||'%');
+		
+		IF FIELDTYPE(Environment.DatosServicio) IS NULL THEN
+			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1008() VALUES(getMSJ_ERROR_1008());			
+			
+		ELSEIF FIELDVALUE(Environment.DatosServicio.ESTADO) = getEST_INACTIVO() THEN
+			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1002() VALUES(getMSJ_ERROR_1002());			
+			
+		END IF;
+		
+		--((2))	Se obtiene los parametros desde Cache para el servicio que se esta invocando
+		SET Environment.ParametrosServicio[] = (SELECT P.CODIGO_ATRIBUTO, P.VALOR FROM cacheParametros.Parametros[] as P WHERE P.CODIGO_SERVICIO = Environment.DatosServicio.CODIGO);
+		
+		--((3))	Adecuacion de los parametros en la cabecera
+		IF CARDINALITY(Environment.ParametrosServicio[]) > 0 THEN
+
+			SET OutputRoot.Properties 	= InputProperties;
+			SET OutputRoot.MQMD 		= InputRoot.MQMD;
+			SET OutputRoot.MQMD.CorrelId= InputRoot.MQMD.MsgId; 
+			SET OutputRoot.MQRFH2.usr 	= InputRoot.MQRFH2.usr;
+			SET OutputRoot.MQRFH2.usr.CodigoServicio =	Environment.DatosServicio.CODIGO;
+			
+			--Guardado de datos de la auditoria
+			SET OutputRoot.MQRFH2.usr.Auditoria.grupoServicio 	= Environment.DatosServicio.GRUPOSERVICIO;					
+			SET OutputRoot.MQRFH2.usr.Auditoria.rutaServicio 	= Environment.DatosServicio.RUTASERVICIO;
+			
+ 
+			CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Servicio; 
+			CALL crearNombreCampos(Environment.ParametrosServicio[],OutputRoot.MQRFH2.usr.Parametros.Servicio);		
+			CREATE LASTCHILD OF OutputRoot.MQRFH2.usr.Parametros.Servicio NAME 'NOMBRE' VALUE FIELDVALUE( Environment.DatosServicio.NOMBRE);			
+			
+			--((3.1)) Validacion de parametros necesarios por Protocolo de salida.
+			DECLARE chrMensajeVal CHARACTER;
+			SET chrMensajeVal = validarParametrosPorProtocolo(OutputRoot.MQRFH2.usr.Parametros.Servicio, OutputRoot.MQRFH2.usr.CodigoServicio,OutputRoot.MQRFH2.usr.Parametro.Protocolo.TipoProtocolo);
+			
+			IF chrMensajeVal <> '' THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(chrMensajeVal);					
+			END IF;
+	
+			
+		ELSE
+			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1004() VALUES(getMSJ_ERROR_1004());			
+			
+		END IF;
+		
+			
+		--((4)) Asignacion del cuerpo del mensaje
+		SET OutputRoot.BLOB.BLOB = InputRoot.BLOB.BLOB;
+		
+		--((5))	Asignacion dinamica de la cola de entrada del flujo especifico
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaFlujoRequest(Environment.DatosServicio.CODIGO);
+		 
+		--((6)) Asignacion del tiempo de expiracion de un mensaje.		
+		CALL asignarTiempoExpiracion(OutputRoot.MQMD,OutputRoot.MQRFH2.usr.Parametros.Servicio,1);
+
+		--((7)) Setea el mensaje como persistente		
+		CALL setearPersistenciaMensaje(OutputRoot.MQMD,OutputRoot.MQRFH2.usr.Parametros.Servicio);
+		
+		PROPAGATE TO TERMINAL 1 DELETE NONE;
+		
+		SET OutputRoot.BLOB = NULL;
+		
+		--((8))Se envia a auditoria. Dentro del flujo de auditoria se validara si se registra o no
+		
+		CALL armarAuditoriaEventoEntrada(OutputRoot,
+							InputRoot.MQMD.MsgId,
+							OutputRoot.MQRFH2.usr,
+							InputBody);
+ 
+		--((9))Asignacion dinamica de la cola de entrada del flujo especifico
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+ 
+ 		PROPAGATE TO TERMINAL 2;
+ 		
+ 		RETURN FALSE;
+		
+	END;
+
+	 
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_RUTEO_PrepararRespuestaError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.Properties = InputProperties;
+		SET OutputRoot.MQRFH2.usr.Parametros = InputRoot.MQRFH2.usr.Parametros;
+		SET OutputRoot.BLOB	=NULL;
+			
+		--((1)) Generamos el mensaje para la auditoria de error
+		
+		DECLARE chrCodigoError CHARACTER '';
+		DECLARE chrDescripcionError CHARACTER '';
+		DECLARE chrMensajeError CHARACTER '';
+		CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
+		SET  chrMensajeError = chrDescripcionError ;
+		
+		 
+		CALL armarAuditoriaEventoError(OutputRoot,
+								InputRoot.MQMD.MsgId,
+								InputRoot.MQRFH2.usr,
+								CAST(chrCodigoError AS INTEGER),
+								chrMensajeError,
+								InputExceptionList,
+								validarCampoAuditoria(Environment.DatosServicio.CODIGO),
+								InputRoot.MQRFH2.usr.Parametros.Protocolo.IdProtocolo);
+
+	 
+ 		--((2))Asignacion dinamica de la cola de entrada del flujo de auditoria
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+		
+		PROPAGATE TO TERMINAL 1;
+		
+ 		--((3))Se prepara la respuesta para que el flujo responda segun el protocolo de entrada. El tag "ControlRuteo" se crea solo desde este flujo
+		
+		SET OutputRoot.Properties 							= InputProperties;
+		SET OutputRoot.MQRFH2 								= InputRoot.MQRFH2;
+		SET OutputRoot.MQRFH2.usr.CodigoServicio			= Environment.DatosServicio.CODIGO;
+		SET OutputRoot.MQRFH2.usr.ControlRuteo.codigo 		= chrCodigoError;
+		SET OutputRoot.MQRFH2.usr.ControlRuteo.descripcion 	= chrDescripcionError;		
+		SET OutputRoot.BLOB.BLOB							= InputRoot.BLOB.BLOB;
+		
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaEntradaProtocoloRespuesta(InputRoot.MQRFH2.usr);
+		
+		PROPAGATE TO TERMINAL 2;		
+		
+	END;
+
+	
+END MODULE;

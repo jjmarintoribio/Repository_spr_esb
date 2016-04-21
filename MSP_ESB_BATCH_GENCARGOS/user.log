@@ -1,0 +1,92 @@
+Generating .xsdzip file for message set "MS_ESB_BATCH_GENCARGOS" 
+
+Generating schema for no XML Wire format
+Generating schema using the lax option
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_CABECERA.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_CARGO.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_LOTE.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO0.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO1.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO2.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO0.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO1.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO2.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE_TIPO1.mxsd"
+
+
+
+Processing File : "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE_TIPO2.mxsd"
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_CABECERA.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_CARGO.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_REQ_LOTE.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO0.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO1.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CABECERA_TIPO2.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO0.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO1.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_CARGO_TIPO2.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE_TIPO1.xsd" 
+
+Saving File : "/MSP_ESB_BATCH_GENCARGOS/.GeneratedSchemas/ib/visa/esb/bth/gencar/MDF_ESB_BATCH_FILE_RES_LOTE_TIPO2.xsd" 
+
+Saving file "/MSP_ESB_BATCH_GENCARGOS/.KeywordsFile/meta-inf/keywords.txt" 
+
+Saving file "/MSP_ESB_BATCH_GENCARGOS/MS_ESB_BATCH_GENCARGOS/messageSet.mset" 
+

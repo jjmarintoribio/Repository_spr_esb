@@ -1,0 +1,93 @@
+BROKER SCHEMA test.dfsl.imparch
+PATH ib.visa.esb.bth;
+ 
+ 
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TEST_DFDL_ControlarErrorRecepcion
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE chrCodError INTEGER;
+		DECLARE chrMsjError CHARACTER ''; 
+ 		DECLARE chrMsjErrorCleaner CHARACTER '';
+ 		
+		--CALL getLastExceptionDetail(InputExceptionList,chrCodError,chrMsjError,chrMsjErrorCleaner);
+		
+		--CALL getLastExceptionDetail(InputExceptionList,chrCodError,chrMsjError);
+		
+		--DECLARE intPosicion INTEGER POSITION('mensaje ''' IN chrMsjError);
+		
+		/*IF intPosicion > 0 THEN 
+			DECLARE intPosicionFinal INTEGER POSITION ('#' IN chrMsjError);
+			DECLARE chrMsjErrorTmp CHARACTER;
+			SET intPosicion = intPosicion + 9;
+			SET chrMsjErrorTmp = SUBSTRING(chrMsjError FROM intPosicion FOR LENGTH(chrMsjError)-intPosicion);
+			SET chrMsjErrorCleaner = SUBSTRING(chrMsjErrorTmp BEFORE '''');
+			SET chrMsjError = chrMsjErrorCleaner;
+		END IF;
+		*/ 	
+		 			  
+		--declare ptrException reference to InputExceptionList.RecoverableException;
+		
+		--SET Environment.Variables.errMensaje = construirMsgErrorDfdl(chrMsjErrorCleaner) || '[ '|| CAST(InputLocalEnvironment.File.Record AS CHARACTER) ||' ]';
+		CREATE LASTCHILD OF Environment DOMAIN 'XMLNSC';
+		SET Environment.XMLNSC.resultado.mensajeCLR = Environment.Variables.flgErr;
+		--SET Environment.XMLNSC.HTML = '<table> <tr> <td> '|| construirMsgErrorDfdl(chrMsjErrorCleaner) || '</td></tr></table>';
+				
+ 		--SET Environment.XMLNSC.resultado.mensajeCLR = chrMsjErrorCleaner;
+ 		
+ 		 		
+ 		--SET Environment.XMLNSC.resultado.codigo  = chrCodError; 		 
+ 		SET OutputRoot.Properties.CodedCharSetId = InputProperties.CodedCharSetId;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= '/app/visa/esb/batch/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= 'error_dfdl.log';
+		
+		DECLARE inCCSID INT 1208;                     
+		DECLARE inEncoding INT InputProperties.Encoding;
+		                        
+		SET OutputRoot.BLOB.BLOB = ASBITSTREAM(Environment.XMLNSC, inEncoding, inCCSID); 
+		--SET OutputRoot.BLOB.BLOB = CAST(Environment.Variables.errMensaje AS BLOB CCSID InputRoot.Properties.CodedCharSetId);
+		
+		PROPAGATE TO TERMINAL 0 DELETE NONE;
+		PROPAGATE TO TERMINAL 1;
+		 
+		RETURN FALSE; 
+		
+		
+	END;
+
+END MODULE;
+
+CREATE PROCEDURE getLastExceptionDetail(IN InputExceptionList reference, INOUT codigoError INTEGER, INOUT
+mensajeError CHARACTER, INOUT detalleError CHARACTER)
+/*********************************************************************
+    * Un procedimiento que obtendrá los detalles de la última excepción de un mensaje
+    * IN start: La lista de excepciones entrante
+    * INOUT codigoError: El último número de mensaje
+    * INOUT mensajeError: El último texto de mensaje.
+    * INOUT detalleError: Detalles del error concatenados en un string
+********************************************************************/
+    BEGIN
+        -- Crear una referencia al primer hijo de la lista de excepciones
+        DECLARE start REFERENCE TO InputExceptionList.*[1];
+        -- Seguir con el bucle mientras actúan los desplazamientos
+        WHILE LASTMOVE(start) DO
+        -- Almacenar los valores actuales para el número de error y el texto
+        IF start.Number IS NOT NULL THEN
+              SET codigoError = start.Number;
+              SET mensajeError = start.Text;
+              DECLARE numInserts REFERENCE TO start.Insert;
+              IF ((TRIM(numInserts.Text) IS NOT NULL) AND (TRIM(numInserts.Text) <> '')) THEN
+                    SET detalleError = '#INFO: ' || numInserts.Text || '#';
+              END IF;
+              MOVE numInserts NEXTSIBLING;
+              WHILE LASTMOVE(numInserts) DO
+                    IF ((TRIM(numInserts.Text) IS NOT NULL) AND (TRIM(numInserts.Text) <> '')) THEN
+                          SET detalleError =   '#ERROR: ' || numInserts.Text || '#' || detalleError;
+                    END IF;
+                    MOVE numInserts NEXTSIBLING;
+              END WHILE;
+        END IF;
+        -- Ahora ir al último hijo, que debería ser la próxima lista de excepciones
+        MOVE start LASTCHILD;
+        END WHILE;
+    END;

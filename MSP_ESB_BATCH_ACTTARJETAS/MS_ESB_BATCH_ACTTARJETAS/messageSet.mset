@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<msgCoreModel:MRMessageSet xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:MSGModel="http://www.ibm.com/msgmodel/2003/MSGModel" xmlns:msgCoreModel="http://www.ibm.com/msgmodel/2003/MSGCoreModel" name="MS_ESB_BATCH_ACTTARJETAS" parserDomain="XMLNSC" msetVersionNo="" currentMessageSetId="//@MRMessageSetID.0">
+  <MRMessageSetRep xsi:type="MSGModel:MRCWFMessageSetRep" name="CWF" daysInFirstWeekOfTheYear="Four" firstDayOfWeek="Monday" timeZoneID="0" allowLenientDateTimes="false"/>
+  <MRMessageSetRep xsi:type="MSGModel:MRXMLMessageSetRep" name="XML" timeZoneID="0" allowLenientDateTimes="false" suppressDOCTYPE="true" doctypeSystemID="www.mrmnames.net/IFLRQFK002001" doctypePublicID="IFLRQFK002001" rootTagName=""/>
+  <MRMessageSetID repositoryId="-2015921539" messageSetId="1"/>
+  <otherSupportedDomains parserDomain="MRM"/>
+</msgCoreModel:MRMessageSet>

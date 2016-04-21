@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="gen.bth.esb.visa.ib" xmlns:tns="gen.bth.esb.visa.ib">
+  <xsd:complexType name="T_MSJ_LANZADOR">
+    <xsd:sequence>
+      <xsd:element name="MENSAJE" type="tns:T_MSJ_LANZADOR_CUERPO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="MSJ_LANZADOR" type="tns:T_MSJ_LANZADOR">
+    <xsd:annotation>
+      <xsd:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/MSJ_LANZADOR;XSDElementDeclaration$MRObject"/>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="T_MSJ_LANZADOR_CUERPO">
+    <xsd:sequence>
+      <xsd:element default="  " name="IDPROCESO" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" prefixLength="2" stringJustification="leftJustify" typeName="MRCWFStringRep" width="2"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        <xsd:documentation source="WMQI_DOCUMENTATION">Identificador\sdel\sproceso\sdentro\sdel\scatalogo\sde\sservicios\sde\sBUS</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element default=" " minOccurs="0" name="FILLER" type="xsd:string">
+        <xsd:annotation>
+          <xsd:appinfo source="WMQI_APPINFO">
+            <cwfInclRep messageSetDefaultRep="CWF">
+              <cwfSimpleRep encodingNull="NullLogicalValue" lengthUnits="EndOfBitStream" mrLengthEncoding="fixedLength" paddingCharacter="SPACE" stringJustification="leftJustify" typeName="MRCWFStringRep"/>
+            </cwfInclRep>
+          </xsd:appinfo>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>

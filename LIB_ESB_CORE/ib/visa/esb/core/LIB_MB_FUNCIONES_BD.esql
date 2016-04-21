@@ -1,0 +1,116 @@
+/*
+ *
+ * Nombre		: LIB_MB_FUNCIONES_BD.esql
+ * Proposito	: Procedimientos para el acceso a la BD de los flujos del ESB
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version	: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+
+
+BROKER SCHEMA ib.visa.esb.core
+	/*
+	 * Procedimiento que registra una transaccion en BD
+ 	*/
+
+	CREATE PROCEDURE registrarTransaccionBD(	
+					IN I_MSGID CHARACTER,
+					IN I_FECHAHORA CHARACTER,
+					IN I_HORA CHARACTER,
+					IN I_INDORIGEN CHARACTER,
+					IN I_CODSERVICIO CHARACTER,
+					IN I_PROTOCOLOENTRADA  CHARACTER,
+					IN I_INDTRANSACCION CHARACTER,
+					IN I_INDSERVICIO CHARACTER,
+					IN I_INDCLIENTE CHARACTER,
+					IN I_INDEXTERNOSERVICIO CHARACTER,
+					IN I_NROCUENTA CHARACTER,
+					IN I_FECHAHORAORIGEN CHARACTER,
+					IN I_CODINFORMATIVO1 CHARACTER,
+					IN I_CODINFORMATIVO2 CHARACTER,
+					IN I_CODINFORMATIVO3 CHARACTER,
+					IN I_CODINFORMATIVO4 CHARACTER,
+					IN I_RUTASERVICIO CHARACTER,
+					IN I_GRUPOSERVICIO CHARACTER,
+					IN I_ANOMES CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	EXTERNAL NAME "ESBDB.SP_REGISTRAR_TRANSACCION";  	
+
+
+	/*
+	 * Procedimiento que registra un evento en BD
+ 	*/
+
+	CREATE PROCEDURE registrarEventoBD(	
+					IN I_MSGID CHARACTER,
+					IN I_TIPOEVENTO CHARACTER,
+					IN I_CODSERVICIO CHARACTER,
+					IN I_PROTOCOLOENTRADA  CHARACTER,				
+					IN I_BROKER CHARACTER,
+					IN I_FLUJO CHARACTER,
+					IN I_FECHAHORA CHARACTER,
+					IN I_HORA CHARACTER,
+					IN I_GRUPOSERVICIO CHARACTER,
+					IN I_ANOMES CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	EXTERNAL NAME "ESBDB.SP_REGISTRAR_EVENTO";  	
+
+
+	/*
+	 * Procedimiento que registra un mensaje en BD
+ 	*/
+
+	CREATE PROCEDURE registrarMensajeBD(	
+					IN I_MSGID CHARACTER,
+					IN I_FECHAHORA CHARACTER,
+					IN I_HORA CHARACTER,
+					IN I_CODSERVICIO CHARACTER,
+					IN I_BROKER CHARACTER,					
+					IN I_TIPOMENSAJE CHARACTER,
+					IN I_DATO CHARACTER,
+					IN I_GRUPOSERVICIO CHARACTER,
+					IN I_ANOMES CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	EXTERNAL NAME "ESBDB.SP_REGISTRAR_MENSAJE";
+
+
+
+	/* 
+	 * Obtener Servicios del ESB
+ 	*/ 
+
+	CREATE PROCEDURE obtenerServiciosBD(	
+					IN I_TIPO CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1
+  	EXTERNAL NAME "ESBDB.SP_OBTENER_SERVICIOS";  	
+
+	
+	/*
+	 * Obtener Parametros de los servicios del ESB
+ 	*/   
+
+	CREATE PROCEDURE obtenerParametrosBD(	
+					IN I_TIPO CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1
+  	EXTERNAL NAME "ESBDB.SP_OBTENER_PARAMETROS";  	
+	
+	
+	/*
+	 * Procedimiento para obtener los parametros de auditoria de BD de los servicios
+ 	*/
+	CREATE PROCEDURE obtenerParametrosAuditoriaBD (
+					IN I_TIPO CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1
+  	EXTERNAL NAME "ESBDB.SP_OBTENER_PARAMETROS_AUDITORIA";

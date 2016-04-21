@@ -1,0 +1,15 @@
+/*
+ *
+ * Nombre		: LIB_MB_FUNCIONES.esql
+ * Proposito	: Funciones de ayuda para el IS 01
+ * Fecha		: 2011-01-12
+ * Autores		: Ruben Mejia - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+
+ 
+BROKER SCHEMA ib.visa.esb.srv.is01
+
+

@@ -1,0 +1,229 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		--((0)) Obtener la lista de cargos por listado de Lotes
+
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+		DECLARE flgEncriptacionPgp CHARACTER '';				   
+		CALL buscarTarjetasEmisorDetalle(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+											CAST(InputBody.MENSAJE.ID_EMISOR AS INTEGER),
+											flgEncriptacionPgp,
+											Environment.Tarjetas[]);
+
+		DECLARE refTarjeta REFERENCE TO Environment.Tarjetas;
+		DECLARE refEmisor REFERENCE TO InputBody.MENSAJE;	 
+		DECLARE chrFecActual CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2()); 
+	
+		--el campo NOM_ARCHIVO_ACTUALIZACION_TARJETAS ira el nombre del subdirectorio donde se creara el archivo para el emisor. No debe de comenzar con /
+		DECLARE chrRutaArchivo CHARACTER TRIM(refEmisor.NOM_ARCHIVO_ACTUALIZACION_TARJETAS);
+		DECLARE chrSufijo CHARACTER ''; 
+		DECLARE chrCodEmisor CHARACTER RIGHT(REPLICATE('0',3) ||TRIM(refEmisor.COD_EMISOR),3);
+		
+		IF (flgEncriptacionPgp = 'S') THEN
+			
+			SET refParam.Servicio.EXTFILEDEST = getEXT_FILE_ALIGNET();
+			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL();
+			
+		ELSEIF FIELDTYPE(refEmisor.FLG_ENCRIPTA_ACTUALIZACION_TARJETA) IS NOT NULL AND refEmisor.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1' THEN 
+			
+			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL(); 
+			SET Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1';
+			
+		END IF;
+		
+		
+		DECLARE chrNombreArchivo CHARACTER chrCodEmisor
+											|| refParam.Servicio.PREJFILEDEST
+											|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA3())
+											|| refParam.Servicio.EXTFILEDEST
+											|| chrSufijo;  --se genera el nombre del archivo emisor dinamicamente.
+		
+		--//***************VALIDACION PGP************************//
+		--// Crear la cabecera solo cuando el flag de validacion
+		--// PGP se encuentre con el valor N
+		--//*****************************************************//
+		
+		IF (flgEncriptacionPgp <> 'S') THEN
+			
+			--//*********CABECERA ARCHIVO****************//
+			--//***************************************//
+			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_ACTTARJETAS';			
+			SET OutputRoot.Properties.MessageType 		= 'MSJ_CABECERA_INI';	
+			SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+			
+			CREATE FIELD OutputRoot.MRM.MENSAJE;
+			DECLARE refItemA REFERENCE TO OutputRoot.MRM.MENSAJE;
+							
+			SET refItemA.TIPOREGISTRO		= 'A';
+			SET refItemA.CODEMISOR			= refEmisor.ID_EMISOR;
+			SET refItemA.TIPOENVIO			= 'SOURCE';
+			SET refItemA.FECHA 				= chrFecActual;
+			SET refItemA.NROREGISTROS		= refEmisor.NRO_TARJETAS;
+			SET refItemA.FILLER				= '';
+	 
+			CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+			PROPAGATE TO TERMINAL 1;
+			
+		END IF;
+		
+		--//*********DETALLE TARJETA****************//
+		--//***************************************//
+ 		
+		SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_ACTTARJETAS';
+		IF (flgEncriptacionPgp = 'S') THEN		
+			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA_PGP';
+		ELSE
+			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA';
+		END IF;	
+		SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+		
+		CREATE FIELD OutputRoot.MRM.MENSAJE;
+		DECLARE refItemD REFERENCE TO OutputRoot.MRM.MENSAJE;
+					 
+		WHILE LASTMOVE(refTarjeta) DO											
+							
+			SET refItemD.TIPOREGISTRO		= 'D';
+			SET refItemD.NROTARJETA			= desencriptarNroTarjeta(refTarjeta.NRO_TARJETA_ENCRIPTADO);
+			SET refItemD.MESVENCIMIENTO		= setAppendZerosToLeft(CAST(refTarjeta.NRO_MES_EXPIRACION_TARJETA AS CHARACTER));
+			SET refItemD.ANOVENCIMIENTO		= RIGHT(CAST(refTarjeta.NRO_ANHO_EXPIRACION_TARJETA AS CHARACTER),2);
+			SET refItemD.FILLER				= '';
+			
+			CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+
+			MOVE refTarjeta NEXTSIBLING REPEAT TYPE NAME;
+
+		END WHILE;
+
+		--//***************VALIDACION PGP********************//
+		--// Crear el pie de pagina solo cuando el flag de 
+		--// validacion PGP se encuentre con el valor N
+		--//*************************************************//
+		
+		IF (flgEncriptacionPgp <> 'S') THEN
+			
+		--//*********RESUMEN ARCHIVO****************//
+		--//***************************************//
+		
+			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_ACTTARJETAS';			
+			SET OutputRoot.Properties.MessageType 		= 'MSJ_CABECERA_FIN';	
+			SET OutputRoot.Properties.MessageFormat 	= 'CWF';
+			SET OutputRoot.MRM = NULL;	
+			CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
+			
+			CREATE FIELD OutputRoot.MRM.MENSAJE;
+			DECLARE refItemZ REFERENCE TO OutputRoot.MRM.MENSAJE;
+							
+			SET refItemZ.TIPOREGISTRO		= 'Z';
+			SET refItemZ.NROREGISTROS		= refEmisor.NRO_TARJETAS;
+			SET refItemZ.FILLER				= '';
+	 
+			CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+			PROPAGATE TO TERMINAL 1;
+
+		END IF;
+		
+		--((1)) Envio del cierre del archivo de actualizacion de tarjetas por emisor 		
+		SET OutputRoot.Properties = InputProperties;
+
+		CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+		PROPAGATE TO TERMINAL 2;
+
+		--((2)) Registro de Log del Proceso
+
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se creo y cerro el archivo de cargo: '|| chrNombreArchivo || ' del emisor' || refEmisor.ID_EMISOR);
+
+		PROPAGATE TO TERMINAL 3;
+		
+		--((3)) Encriptacion del archivo finalizado
+		--		Valida si se encripta modalidad PGP
+		
+		IF (flgEncriptacionPgp = 'S') THEN
+			
+			CALL encriptarArchivoTarjetasPgp(refParam.Servicio.PATHFILEDEST || chrRutaArchivo,chrNombreArchivo);
+			
+			--((4.0)) Registro de Log del Proceso
+			CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se creo el archivo encriptado PGP: '|| TRIM(TRAILING getSUFIJO_ARCHIVO_TEMPORAL() FROM chrNombreArchivo)|| ' del emisor: ' || chrCodEmisor);
+
+			PROPAGATE TO TERMINAL 3;
+			
+		ELSEIF (Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1') THEN 
+			
+			CALL encriptarArchivoTarjetas(chrCodEmisor,refParam.Servicio.PATHFILEDEST || chrRutaArchivo,chrNombreArchivo);
+		
+			--((4.0)) Registro de Log del Proceso
+			CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se creo el archivo encriptado : '|| TRIM(TRAILING getSUFIJO_ARCHIVO_TEMPORAL() FROM chrNombreArchivo)|| ' del emisor: ' || chrCodEmisor);
+
+			PROPAGATE TO TERMINAL 3;
+			
+		END IF;
+
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr = InputRoot.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;		
+			
+		PROPAGATE TO TERMINAL 4;
+	
+		RETURN FALSE;	
+
+	END; 
+
+CREATE PROCEDURE setearDestino(IN refParam REFERENCE, IN chrRutaArchivo CHARACTER,IN chrNomArchivo CHARACTER)
+	BEGIN
+		
+		SET OutputLocalEnvironment.Destination.File.Directory 	= refParam.Servicio.PATHFILEDEST || chrRutaArchivo;
+		SET OutputLocalEnvironment.Destination.File.Name 		= chrNomArchivo;
+	
+	END;
+END MODULE;
+
+
+ 
+ 
+  
+CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName 		= 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01'; 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName 	= InputBody.MENSAJE.QMPROCESO;
+
+		SET OutputRoot.MQMD.Format 					= 'MQHRF2  '; 
+		SET OutputRoot.MQRFH2.usr = InputRoot.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;				
+
+		RETURN TRUE;
+		
+	END;
+
+ 
+END MODULE;

@@ -1,0 +1,139 @@
+
+
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN 
+
+		SET Environment.MQRFH2 = InputRoot.MQRFH2;
+		SET Environment.CorrelId = CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
+		SET OutputRoot.MQMD.CorrelId = Environment.CorrelId;
+		SET Environment.idGrupo = InputBody.MENSAJE.IDGRUPO;
+		--Bucle para obtener todos los registros de un grupo del archivo cargado
+		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
+
+		DECLARE intIdAfiliadoPorDesafiliar INTEGER;
+		DECLARE strNroTarjetaEncriptado,strNroTarjetaEnmascarado CHARACTER '';
+  
+		CREATE FIELD Environment.ListIdAfiliado.idAfiliado;
+		DECLARE refIdAfi REFERENCE TO Environment.ListIdAfiliado.idAfiliado;
+		
+
+		WHILE LASTMOVE(refRegis) DO
+			--///////////////////////////////////////////////////////
+
+			IF (refRegis.CODRESPUESTA <> '00') THEN
+
+
+				IF Environment.MQRFH2.usr.Parametros.Batch.tipoArchivoAlignet = 'BCP' THEN
+					SET strNroTarjetaEncriptado = encriptarNroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
+					SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
+				ELSE
+					SET strNroTarjetaEncriptado = encriptarNroTarjeta(refRegis.NROTARJETANUEVO);
+					SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(refRegis.NROTARJETANUEVO);
+				END IF;
+				--((1))Actualizar tarjetas
+				--CALL actualizarTarjetas( --25/11 CambioLogicaOptimizado
+				CALL insertarTarjetasReporteTemporal(
+							Environment.idGrupo,
+							Environment.MQRFH2.usr.Parametros.Batch.idTransaccion,
+							obtenerTimestampSinHora(obtenerDateConOpcionFormato(Environment.MQRFH2.usr.Parametros.Batch.fechaNombreArchivo,3)),
+							enmascararNumeroTarjeta(refRegis.NROTARJETA),
+							encriptarNroTarjeta(refRegis.NROTARJETA),
+							CAST(refRegis.MESVENCIMIENTO AS INTEGER),
+							CAST(RIGHT('20' || refRegis.ANOVENCIMIENTO,4) AS INTEGER),
+							strNroTarjetaEnmascarado,
+							strNroTarjetaEncriptado,
+							CAST(refRegis.MESVENCIMIENTONUEVO AS INTEGER),
+							CAST(RIGHT('20' || refRegis.ANOVENCIMIENTONUEVO,4) AS INTEGER),
+							refRegis.CODRESPUESTA,
+							getID_ESB_VISA(),
+							BrokerName
+							);					
+ 
+				--25/11 CambioLogicaOptimizado comentado
+				/*SET refIdAfi.id = intIdAfiliadoPorDesafiliar;
+				
+				CREATE LASTCHILD OF Environment.ListIdAfiliado NAME 'idAfiliado';					
+				MOVE refIdAfi NEXTSIBLING;*/
+
+				
+			END IF;
+			--///////////////////////////////////////////////////////
+			MOVE refRegis NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+
+		DELETE LASTCHILD OF Environment.ListIdAfiliado;
+
+		--25/11 CambioLogicaOptimizado comentado
+		/*CALL insertarActualizacionTarjeta(Environment.idGrupo);*/
+		
+		---------------------- 
+		--25/11 CambioLogicaOptimizado comentado temporal
+		/*DECLARE refListaID REFERENCE TO Environment.ListIdAfiliado.idAfiliado;
+
+		WHILE LASTMOVE(refListaID) DO
+			--((2))Envio de notificacion al afiliado por desafiliacion
+			IF (refListaID.id IS NOT NULL) THEN
+
+				CALL obtenerAfiliacionParaNotificarDesafiliacion(refListaID.id,Environment.resultSetAfiliacion[]);
+				DECLARE blnExiste BOOLEAN EXISTS(Environment.resultSetAfiliacion[]);
+
+				IF (blnExiste) THEN
+					DECLARE refDesafiliado REFERENCE TO Environment.resultSetAfiliacion;
+					CREATE LASTCHILD OF OutputRoot DOMAIN 'XMLNSC';
+					SET OutputRoot.XMLNSC.Email.Header.From = Environment.MQRFH2.usr.Parametros.ESB.CORREO;
+					SET OutputRoot.XMLNSC.Email.Header.To = refDesafiliado.EMAIL_TARJETAHABIENTE;
+					SET OutputRoot.XMLNSC.Email.Header.Subject = 'Visanet - Desafiliacion';
+					SET OutputRoot.XMLNSC.Email.Body = '<p>Estimado Afiliado: ' || refDesafiliado.NOM_TARJETAHABIENTE || ' </br> Se ha desafiliado al pago recurrente de Visanet.</b> Gracias.</p>';
+					
+					PROPAGATE TO TERMINAL 1;
+
+				END IF;
+
+			END IF;
+		
+			MOVE refListaID NEXTSIBLING REPEAT TYPE NAME;
+		END WHILE;
+		*/
+
+		----------------------
+		--Envio de la validacion del fin de archivo
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.GENBTH.CTRLFINPROCESO.REQ.01';
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueManagerName = InputBody.MENSAJE.QMPROCESO;
+
+
+		SET OutputRoot.MQMD.Format = 'MQHRF2  ';
+		SET OutputRoot.MQRFH2.usr = Environment.MQRFH2.usr;
+		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO = InputBody.MENSAJE.IDGRUPO;
+		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
+
+	END;	
+
+	CREATE PROCEDURE insertarTarjetasReporteTemporal(
+					IN I_ID_GRUPO CHARACTER,
+					IN I_ID_PROCESO_ACTUALIZACION_TARJETA CHARACTER,
+					IN I_FEC_ACTUALIZACION_TARJETA TIMESTAMP,
+					IN I_NRO_TARJETA_ENMASCARADO CHARACTER, 
+					IN I_NRO_TARJETA_ENCRIPTADO CHARACTER,
+					IN I_NRO_MES_EXPIRACION_TARJETA INTEGER,
+					IN I_NRO_ANHO_EXPIRACION_TARJETA INTEGER,	
+					IN I_NRO_TARJETA_ENMASCARADO_NUEVO CHARACTER, 	
+					IN I_NRO_TARJETA_ENCRIPTADO_NUEVO CHARACTER,
+					IN I_NRO_MES_EXPIRACION_TARJETA_NUEVO INTEGER,
+					IN I_NRO_ANHO_EXPIRACION_TARJETA_NUEVO INTEGER,
+					IN I_COD_RESPUESTA CHARACTER,
+					IN I_COD_USUARIO_MODIFICACION CHARACTER,
+  					IN I_IP_MODIFICACION CHARACTER			
+					)
+  	LANGUAGE DATABASE
+ 	EXTERNAL NAME "SPRESB.SP_ACTUALIZACION_TARJETA_INSERTAR_TEMPORAL_1";  
+ 	
+END MODULE;
+

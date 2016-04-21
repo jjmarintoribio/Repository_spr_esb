@@ -1,0 +1,134 @@
+BROKER SCHEMA ib.visa.esb.bth.tds
+ PATH ib.visa.esb.bth;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_EjecutarFinalizacionCarga
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) hacer que cambie el estado de un proceso
+		
+		SET Environment.finArchivo.IdProceso		  = InputRoot.MQRFH2.usr.Parametros.Batch.idProceso;
+		SET Environment.finArchivo.IdTransaccion	  = InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion;
+		SET Environment.Parametros 					  = InputRoot.MQRFH2.usr.Parametros;
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+									InputRoot.MQRFH2.usr.Parametros.Batch.idProceso, 
+									InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se termino de actualizar en BD el archivo de Importacion ' || InputRoot.MQRFH2.usr.Parametros.Batch.nombreArchivo);
+		
+		PROPAGATE TO TERMINAL 1;
+		
+		--((2)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+		
+		PROPAGATE TO TERMINAL 2;			
+		
+		--((3)) Manda a sacar todos los mensajes de los registros impactados
+		
+		SET Environment.flagFinArchivo = TRUE;
+		
+		WHILE Environment.flagFinArchivo IS TRUE DO
+			SET OutputRoot.MQMD.CorrelId = CAST(InputBody.MENSAJE.IDTRANSACCION AS BLOB);
+			PROPAGATE TO TERMINAL 3;
+			
+		END WHILE;
+		
+		--((4)) Envio de alertas al fin  del proceso
+		SET refParam.Batch.horaFinProceso = obtenerFechaHoraActual(2);
+		 
+		IF ( COALESCE(refParam.Servicio.NOTIFICA,getNO())= getSI()) THEN  
+			CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_2(),refParam,NULL,NULL);
+			PROPAGATE TO TERMINAL 4;
+		END IF;	
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ContadorImportaciones
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET Environment.finArchivo.TotalRegistrosOk = CAST(COALESCE(Environment.finArchivo.TotalRegistrosOk,0) AS INTEGER) + CAST(InputBody.MENSAJE.CANTIDADREGISTROSOK AS INTEGER);
+		SET Environment.finArchivo.TotalRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) + CAST(InputBody.MENSAJE.CANTIDADREGISTROSFAIL AS INTEGER);
+		SET Environment.finArchivo.TotalRegistros  = InputBody.MENSAJE.CANTIDADREGISTROS;
+		
+		RETURN FALSE;
+
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ActualizarImportacionCantidad
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE estadoProcesoImp INTEGER 2;-- ESTADO DE PROCESO (PROCESADO)
+		DECLARE intRegistrosTotal INTEGER CAST(COALESCE(Environment.finArchivo.TotalRegistros,0) AS INTEGER);
+		DECLARE intRegistrosFail INTEGER;
+		SET intRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) +
+							   CAST(COALESCE(Environment.Parametros.registrosErrorDfdl,0) AS INTEGER);
+		SET Environment.flagFinArchivo=FALSE;
+		
+		IF intRegistrosTotal = intRegistrosFail THEN
+			SET estadoProcesoImp = 3; -- ESTADO DE PROCESO (FALLIDO)
+		END IF;
+			
+		CALL actualizarProcesoImportacion(CAST(Environment.finArchivo.IdProceso AS INTEGER),
+										  CURRENT_TIMESTAMP,
+										  CAST(COALESCE(Environment.finArchivo.TotalRegistrosOk,0) AS INTEGER),
+										  intRegistrosFail,
+										  intRegistrosTotal,
+										  estadoProcesoImp, 
+										  CAST( Environment.finArchivo.IdTransaccion AS INTEGER));
+		--TODO :: INICIO								  
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		--TODO :: FIN
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		PROPAGATE TO TERMINAL 0 DELETE NONE;
+		PROPAGATE TO TERMINAL 1;								  								  
+		RETURN FALSE;
+
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ControlarError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		--((1)) se cambia el semaforo a verde
+		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+
+		RETURN TRUE;
+		
+	END;
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoTemp
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		RETURN TRUE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoFin
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		RETURN TRUE;
+	END;
+END MODULE;

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:mbmonitor="http://www.ibm.com/wbi/2008/eflow_mbmonitor" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/core/MF_ESB_CORE_AUDITORIA.msgflow"
+    nsPrefix="ib_visa_esb_core_MF_ESB_CORE_AUDITORIA.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/srv/logs/AUDITORIA_Error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_InfoError" name="T_InfoError" defaultValueLiteral="/app/visa/esb/srv/logs/AUDITORIA_TRAMAS_ERROR.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.DSParametros" name="DSParametros" defaultValueLiteral="DSESB_DB">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.DSTransacciones" name="DSTransacciones" defaultValueLiteral="DSESB_DB">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.DSEventos" name="DSEventos" defaultValueLiteral="DSESB_DB">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.DSMensajes" name="DSMensajes" defaultValueLiteral="DSESB_DB">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_CORE_AUDITORIA" bundleName="ib/visa/esb/core/MF_ESB_CORE_AUDITORIA" pluginId="MFP_ESB_CORE"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj16/MF_ESB_CORE_AUDITORIA.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj30/MF_ESB_CORE_AUDITORIA.gif"/>
+    <longDescription xmi:type="utility:ConstantString" string="$MQSI Descripcion = Flujo encargado de registrar la Auditoria en la BD MQSI$&#xD;&#xA;$MQSI Version 1.1 = Modificacion para que los mensajes se registren en una cola temporal cuando ocurre un error de conexion con la BD MQSI$"/>
+    <version xmi:type="utility:ConstantString" string="1.1"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="78,133" queueName="IB.GEN.AUDITORIA.REQ.01" messageDomainProperty="MRM" messageSetProperty="MS_ESB_CORE_GENERICOS" messageTypeProperty="{core.esb.visa.ib}:MSG_AUDITORIA" messageFormatProperty="CWF1" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.AUDITORIA.REQ.01"/>
+        <nsMappingTable nsPrefix="tns" namespace="http://core.esb.tdp.mb"/>
+        <nsMappingTable nsPrefix="soapenv" namespace="http://schemas.xmlsoap.org/soap/envelope/"/>
+        <monitorEvents eventSourceDescription="Transaction start" eventSourceName="IB.GEN.AUDITORIA.REQ.01.transaction.Start" eventIdentity="IB.GEN.AUDITORIA.REQ.01.TransactionStart">
+          <eventXMLDoc xmi:type="mbmonitor:MonitorEvent">
+            <applicationData dataLocation="$Root/MRM/MENSAJE/DATOSNEGOCIO/INDTRANSACCION" isXPath="true" complexData="true">
+              <nsPrefixMap prefix="tns" nsURI="http://core.esb.tdp.mb"/>
+              <nsPrefixMap prefix="soapenv" nsURI="http://schemas.xmlsoap.org/soap/envelope/"/>
+            </applicationData>
+            <applicationData dataLocation="$Root/MRM/MENSAJE/DATOSAUDITORIA/FECHAHORA" isXPath="true" complexData="true">
+              <nsPrefixMap prefix="tns" nsURI="http://core.esb.tdp.mb"/>
+              <nsPrefixMap prefix="soapenv" nsURI="http://schemas.xmlsoap.org/soap/envelope/"/>
+            </applicationData>
+            <applicationData dataLocation="$Root/MRM/MENSAJE/DATOSAUDITORIA/CODSERVICIO" isXPath="true" complexData="true">
+              <nsPrefixMap prefix="tns" nsURI="http://core.esb.tdp.mb"/>
+              <nsPrefixMap prefix="soapenv" nsURI="http://schemas.xmlsoap.org/soap/envelope/"/>
+            </applicationData>
+            <applicationData dataLocation="$Root/MRM/MENSAJE/DATOSAUDITORIA/TIPOEVENTO" isXPath="true" complexData="true">
+              <nsPrefixMap prefix="tns" nsURI="http://core.esb.tdp.mb"/>
+              <nsPrefixMap prefix="soapenv" nsURI="http://schemas.xmlsoap.org/soap/envelope/"/>
+            </applicationData>
+            <globalTransactionCorrelator/>
+            <parentTransactionCorrelator/>
+            <localTransactionCorrelator/>
+            <bitStreamData encoding="none" bitstreamContent="none"/>
+            <eventName literal="IB.GEN.AUDITORIA.REQ.01.TransactionStart"/>
+            <eventFilter dataLocation="true()" isXPath="true">
+              <nsPrefixMap prefix="tns" nsURI="http://core.esb.tdp.mb"/>
+              <nsPrefixMap prefix="soapenv" nsURI="http://schemas.xmlsoap.org/soap/envelope/"/>
+            </eventFilter>
+          </eventXMLDoc>
+        </monitorEvents>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="589,137" queueName="IB.GEN.CORREO.REQ.01" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.CORREO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="219,230" destination="file" filePath="D:\Apps\TDP\logs\auditoria.TXT" pattern="********/Error/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Body.MENSAJE.DATOSAUDITORIA.MSGID}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="234,135" dataSource="CAVSOADB" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_AUDITORIA_ObtenerParametros.Main">
+        <translation xmi:type="utility:ConstantString" string="ObtenerParametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="446,215" dataSource="CAVSOADB" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_AUDITORIA_RegistrarEvento.Main" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="RegistrarEvento"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="506,27" dataSource="CAVSOADB" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_AUDITORIA_RegistrarTransaccion.Main" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="RegistrarTransaccion"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="436,295" dataSource="CAVSOADB" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_AUDITORIA_RegistrarMensaje.Main" throwExceptionOnDatabaseError="false">
+        <translation xmi:type="utility:ConstantString" string="RegistrarMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="498,136" computeExpression="esql://routine/ib.visa.esb.core#MF_ESB_CORE_AUDITORIA_PrepararCorreo.Main">
+        <translation xmi:type="utility:ConstantString" string="PrepararCorreo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="324,358" queueName="IB.GEN.AUDITORIATEMP.REQ.01" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.AUDITORIATEMP.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="305,285" destination="file" pattern="${Body.MENSAJE.DATOSAUDITORIA.MSGID} # ${CURRENT_TIMESTAMP } # ${Body.MENSAJE.DATOSAUDITORIA.CODSERVICIO} # ${Body.MENSAJE.DATOSAUDITORIA.TIPOEVENTO} # ${Body.MENSAJE.DATOSAUDITORIA.DATO}">
+        <translation xmi:type="utility:ConstantString" string="T_Info"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="805,216" queueName="IB.GEN.AUDITORIAERROR.REQ.01" transactionMode="no" persistenceMode="yes">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.AUDITORIAERROR.REQ.01"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out4" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_Error">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_InfoError">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.T_InfoError" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+          <propertyDescriptor groupName="Group.DataSources" configurable="true" describedAttribute="Property.DSParametros">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.DSParametros" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+            <propertyDescriptor groupName="Group.DataSources" configurable="true" describedAttribute="Property.DSTransacciones">
+              <propertyName xmi:type="utility:TranslatableString" key="Property.DSTransacciones" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+              <propertyDescriptor groupName="Group.DataSources" configurable="true" describedAttribute="Property.DSEventos">
+                <propertyName xmi:type="utility:TranslatableString" key="Property.DSEventos" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+                <propertyDescriptor groupName="Group.DataSources" configurable="true" describedAttribute="Property.DSMensajes">
+                  <propertyName xmi:type="utility:TranslatableString" key="Property.DSMensajes" bundleName="ib/cav/esb/core/FlowAuditingGeneric" pluginId="MFP_ESB_CORE"/>
+                </propertyDescriptor>
+              </propertyDescriptor>
+            </propertyDescriptor>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_5">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_InfoError" overriddenNodes="FCMComposite_1_6">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.DSParametros" overriddenNodes="FCMComposite_1_13">
+      <overriddenAttribute href="ComIbmCompute.msgnode#Property.dataSource"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.DSTransacciones" overriddenNodes="FCMComposite_1_15">
+      <overriddenAttribute href="ComIbmCompute.msgnode#Property.dataSource"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.DSEventos" overriddenNodes="FCMComposite_1_14">
+      <overriddenAttribute href="ComIbmCompute.msgnode#Property.dataSource"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.DSMensajes" overriddenNodes="FCMComposite_1_16">
+      <overriddenAttribute href="ComIbmCompute.msgnode#Property.dataSource"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

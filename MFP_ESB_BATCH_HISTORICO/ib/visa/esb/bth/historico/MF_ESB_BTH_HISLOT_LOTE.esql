@@ -1,0 +1,44 @@
+BROKER SCHEMA ib.visa.esb.bth.historico
+PATH ib.visa.esb.bth;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_HISLOT_LOTE_GenerarHistorial
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--((1)) Obtener parametros de servicio batch
+		
+		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+
+		
+		--((2)) Calcular parametros hitoricos
+		DECLARE intCantDiasHistorial INTEGER CAST(refParam.Servicio.CANDIASFECHIST AS INTEGER);
+		DECLARE intCantCommitsTransa  INTEGER CAST(refParam.Servicio.CANREGTRANS1 AS INTEGER);
+		DECLARE fecHistorialLote DATE obtenerFechaMenosDias(CURRENT_DATE,intCantDiasHistorial);
+		DECLARE intRegistrosHistoricos INTEGER;
+		CALL obtenerCantidadLotesHistorial(fecHistorialLote,intRegistrosHistoricos);
+		
+		
+		DECLARE intTotalPaginado INTEGER intRegistrosHistoricos / intCantCommitsTransa;--TODO AGREGAR LOGICA PARA DIVIDIR CORRECTAMENTE EL GRUPO DE TRANSACCIONES
+
+		DECLARE intContadorPaginado INTEGER 1;
+		
+		WHILE intContadorPaginado <=  intTotalPaginado DO
+			--TODO LLAMAR PROCEDURE
+			SET Environment.PAGINA[intContadorPaginado]=intContadorPaginado;
+			SET intContadorPaginado = intContadorPaginado +1;
+		END WHILE; 
+		
+		--((3)) Registrar el Log Proceso
+		
+		CALL armarMensajeLogProceso(OutputRoot,
+									refParam.Batch.idProceso, 
+									refParam.Batch.idTransaccion,   
+									getTIP_LOG_INFO(),
+									MessageFlowLabel,
+									'Se registraron ' || CAST(intRegistrosHistoricos AS CHARACTER) || ' lotes en la tabal historica.');
+
+		PROPAGATE TO TERMINAL 0;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

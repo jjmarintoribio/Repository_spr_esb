@@ -1,0 +1,43 @@
+BROKER SCHEMA ib.visa.esb.bth.gen
+
+DECLARE C_NUM_CCSID_UTF8 CONSTANT INTEGER 1208;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_CORREO_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE refMailHeader REFERENCE TO InputRoot.XMLNSC.Email;
+		DECLARE chrBody REFERENCE TO InputRoot.XMLNSC.Email.Body;
+		DECLARE refMailAttachment REFERENCE TO InputRoot.XMLNSC.Email.Attachment;
+		
+		
+		IF FIELDTYPE(InputRoot.XMLNSC.Email.Header) IS NOT NULL THEN			
+			SET refMailHeader  = InputRoot.XMLNSC.Email.Header;
+		END IF;
+
+		SET OutputRoot.EmailOutputHeader.From = refMailHeader.From;
+		SET OutputRoot.EmailOutputHeader.To = refMailHeader.To;
+		SET OutputRoot.EmailOutputHeader.Cc = refMailHeader.Cc;
+		SET OutputRoot.EmailOutputHeader.Subject = refMailHeader.Subject;
+		
+		SET OutputRoot.BLOB.BLOB = CAST( chrBody AS BLOB CCSID 1208);
+		
+		IF FIELDVALUE(refMailHeader.BodyContentType) IS NOT NULL THEN
+			SET OutputLocalEnvironment.Destination.Email.BodyContentType = refMailHeader.BodyContentType;
+		ELSE 
+			SET OutputLocalEnvironment.Destination.Email.BodyContentType = 'text/html';			
+		END IF;	
+		
+		IF FIELDTYPE(refMailAttachment.ContentName) IS NOT NULL THEN
+			SET OutputLocalEnvironment.Destination.Email.Attachment.ContentType 	= refMailAttachment.ContentType;
+			SET OutputLocalEnvironment.Destination.Email.Attachment.Content 		= CAST(refMailAttachment.Content AS BLOB);
+			SET OutputLocalEnvironment.Destination.Email.Attachment.ContentName 	= refMailAttachment.ContentName;
+			SET OutputLocalEnvironment.Destination.Email.Attachment.ContentEncoding = refMailAttachment.ContentEncoding;
+		END IF;
+
+		PROPAGATE TO TERMINAL 1;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
