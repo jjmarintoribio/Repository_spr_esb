@@ -1,0 +1,91 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth; 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_SNDARCHIVO_MoverArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_1(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+
+		SET OutputRoot = InputRoot;
+				
+		SET OutputLocalEnvironment.Destination.File.Name =  InputLocalEnvironment.File.Name;
+		PROPAGATE TO TERMINAL 1;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_SNDARCHIVO_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+--		       
+--		DECLARE blnSleep BOOLEAN;
+--		SET blnSleep = SLEEP(2000);
+		--((2)) copiar el BLOB del archivo		
+		
+		
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_1(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+	 
+		 
+		 
+	
+ 		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
+ 		
+ 		SET OutputLocalEnvironment.Destination.File.Name = InputLocalEnvironment.File.Name; 
+ 		
+ 		IF STARTSWITH(InputLocalEnvironment.File.Name,'002S') THEN --Interamericano/BIF TODO VER SI SE PUEDE OBTENER DE BD
+			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutUBBanbif';--se podria obtner de tabla
+			SET OutputRoot = InputRoot;
+ 		ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'003S') THEN --Interbank/
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutInterbank';
+ 			SET OutputRoot = InputRoot;
+ 		ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'P017S') THEN --Scotiabank/ProcesosMC
+ 			SET OutputLocalEnvironment.Destination.File.Name = REPLACE(InputLocalEnvironment.File.Name,'P',''); 
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutPMCScotia';
+ 			--SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory 	= 'scotia/out';
+ 			SET OutputRoot = InputRoot;
+        ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'U017S') THEN --Scotiabank/Unibanca
+        	SET OutputLocalEnvironment.Destination.File.Name = REPLACE(InputLocalEnvironment.File.Name,'U',''); 
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutUBScotia';
+ 			--SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory 	= 'ub_scotia/out';
+ 			SET OutputRoot = InputRoot;
+ 		ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'019S') THEN --GNB/
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutUBGnb';
+ 			SET OutputRoot = InputRoot;
+ 			--PROPAGATE TO TERMINAL 1;
+        ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'020S') THEN --Falabella/
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutFalabella';
+ 			--SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory 	= 'falabella/out'; 
+ 			SET OutputRoot = InputRoot;
+        ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'028S') THEN --Crediscotia/
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutPMCCrediscotia'; 
+ 			SET OutputRoot = InputRoot;
+		ELSEIF STARTSWITH(InputLocalEnvironment.File.Name,'004S') THEN --BBVA
+ 			SET OutputLocalEnvironment.Destination.File.Remote.Server 	= 'sftpOutBbva'; 
+ 			SET OutputRoot = InputRoot; 			
+ 		END IF;		
+ 		PROPAGATE TO TERMINAL 1;
+ 		
+		RETURN FALSE;
+		
+	END;
+
+END MODULE;

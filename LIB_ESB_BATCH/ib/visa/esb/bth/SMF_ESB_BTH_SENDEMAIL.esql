@@ -1,0 +1,25 @@
+BROKER SCHEMA ib.visa.esb.bth
+PATH ib.visa.esb.bth;
+  
+  
+  
+CREATE COMPUTE MODULE SMF_ESB_BTH_SENDEMAIL_PrepararCorreo
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+ 
+		IF (FIELDTYPE(InputRoot.MQRFH2.usr.Parametros) IS NOT NULL) THEN
+			IF (COALESCE(InputRoot.MQRFH2.usr.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN 
+				CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_4(),InputRoot.MQRFH2.usr.Parametros,obtenerMensajeError(InputExceptionList),MessageFlowLabel);
+				RETURN TRUE;
+			END IF;		
+		ELSEIF (FIELDTYPE(Environment.Parametros) IS NOT NULL) THEN
+			IF (COALESCE(Environment.Parametros.Servicio.NOTIFICA,getNO())= getSI()) THEN 
+				CALL prepararMensajeCorreoAlerta(OutputRoot,getTIPO_ALERTA_4(),Environment.Parametros,obtenerMensajeError(InputExceptionList),MessageFlowLabel);
+				RETURN TRUE;
+			END IF;
+		END IF;
+		RETURN FALSE;
+	END;
+
+
+END MODULE;

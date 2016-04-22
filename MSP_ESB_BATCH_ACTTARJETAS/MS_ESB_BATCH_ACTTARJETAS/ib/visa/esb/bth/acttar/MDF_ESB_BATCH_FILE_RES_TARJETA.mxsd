@@ -308,7 +308,7 @@
           </xsd:appinfo>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="NROTARJETANUEVO" type="xsd:string">
+      <xsd:element minOccurs="0" name="NROTARJETANUEVO" type="xsd:string">
         <xsd:annotation>
           <xsd:appinfo source="WMQI_APPINFO">
             <cwfInclRep messageSetDefaultRep="CWF">
@@ -317,7 +317,7 @@
           </xsd:appinfo>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="MESVENCIMIENTONUEVO" type="xsd:string">
+      <xsd:element minOccurs="0" name="MESVENCIMIENTONUEVO" type="xsd:string">
         <xsd:annotation>
           <xsd:appinfo source="WMQI_APPINFO">
             <cwfInclRep messageSetDefaultRep="CWF">
@@ -326,7 +326,7 @@
           </xsd:appinfo>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="SEPARADOR2" type="xsd:string">
+      <xsd:element minOccurs="0" name="SEPARADOR2" type="xsd:string">
         <xsd:annotation>
           <xsd:appinfo source="WMQI_APPINFO">
             <cwfInclRep messageSetDefaultRep="CWF">
@@ -335,7 +335,7 @@
           </xsd:appinfo>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="ANOVENCIMIENTONUEVO" type="xsd:string">
+      <xsd:element minOccurs="0" name="ANOVENCIMIENTONUEVO" type="xsd:string">
         <xsd:annotation>
           <xsd:appinfo source="WMQI_APPINFO">
             <cwfInclRep messageSetDefaultRep="CWF">

@@ -79,7 +79,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_FINPROCESO_EjecutarFinalizacionCarga
 		--CALL truncarTabla(getESQUEMA_BD_ESB(),'ACTUALIZACION_TARJETA_TEMPORAL');			
 		--25/11 CambioLogicaOptimizado INICIO
 		--CALL truncarTabla(getESQUEMA_BD_ESB(),'ACTUALIZACION_TARJETA_TEMPORAL_AFILIACION');
-			CALL dropTablasTemporales(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion);
+		--CALL dropTablasTemporales(InputRoot.MQRFH2.usr.Parametros.Batch.idTransaccion);
 		--25/11 CambioLogicaOptimizado FIN
 		
 		CALL armarMensajeLogProceso(OutputRoot,
@@ -100,9 +100,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_FINPROCESO_EjecutarFinalizacionCarga
 														) ;
 		
 		--((3)) se cambia el semaforo a verde
-		SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
+	--	SET OutputRoot.XMLNSC.MENSAJE.PROCESANDO = getNO();
 		
-		PROPAGATE TO TERMINAL 2;			
+	--	PROPAGATE TO TERMINAL 2;			
 
 		--((4)) Envio de alertas al inicio del proceso}
 		SET Environment.Parametros = InputRoot.MQRFH2.usr.Parametros;		

@@ -11,11 +11,15 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
 		SET Environment.CorrelId = CAST(InputBody.MENSAJE.IDGRUPO AS BLOB);
 		SET OutputRoot.MQMD.CorrelId = Environment.CorrelId;
 		SET Environment.idGrupo = InputBody.MENSAJE.IDGRUPO;
+		--SET Environment.tipoArchivoProceso = InputBody.MENSAJE.TIPOARCHIVO;
 		--Bucle para obtener todos los registros de un grupo del archivo cargado
 		DECLARE refRegis REFERENCE TO InputRoot.XMLNSC.MENSAJE.REGISTROS.REGISTRO;
 
 		DECLARE intIdAfiliadoPorDesafiliar INTEGER;
 		DECLARE strNroTarjetaEncriptado,strNroTarjetaEnmascarado CHARACTER '';
+		--BANCARED
+		DECLARE strMesTarjetaNueva,strAnhoTarjetaNueva INTEGER;
+		--FIN BANCARED
   
 		CREATE FIELD Environment.ListIdAfiliado.idAfiliado;
 		DECLARE refIdAfi REFERENCE TO Environment.ListIdAfiliado.idAfiliado;
@@ -25,15 +29,33 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
 			--///////////////////////////////////////////////////////
 
 			IF (refRegis.CODRESPUESTA <> '00') THEN
-
-
-				IF Environment.MQRFH2.usr.Parametros.Batch.tipoArchivoAlignet = 'BCP' THEN
-					SET strNroTarjetaEncriptado = encriptarNroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
-					SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
+				
+				
+				IF (Environment.MQRFH2.usr.Parametros.Batch.tipoArchivoAlignet = 'BCP') THEN
+					--BANCARED
+					IF (COALESCE(refRegis.NROTARJETANUEVO,'') <> '') THEN
+					--FIN BANCARED
+						SET strNroTarjetaEncriptado = encriptarNroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
+						SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(devolverSinZerosBcp(refRegis.NROTARJETANUEVO));
+					ELSE
+						SET strNroTarjetaEncriptado = encriptarNroTarjeta(refRegis.NROTARJETA);
+						SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(refRegis.NROTARJETA);
+					END IF;
 				ELSE
 					SET strNroTarjetaEncriptado = encriptarNroTarjeta(refRegis.NROTARJETANUEVO);
 					SET strNroTarjetaEnmascarado = enmascararNumeroTarjeta(refRegis.NROTARJETANUEVO);
 				END IF;
+				
+				--BANCARED
+				IF (COALESCE(refRegis.MESVENCIMIENTO,'') <> '' AND COALESCE(refRegis.MESVENCIMIENTONUEVO,'') <> '') THEN
+					SET strMesTarjetaNueva = CAST(refRegis.MESVENCIMIENTONUEVO AS INTEGER);
+					SET strAnhoTarjetaNueva = CAST(RIGHT('20' || refRegis.ANOVENCIMIENTONUEVO,4) AS INTEGER);
+				ELSE 
+					SET strMesTarjetaNueva = CAST(refRegis.MESVENCIMIENTO AS INTEGER);
+					SET strAnhoTarjetaNueva = CAST(RIGHT('20' || refRegis.ANOVENCIMIENTO,4) AS INTEGER);
+				END IF;
+				--FINBANCARED
+				
 				--((1))Actualizar tarjetas
 				--CALL actualizarTarjetas( --25/11 CambioLogicaOptimizado
 				CALL insertarTarjetasReporteTemporal(
@@ -46,8 +68,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
 							CAST(RIGHT('20' || refRegis.ANOVENCIMIENTO,4) AS INTEGER),
 							strNroTarjetaEnmascarado,
 							strNroTarjetaEncriptado,
-							CAST(refRegis.MESVENCIMIENTONUEVO AS INTEGER),
-							CAST(RIGHT('20' || refRegis.ANOVENCIMIENTONUEVO,4) AS INTEGER),
+							strMesTarjetaNueva, --CAST(refRegis.MESVENCIMIENTONUEVO AS INTEGER),
+							strAnhoTarjetaNueva, --CAST(RIGHT('20' || refRegis.ANOVENCIMIENTONUEVO,4) AS INTEGER),
 							refRegis.CODRESPUESTA,
 							getID_ESB_VISA(),
 							BrokerName
@@ -58,7 +80,10 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVOBD_PrepararLectura
 				
 				CREATE LASTCHILD OF Environment.ListIdAfiliado NAME 'idAfiliado';					
 				MOVE refIdAfi NEXTSIBLING;*/
-
+				SET strNroTarjetaEncriptado = '' ;
+				SET strNroTarjetaEnmascarado = '';
+				SET strMesTarjetaNueva = NULL ;
+				SET strAnhoTarjetaNueva = NULL;
 				
 			END IF;
 			--///////////////////////////////////////////////////////

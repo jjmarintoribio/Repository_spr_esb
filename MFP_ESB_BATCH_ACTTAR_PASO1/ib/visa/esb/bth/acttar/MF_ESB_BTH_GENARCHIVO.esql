@@ -8,22 +8,45 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 		--((0)) Obtener la lista de cargos por listado de Lotes
 
 		DECLARE refParam REFERENCE TO InputRoot.MQRFH2.usr.Parametros;
-		DECLARE flgEncriptacionPgp CHARACTER '';				   
-		CALL buscarTarjetasEmisorDetalle(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
-											CAST(InputBody.MENSAJE.ID_EMISOR AS INTEGER),
-											flgEncriptacionPgp,
-											Environment.Tarjetas[]);
-
+		
+		DECLARE flgEncriptacionPgp CHARACTER '';
+		
+		--BANCARED
+		DECLARE flgModuloActualizador CHARACTER '';
+		SET flgModuloActualizador = InputBody.MENSAJE.FLG_PROCESADORA_ALIGNET; 	
+		IF (flgModuloActualizador = 'MOD_ALIGNET') THEN	 		   
+			CALL buscarTarjetasEmisorDetalle_Alignet(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+													CAST(InputBody.MENSAJE.ID_EMISOR AS INTEGER),
+													flgEncriptacionPgp,
+													Environment.Tarjetas[]); 	
+		ELSE
+			CALL buscarTarjetasEmisorDetalle_BancaRed(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+													CAST(InputBody.MENSAJE.ID_EMISOR AS INTEGER),
+													CAST(InputBody.MENSAJE.ID_PROCESADORA AS INTEGER),
+													flgEncriptacionPgp,
+													Environment.Tarjetas[]);				
+			
+		END IF;	
+		
+--		CALL buscarTarjetasEmisorDetalle(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),
+--												CAST(InputBody.MENSAJE.ID_EMISOR AS INTEGER),
+--												flgEncriptacionPgp,
+--												Environment.Tarjetas[]);										
+		--FIN BANCARED
+		
 		DECLARE refTarjeta REFERENCE TO Environment.Tarjetas;
 		DECLARE refEmisor REFERENCE TO InputBody.MENSAJE;	 
 		DECLARE chrFecActual CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2()); 
 	
 		--el campo NOM_ARCHIVO_ACTUALIZACION_TARJETAS ira el nombre del subdirectorio donde se creara el archivo para el emisor. No debe de comenzar con /
-		DECLARE chrRutaArchivo CHARACTER TRIM(refEmisor.NOM_ARCHIVO_ACTUALIZACION_TARJETAS);
+		DECLARE chrRutaArchivo CHARACTER '';--CHARACTER TRIM(refEmisor.NOM_ARCHIVO_ACTUALIZACION_TARJETAS);
 		DECLARE chrSufijo CHARACTER ''; 
-		DECLARE chrCodEmisor CHARACTER RIGHT(REPLICATE('0',3) ||TRIM(refEmisor.COD_EMISOR),3);
+		--BANCARED
+		DECLARE chrFechaArchivo CHARACTER ''; 
+		--DECLARE chrCodEmisor CHARACTER RIGHT(REPLICATE('0',3) ||TRIM(refEmisor.COD_EMISOR),3);
+		DECLARE chrCodEmisor CHARACTER RIGHT(REPLICATE('0',3) ||TRIM(refEmisor.COD_EMISOR_ACTUALIZADOR),3);
 		
-		IF (flgEncriptacionPgp = 'S') THEN
+		/*IF (flgEncriptacionPgp = 'S') THEN
 			
 			SET refParam.Servicio.EXTFILEDEST = getEXT_FILE_ALIGNET();
 			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL();
@@ -33,22 +56,69 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL(); 
 			SET Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1';
 			
+		END IF;*/
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '1') THEN --alignet
+			
+			SET refParam.Servicio.EXTFILEDEST = getEXT_FILE_ALIGNET();
+			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL();
+			--BANCARED
+			SET chrFechaArchivo = CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA3());
+			--FIN BANCARED
+			
+		ELSEIF refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND FIELDTYPE(refEmisor.FLG_ENCRIPTA_ACTUALIZACION_TARJETA) IS NOT NULL AND refEmisor.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1' THEN 
+			
+			SET chrSufijo = getSUFIJO_ARCHIVO_TEMPORAL(); 
+			SET Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1';
+			--BANCARED
+			SET chrFechaArchivo = CAST(CURRENT_DATE AS CHAR FORMAT getFORMATO_FECHA3());
+			--FIN BANCARED
+			
 		END IF;
+		--FIN BANCARED
+		
 		
 		
 		DECLARE chrNombreArchivo CHARACTER chrCodEmisor
 											|| refParam.Servicio.PREJFILEDEST
-											|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA3())
+											--|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA3())
+											|| chrFechaArchivo
 											|| refParam.Servicio.EXTFILEDEST
 											|| chrSufijo;  --se genera el nombre del archivo emisor dinamicamente.
+		
+		--BANCARED SOLO SI ES BCP Y ESTA CON BANCARED TIENE UN NOMBRE DIFERENTE
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR = '2') THEN --TODO Verificar que el codigo de la sbs ya que no cambia 
+			SET chrNombreArchivo = refParam.Servicio.PREJFILEDESTBCP 
+								--|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())
+								|| CAST(CURRENT_DATE AS CHAR FORMAT getFORMATO_FECHA())
+								|| '0000' 
+								|| refParam.Servicio.EXTFILEDEST
+								|| chrSufijo;  --se genera el nombre del archivo emisor dinamicamente.
+		ELSEIF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR = '12') THEN --BANCARED/Scotiabank --Se pondra un prefijo P:ProcesosMC y U:Unibanca para diferenciar sus carpetas en el flujo sftp
+			DECLARE chrPrefijoScotia CHARACTER '';
+			IF (refEmisor.ID_PROCESADORA = '2') THEN
+				SET chrPrefijoScotia = 'U'; --Unibanca
+			ELSEIF (refEmisor.ID_PROCESADORA = '3') THEN
+				SET chrPrefijoScotia = 'P'; --Procesos MC
+			END IF;
+			SET chrNombreArchivo = chrPrefijoScotia ||chrCodEmisor
+								|| refParam.Servicio.PREJFILEDEST 
+								--|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA3())
+								|| chrFechaArchivo
+								|| refParam.Servicio.EXTFILEDEST
+								|| chrSufijo;  --se genera el nombre del archivo emisor dinamicamente.
+		END IF;
+		--FIN BANCARED											
+											
 		
 		--//***************VALIDACION PGP************************//
 		--// Crear la cabecera solo cuando el flag de validacion
 		--// PGP se encuentre con el valor N
 		--//*****************************************************//
 		
-		IF (flgEncriptacionPgp <> 'S') THEN
-			
+		--BANCARED
+		--IF (flgEncriptacionPgp <> 'S') THEN
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR <> '2') THEN --BANCARED Y QUE NO SEA BCP			
+		--FIN BANCARED	
 			--//*********CABECERA ARCHIVO****************//
 			--//***************************************//
 			SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_ACTTARJETAS';			
@@ -60,7 +130,10 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 			DECLARE refItemA REFERENCE TO OutputRoot.MRM.MENSAJE;
 							
 			SET refItemA.TIPOREGISTRO		= 'A';
-			SET refItemA.CODEMISOR			= refEmisor.ID_EMISOR;
+			--bancared
+			--SET refItemA.CODEMISOR			= refEmisor.ID_EMISOR;
+			SET refItemA.CODEMISOR			= refEmisor.COD_EMISOR_ACTUALIZADOR;
+			--fin bancared
 			SET refItemA.TIPOENVIO			= 'SOURCE';
 			SET refItemA.FECHA 				= chrFecActual;
 			SET refItemA.NROREGISTROS		= refEmisor.NRO_TARJETAS;
@@ -75,38 +148,80 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 		--//***************************************//
  		
 		SET OutputRoot.Properties.MessageSet 		= 'MS_ESB_BATCH_ACTTARJETAS';
-		IF (flgEncriptacionPgp = 'S') THEN		
+		
+		--BANCARED
+		/*IF (flgEncriptacionPgp = 'S') THEN		
 			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA_PGP';
 		ELSE
 			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA';
-		END IF;	
+		END IF;*/
+		
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR <> '2') THEN --BANCARED Y QUE NO SEA BCP		
+			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA';
+		ELSEIF (refEmisor.ID_MODULO_ACTUALIZADOR = '1')  THEN  --ALIGNET
+			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA_PGP';
+		ELSEIF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR = '2')  THEN  -- BANCARED Y QUE SEA BCP
+			SET OutputRoot.Properties.MessageType 	= 'MSJ_TARJETA_BCP';
+		END IF;
+		--FIN BANCARED
+			
 		SET OutputRoot.Properties.MessageFormat 	= 'CWF';	
 		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MRM';	
 		
 		CREATE FIELD OutputRoot.MRM.MENSAJE;
 		DECLARE refItemD REFERENCE TO OutputRoot.MRM.MENSAJE;
-					 
-		WHILE LASTMOVE(refTarjeta) DO											
-							
-			SET refItemD.TIPOREGISTRO		= 'D';
-			SET refItemD.NROTARJETA			= desencriptarNroTarjeta(refTarjeta.NRO_TARJETA_ENCRIPTADO);
-			SET refItemD.MESVENCIMIENTO		= setAppendZerosToLeft(CAST(refTarjeta.NRO_MES_EXPIRACION_TARJETA AS CHARACTER));
-			SET refItemD.ANOVENCIMIENTO		= RIGHT(CAST(refTarjeta.NRO_ANHO_EXPIRACION_TARJETA AS CHARACTER),2);
-			SET refItemD.FILLER				= '';
+		
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR <> '2') OR
+			(refEmisor.ID_MODULO_ACTUALIZADOR = '1') THEN			 
 			
-			CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
-			PROPAGATE TO TERMINAL 1 DELETE NONE;
-
-			MOVE refTarjeta NEXTSIBLING REPEAT TYPE NAME;
-
-		END WHILE;
-
+			WHILE LASTMOVE(refTarjeta) DO											
+								
+				SET refItemD.TIPOREGISTRO		= 'D';
+				SET refItemD.NROTARJETA			= desencriptarNroTarjeta(refTarjeta.NRO_TARJETA_ENCRIPTADO);
+				SET refItemD.MESVENCIMIENTO		= setAppendZerosToLeft(CAST(refTarjeta.NRO_MES_EXPIRACION_TARJETA AS CHARACTER));
+				SET refItemD.ANOVENCIMIENTO		= RIGHT(CAST(refTarjeta.NRO_ANHO_EXPIRACION_TARJETA AS CHARACTER),2);
+				SET refItemD.FILLER				= '';
+				
+				CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+				PROPAGATE TO TERMINAL 1 DELETE NONE;
+	
+				MOVE refTarjeta NEXTSIBLING REPEAT TYPE NAME;
+	
+			END WHILE;
+			
+		ELSEIF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR = '2')  THEN  -- BANCARED Y QUE SEA BCP
+			DECLARE chrFecActualBCP CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA4() );
+			DECLARE chrTimestamp CHARACTER CAST(CURRENT_TIMESTAMP AS CHAR FORMAT getFORMATO_HORA_BD2());
+			WHILE LASTMOVE(refTarjeta) DO											
+								
+				SET refItemD.TIPOREGISTRO		= '999999999';
+				SET refItemD.FECRESPUESTA		= chrFecActualBCP || ' ' || chrTimestamp;
+				SET refItemD.NROTARJETA			= desencriptarNroTarjeta(refTarjeta.NRO_TARJETA_ENCRIPTADO);
+				SET refItemD.FILLER				= '';
+				SET refItemD.CODRESPUESTA		= '';
+				SET refItemD.FILLER2			= '';
+				SET refItemD.MESVENCIMIENTO		= setAppendZerosToLeft(CAST(refTarjeta.NRO_MES_EXPIRACION_TARJETA AS CHARACTER));
+				SET refItemD.SEPARADOR1			= '-';
+				SET refItemD.ANOVENCIMIENTO		= RIGHT(CAST(refTarjeta.NRO_ANHO_EXPIRACION_TARJETA AS CHARACTER),2);
+				SET refItemD.FILLER3			= '';
+				SET refItemD.SUFIJO  			= '208';
+				
+				CALL setearDestino(refParam,chrRutaArchivo,chrNombreArchivo);
+				PROPAGATE TO TERMINAL 1 DELETE NONE;
+	
+				MOVE refTarjeta NEXTSIBLING REPEAT TYPE NAME;
+	
+			END WHILE;
+		END IF;
 		--//***************VALIDACION PGP********************//
 		--// Crear el pie de pagina solo cuando el flag de 
 		--// validacion PGP se encuentre con el valor N
 		--//*************************************************//
 		
-		IF (flgEncriptacionPgp <> 'S') THEN
+		--BANCARED
+		--IF (flgEncriptacionPgp <> 'S') THEN
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND refEmisor.COD_EMISOR <> '2') THEN --BANCARED Y QUE NO SEA BCP
+		--FIN BANCARED
 			
 		--//*********RESUMEN ARCHIVO****************//
 		--//***************************************//
@@ -149,7 +264,10 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 		--((3)) Encriptacion del archivo finalizado
 		--		Valida si se encripta modalidad PGP
 		
-		IF (flgEncriptacionPgp = 'S') THEN
+		--BANCARED
+		--IF (flgEncriptacionPgp = 'S') THEN
+		IF (refEmisor.ID_MODULO_ACTUALIZADOR = '1') THEN --ALIGNET
+        --FIN BANCARED			
 			
 			CALL encriptarArchivoTarjetasPgp(refParam.Servicio.PATHFILEDEST || chrRutaArchivo,chrNombreArchivo);
 			
@@ -163,8 +281,15 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 
 			PROPAGATE TO TERMINAL 3;
 			
-		ELSEIF (Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1') THEN 
+		ELSEIF (refEmisor.ID_MODULO_ACTUALIZADOR = '2' AND Environment.FLG_ENCRIPTA_ACTUALIZACION_TARJETA = '1') THEN  --BANCARED
 			
+			--Scotiabank tiene una llave para Unibanca y otra para Procesadora, en la tabla esta como U17 y P17
+			IF (refEmisor.COD_EMISOR = '12' AND refEmisor.ID_PROCESADORA = '2') THEN --UNIBANCA
+				SET chrCodEmisor = 'U' || TRIM(refEmisor.COD_EMISOR_ACTUALIZADOR);
+			ELSEIF (refEmisor.COD_EMISOR = '12' AND refEmisor.ID_PROCESADORA = '3') THEN --PROCESADORA
+				SET chrCodEmisor = 'P' || TRIM(refEmisor.COD_EMISOR_ACTUALIZADOR);
+			END IF;
+					
 			CALL encriptarArchivoTarjetas(chrCodEmisor,refParam.Servicio.PATHFILEDEST || chrRutaArchivo,chrNombreArchivo);
 		
 			--((4.0)) Registro de Log del Proceso
@@ -202,6 +327,26 @@ CREATE PROCEDURE setearDestino(IN refParam REFERENCE, IN chrRutaArchivo CHARACTE
 		SET OutputLocalEnvironment.Destination.File.Name 		= chrNomArchivo;
 	
 	END;
+
+--BANCARED
+CREATE PROCEDURE buscarTarjetasEmisorDetalle_Alignet(
+					IN I_FEC_PROCESO_PAGO TIMESTAMP,
+					IN I_ID_EMISOR INTEGER,
+					OUT I_FLG_ENCRIPTAR_PGP CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1  	
+ 	EXTERNAL NAME "SPRESB.SP_TARJETA_EMISOR_DETALLE_BUSCAR_ALIGNET";
+ 	
+CREATE PROCEDURE buscarTarjetasEmisorDetalle_BancaRed(
+					IN I_FEC_PROCESO_PAGO TIMESTAMP,
+					IN I_ID_EMISOR INTEGER,
+					IN I_ID_PROCESADOR INTEGER,
+					OUT I_FLG_ENCRIPTAR_PGP CHARACTER
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1  	
+ 	EXTERNAL NAME "SPRESB.SP_TARJETA_EMISOR_DETALLE_BUSCAR_BANCARED"; 	  		
 END MODULE;
 
 
@@ -221,7 +366,13 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_ControlarError
 		SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= InputBody.MENSAJE.IDGRUPO;
 		SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = InputBody.MENSAJE.IDTRANSACCION;				
 
-		RETURN TRUE;
+		PROPAGATE TO TERMINAL 1;
+		
+		SET OutputRoot = InputRoot;
+
+		PROPAGATE TO TERMINAL 2;
+
+		RETURN FALSE;
 		
 	END;
 

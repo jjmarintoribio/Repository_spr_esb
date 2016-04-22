@@ -46,9 +46,36 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerTarjetasEmisores
 		 		
 		--((1)) Obtiene la cantidad de tarjetas por emisor.  
 		  	  
-		SET refParam.Batch.fechaProceso = CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) + CAST(valNumerico AS INTERVAL DAY); 
-		CALL buscarCantidadTarjetasEmisor(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
- 
+		SET refParam.Batch.fechaProceso = CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) + CAST(valNumerico AS INTERVAL DAY);
+		
+		--BANCARED
+		DECLARE flgModuloActualizador, chrHoraIni_Alignet CHARACTER '';
+		DECLARE intHoras_Alignet INTEGER;
+		DECLARE tmsHorarioIni_Alignet,tmsHorarioFin_Alignet TIMESTAMP;
+	
+		SET chrHoraIni_Alignet = TRIM(SUBSTRING(refParam.Servicio.HORAALIGNET BEFORE '-')); 
+		SET intHoras_Alignet   = CAST(TRIM(SUBSTRING(refParam.Servicio.HORAALIGNET AFTER '-')) AS INTEGER);
+	
+		SET tmsHorarioIni_Alignet = obtenerTimeStampConcatenadoConHora(chrHoraIni_Alignet); 
+		SET tmsHorarioFin_Alignet = tmsHorarioIni_Alignet + CAST(intHoras_Alignet AS INTERVAL HOUR);
+		
+		IF (CURRENT_TIMESTAMP >= tmsHorarioIni_Alignet AND CURRENT_TIMESTAMP < tmsHorarioFin_Alignet) THEN 
+			SET flgModuloActualizador = 'MOD_ALIGNET';
+		ELSE
+			SET flgModuloActualizador = 'MOD_BANCARED'; --TODO ASUMIR TODAS LAS DEMAS HORAS EN BANCARED?
+		END IF; 
+		---------
+		
+		IF (flgModuloActualizador = 'MOD_ALIGNET') THEN
+			CALL buscarCantidadTarjetasEmisor_Alignet(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+		ELSE
+			CALL buscarCantidadTarjetasEmisor_BancaRed(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+		END IF;
+			
+--		CALL buscarCantidadTarjetasEmisor(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()),Environment.ResultSet1[]);
+ 		
+ 		------ FIN DE BANCARED CAMBIOS
+		
 		--((2)) Agrupa los Emisores segun la cantidad de nodos del BUS y la cantidad de tarjetas que tiene.
 		
 		CREATE FIELD Environment.Proceso.InfoEmisores;
@@ -109,6 +136,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerTarjetasEmisores
 			SET OutputRoot.XMLNSC.MENSAJE 			= refLis.ListadoEmisores;
 			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO = QueueManagerName;--QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
 			
+			--BANCARED
+			SET OutputRoot.XMLNSC.MENSAJE.FLG_PROCESADORA_ALIGNET =  flgModuloActualizador;
+			--FIN BANCARED
 			
 			--Se envia a la cola que esta en cluster en ambos Nodos para que la carga de la creacion del archivo sea balanceada
 			SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = 'IB.BTH.ACTTAR1.ENVIARGEN.REQ.01';		 
@@ -134,7 +164,23 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_ObtenerTarjetasEmisores
 		PROPAGATE TO TERMINAL 2 ;
 		
 		RETURN FALSE;
-	END;
+		END;
+
+--BANCARED
+	CREATE PROCEDURE buscarCantidadTarjetasEmisor_Alignet(
+					IN I_FEC_PROCESO_PAGO TIMESTAMP
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1  	
+ 	EXTERNAL NAME "SPRESB.SP_TARJETA_EMISOR_BUSCAR_ALIGNET";  
+ 	
+ 	CREATE PROCEDURE buscarCantidadTarjetasEmisor_BancaRed(
+					IN I_FEC_PROCESO_PAGO TIMESTAMP
+					)
+  	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1  	
+ 	EXTERNAL NAME "SPRESB.SP_TARJETA_EMISOR_BUSCAR_BANCARED";  
+ 			
 END MODULE;
 
 
@@ -153,13 +199,16 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GETDETALLE_EnviarGenerar
 			
 			SET blbCorrelId = getMsgIdValor(refParam.Batch.idTransaccion || refLis.ID_EMISOR, FALSE);
 			SET OutputRoot.Properties = InputProperties;
+			SET OutputRoot.MQMD.Format = 'MQRFH2';
 			SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;		
 			SET OutputRoot.XMLNSC.MENSAJE 	= refLis;
 			SET OutputRoot.XMLNSC.MENSAJE.IDGRUPO 		= blbCorrelId;
 			SET OutputRoot.XMLNSC.MENSAJE.IDTRANSACCION = blbMsgId;
 			SET OutputRoot.XMLNSC.MENSAJE.QMPROCESO		= InputBody.MENSAJE.QMPROCESO; --QM donde se inicio el proceso (para poder controlar la finalizacion del Proceso)
 			
-					 						  
+			--BANCARED
+			SET OutputRoot.XMLNSC.MENSAJE.FLG_PROCESADORA_ALIGNET =  InputBody.MENSAJE.FLG_PROCESADORA_ALIGNET;
+			--FIN BANCARED		 						  
 			PROPAGATE TO TERMINAL 1;
 
 			--((2)) Registro de Log del Proceso

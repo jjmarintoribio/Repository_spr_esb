@@ -12,26 +12,54 @@ CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_ValidarArchivosEncriptados
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 		
+		
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+
+		
 		ROUTING : BEGIN ATOMIC 
-			IF cacheListaEmisores.iniciado IS NULL THEN
+		--	IF cacheListaEmisores.iniciado IS NULL THEN
   
-				CALL obtenerListadoEmisores(cacheListaEmisores.Emisores[]);
+				CALL obtenerListadoEmisoresNew(cacheListaEmisores.Emisores[]);
 				SET cacheListaEmisores.iniciado = TRUE;				
 
-			END IF;
+		--	END IF;
  
 		END ROUTING ; 
-
+ 
+		DECLARE chrCodEmisorI CHARACTER '';
+		
+		--Scotiabank puede venir con un prefijo P o U (nombre modificado internamente para diferenciar llaves - flujos de recepcion)
+		IF CONTAINS(LEFT(InputLocalEnvironment.File.Name,3),'P') THEN --Procesadora
+			SET chrCodEmisorI = CAST(CAST(REPLACE(LEFT(InputLocalEnvironment.File.Name,3),'P','') AS INTEGER) AS CHARACTER);
+		ELSEIF CONTAINS(LEFT(InputLocalEnvironment.File.Name,3),'U') THEN --Unibanca
+			SET chrCodEmisorI = CAST(CAST(REPLACE(LEFT(InputLocalEnvironment.File.Name,3),'U','') AS INTEGER) AS CHARACTER);
+		ELSE
+			SET chrCodEmisorI = CAST(CAST(LEFT(InputLocalEnvironment.File.Name,3) AS INTEGER) AS CHARACTER);	
+		END IF;
+		
 		SET OutputRoot.XMLNSC.MENSAJE.CODEMISOR 	= LEFT(InputLocalEnvironment.File.Name,3);
-
-		SET Environment.flgEncrip = CAST(THE (SELECT ITEM E.FLG_ENCRIPTA_ACTUALIZACION_TARJETA FROM cacheListaEmisores.Emisores[] AS E WHERE E.COD_EMISOR = OutputRoot.XMLNSC.MENSAJE.CODEMISOR) AS CHARACTER);
+		--BANCARED
+		--SET Environment.flgEncrip = CAST(THE (SELECT ITEM E.FLG_ENCRIPTA_ACTUALIZACION_TARJETA FROM cacheListaEmisores.Emisores[] AS E WHERE E.COD_EMISOR = OutputRoot.XMLNSC.MENSAJE.CODEMISOR) AS CHARACTER);
+		SET Environment.flgEncrip = CAST(THE (SELECT ITEM E.FLG_ENCRIPTA_ACTUALIZACION_TARJETA FROM cacheListaEmisores.Emisores[] AS E WHERE E.COD_EMISOR_ACTUALIZADOR = chrCodEmisorI) AS CHARACTER);
+		--FIN BANCARED
 		SET Environment.flgEncrip = COALESCE(Environment.flgEncrip,'');
 		IF (Environment.flgEncrip='') THEN   
 			THROW USER EXCEPTION MESSAGE getCOD_ERROR_2005() VALUES(getMSJ_ERROR_2005());	
 		ELSE    
 
 			SET OutputRoot.XMLNSC.MENSAJE.RUTAORIGEN 		= InputLocalEnvironment.File.Directory || UDP_SEPARADOR_DIRECTORIO;
+			--BANCARED
 			SET OutputRoot.XMLNSC.MENSAJE.ARCHIVO 			= InputLocalEnvironment.File.Name;
+			--SET OutputRoot.XMLNSC.MENSAJE.ARCHIVO 			= REPLACE(REPLACE(InputLocalEnvironment.File.Name,'P','0'),'U','0');
+			--FIN BANCARED
 			SET OutputRoot.XMLNSC.MENSAJE.FLGENCRIP			= COALESCE(Environment.flgEncrip,'');
 			SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOARCHIVE	= UDP_DIRECTORIO_MQSIARCHIVE || UDP_SEPARADOR_DIRECTORIO;
 			SET OutputRoot.XMLNSC.MENSAJE.DIRECTORIOTARJETA	= UDP_DIRECTORIO_CARGA_TARJETAS;
@@ -41,12 +69,30 @@ CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_ValidarArchivosEncriptados
 		RETURN TRUE;
 	END;
 
+--BANCARED
+	CREATE PROCEDURE obtenerListadoEmisoresNew()
+	LANGUAGE DATABASE
+  	DYNAMIC RESULT SETS 1
+	EXTERNAL NAME "SPRESB.SP_EMISOR_LISTADO_OBTENER_NEW";	
+--FIN BANCARED
 	
 END MODULE;
 
 CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_DesencriptarArchivosPgp
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
+
+
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+
 		
 											
 		SET OutputRoot.XMLNSC.MENSAJE.FLGARCHIVOPGP 	= 'S';											
@@ -63,6 +109,20 @@ END MODULE;
 CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviarArchivosErrorPorPgp
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
+		
+	
+			SET OutputRoot.MQMD.MsgId	= getMsgId();
+			SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+			 
+			CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+			SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+			
+			SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+						
+			PROPAGATE TO LABEL 'lblParametros';	
+
+
+		
 			--((1)) Obtener remitente y destinatarios
 			ROUTING : BEGIN ATOMIC
 				 
@@ -97,3 +157,25 @@ CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_EnviarArchivosErrorPorPgp
 		
 	END;
 END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_RECEPARCHIVO_INICIO_GrabarParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Parametros;
+		
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		SET refParam.Servicio 	= InputBody.MENSAJE.PARAMETROS;
+		SET refParam.General	= InputBody.MENSAJE.SERVICIO;
+		SET refParam.ESB 		= InputBody.MENSAJE.PARAMETROSESB;
+
+		SET refParam.Batch.horaInicioProceso	= obtenerFechaHoraActual(2);
+	   	SET refParam.Batch.fechaInicioProceso	= obtenerFechaActual(4);						      
+		SET refParam.Batch.nombreArchivo		= Environment.File.Name;			
+	
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+

@@ -1,0 +1,143 @@
+BROKER SCHEMA ib.visa.esb.bth.acttar
+PATH ib.visa.esb.bth;
+DECLARE cacheProcesoActTarRcv SHARED ROW;
+
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_MoverArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN 
+	BEGIN
+
+				
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+
+		SET OutputRoot = InputRoot;
+				
+		SET OutputLocalEnvironment.Destination.File.Name =  InputLocalEnvironment.File.Name;
+		PROPAGATE TO TERMINAL 1;
+		
+		
+		RETURN FALSE;
+	END;
+
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_EnviarArchivo
+	CREATE FUNCTION Main() RETURNS BOOLEAN 
+	BEGIN   
+		DECLARE chrMsjError CHARACTER '';
+		DECLARE chrFileUnzip CHARACTER unzipFile(InputLocalEnvironment.WrittenDestination.File.Directory ||'/'|| InputLocalEnvironment.WrittenDestination.File.Name,InputLocalEnvironment.WrittenDestination.File.Directory || '/',getSI(),chrMsjError );
+		SET Environment.mensaje = chrMsjError;
+		SET Environment.ziipppe = chrFileUnzip;
+		IF (LENGTH(chrMsjError)>0) THEN
+			THROW USER EXCEPTION MESSAGE 10 VALUES(chrMsjError);	 
+		END IF;
+		 
+		SET OutputLocalEnvironment.Destination.File.Directory 	= InputLocalEnvironment.WrittenDestination.File.Directory;
+		SET OutputLocalEnvironment.Destination.File.Name 		= chrFileUnzip; 
+		RETURN TRUE;
+	END;
+
+ 	CREATE FUNCTION  unzipFile(IN chrFileIN CHARACTER, IN chrFileOUT CHARACTER, IN bolDeleteFile CHARACTER,IN chrMsjError CHARACTER)
+ 	RETURNS CHARACTER
+ 	LANGUAGE JAVA
+ 	EXTERNAL NAME "ib.visa.esb.bth.acttar.MF_SB_BTH_RCVARCHIVO_PrepararArchivo.unzipFile";
+ 	
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_CambiarNombre
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE valNumerico INTEGER 0;
+		DECLARE valCadena CHARACTER '';
+		
+		--39 ID PARAMETRO , DIAS PREVIOS ACTUALIZADOR DE TARJETA 
+		CALL obtenerParametroSpr(39,valNumerico,valCadena);
+		
+		SET OutputRoot = InputRoot; 
+		SET OutputLocalEnvironment.Destination.File.Name = 'RVNET' || CAST(CURRENT_DATE + CAST(valNumerico AS INTERVAL DAY)  AS CHARACTER FORMAT getFORMATO_FECHA3()) || '.dat';		
+
+		RETURN TRUE;
+	END;
+
+
+END MODULE;
+
+
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_GrabarParametros
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		CREATE FIELD Environment.Parametros;
+		
+		DECLARE refParam REFERENCE TO Environment.Parametros;
+		SET refParam.Servicio 	= InputBody.MENSAJE.PARAMETROS;
+		SET refParam.General	= InputBody.MENSAJE.SERVICIO;
+		SET refParam.ESB 		= InputBody.MENSAJE.PARAMETROSESB;
+
+		SET refParam.Batch.horaInicioProceso	= obtenerFechaHoraActual(2);
+	   	SET refParam.Batch.fechaInicioProceso	= obtenerFechaActual(4);						      
+		SET refParam.Batch.nombreArchivo		= Environment.File.Name;			
+	
+		RETURN FALSE;
+		
+	END;
+END MODULE;
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_Renombrar
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+			
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+		
+		SET OutputRoot = InputRoot; 
+		SET OutputLocalEnvironment.Destination.File.Name = 'U' || SUBSTRING(InputLocalEnvironment.File.Name FROM 2);			
+		 		
+		RETURN TRUE;
+	END;
+
+END MODULE;
+
+CREATE COMPUTE MODULE MF_SB_BTH_RCVARCHIVO_Renombrar1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+			
+		SET OutputRoot.MQMD.MsgId	= getMsgId();
+		SET OutputRoot.MQMD.CorrelId=OutputRoot.MQMD.MsgId; 
+		 
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'XMLNSC';		 
+		SET OutputRoot.XMLNSC.MENSAJE.IDPROCESO = getID_PROCESO_2(); 	
+		
+		SET Environment.File.Name =InputLocalEnvironment.File.Directory || '/'|| InputLocalEnvironment.File.Name;	
+					
+		PROPAGATE TO LABEL 'lblParametros';	
+
+		SET OutputRoot = InputRoot; 
+		SET OutputLocalEnvironment.Destination.File.Name = 'P' || SUBSTRING(InputLocalEnvironment.File.Name FROM 2);
+		 				 		
+		RETURN TRUE;
+	END;
+
+END MODULE;

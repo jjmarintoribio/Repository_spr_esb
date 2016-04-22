@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ecore:EPackage xmi:version="2.0"
-    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/acttar/MF_ESB_BTH_SNDARCHIVO.msgflow"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmFileInput.msgnode="ComIbmFileInput.msgnode" xmlns:ComIbmFileOutput.msgnode="ComIbmFileOutput.msgnode" xmlns:ComIbmLabel.msgnode="ComIbmLabel.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_bth_SMF_ESB_BTH_GETPARAMS.subflow="ib/visa/esb/bth/SMF_ESB_BTH_GETPARAMS.subflow" xmlns:ib_visa_esb_bth_SMF_ESB_BTH_SENDEMAIL.subflow="ib/visa/esb/bth/SMF_ESB_BTH_SENDEMAIL.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/bth/acttar/MF_ESB_BTH_SNDARCHIVO.msgflow"
     nsPrefix="ib_visa_esb_bth_acttar_MF_ESB_BTH_SNDARCHIVO.msgflow">
   <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
     <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
@@ -8,16 +9,93 @@
     <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj16/MF_ESB_BTH_SNDARCHIVO.gif"/>
     <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj30/MF_ESB_BTH_SNDARCHIVO.gif"/>
     <composition>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="184,251" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="*.pgp" processedFileAction="moveToArchive" messageDomainProperty="BLOB" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="80,166" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="*.pgp" processedFileAction="moveToArchive" messageDomainProperty="BLOB" waitInterval="30" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
         <translation xmi:type="utility:ConstantString" string="File Input"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="409,240" outputDirectory="/app/temp" outputFilename="*.pgp" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity" fileFtpDirectory="/IN">
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="299,167" outputDirectory="/app/temp" outputFilename="*.pgp" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity" fileFtpDirectory="/IN">
         <translation xmi:type="utility:ConstantString" string="File Output"/>
       </nodes>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.EOD"/>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="85,260" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="??????????.dat" processedFileAction="moveToArchiveWithTimestamp" replaceDuplicateArchives="true" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="Emisores"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="488,298" outputDirectory="/storage_ib/acttar_out" outputFilename="*.dat" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="172.16.92.20:22" fileFtpUser="falabellaIdentity" fileFtpDirectory="falabella/out">
+        <translation xmi:type="utility:ConstantString" string="SFTPVisanet"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="84,440" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="?????????????????.dat" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="InBCP"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="457,441" outputDirectory="/storage_ib/acttar_out" outputFilename="*.dat" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInBcp" fileFtpUser="bcpIdentity" fileFtpDirectory="/sftp/FTVSNT02/RECURRENTES/IN">
+        <translation xmi:type="utility:ConstantString" string="BCP"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="306,293" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_SNDARCHIVO_Compute.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="CopiarArchivos"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="86,326" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="???????????.dat" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
+        <translation xmi:type="utility:ConstantString" string="EmisorScotia"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="252,531" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR1_SNDARCHIVO.log" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="Trace"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="373,437" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR1_SNDARCHIVO_BCP.log" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Environment = $ {LocalEnvironment}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="Trace1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="222,293" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR1_SNDARCHIVO_2.log" pattern="********/Info2 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Environment = $ {LocalEnvironment}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;InputRoot = $ {Root}&#xD;&#xA;InputBody = $ {Body}">
+        <translation xmi:type="utility:ConstantString" string="Trace2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="411,294" destination="file" filePath="/app/visa/esb/batch/logs/ACTTAR1_SNDARCHIVO_3.log" pattern="********/Error 1 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Environment = $ {LocalEnvironment}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;InputRoot = $ {Root}&#xD;&#xA;InputBody = $ {Body}">
+        <translation xmi:type="utility:ConstantString" string="Trace3"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="327,41" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_SB_BTH_RCVARCHIVO_GrabarParametros.Main">
+        <translation xmi:type="utility:ConstantString" string="GrabarParametros"/>
+      </nodes>
+      <nodes xmi:type="ComIbmLabel.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="88,41" labelName="lblParametros">
+        <translation xmi:type="utility:ConstantString" string="lblParametros"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_GETPARAMS.subflow:FCMComposite_1" xmi:id="FCMComposite_1_16" location="190,41">
+        <translation xmi:type="utility:ConstantString" string="ObtenerParametros"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_SENDEMAIL.subflow:FCMComposite_1" xmi:id="FCMComposite_1_17" location="318,531">
+        <translation xmi:type="utility:ConstantString" string="EnviarCorreo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="186,162" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_SNDARCHIVO_MoverArchivo.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MoverArchivo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="254,436" computeExpression="esql://routine/ib.visa.esb.bth.acttar#MF_ESB_BTH_SNDARCHIVO_MoverArchivo.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MoverArchivoIB1"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_23" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_24" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_17" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_25" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_27" targetNode="FCMComposite_1_20" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_29" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_31" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_20" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
     </composition>
     <propertyOrganizer/>
-    <stickyBoard/>
+    <stickyBoard>
+      <stickyNote location="579,174">
+        <body xmi:type="utility:ConstantString" string="Flujo de Envio 1: ALIGNET"/>
+      </stickyNote>
+      <stickyNote location="630,285">
+        <body xmi:type="utility:ConstantString" string="Flujo de envio de SFTPVisanet:&#xA;-IP Desarrollo 172.16.92.20:22"/>
+      </stickyNote>
+      <stickyNote location="636,416">
+        <body xmi:type="utility:ConstantString" string="BCP:&#xA;- Desarrollo:  172.25.2.222:7022&#xA;- IB: /storage_ib/tarjetas_emisores_envio/ (desarrollo, prod)&#xA;"/>
+      </stickyNote>
+    </stickyBoard>
   </eClassifiers>
 </ecore:EPackage>
