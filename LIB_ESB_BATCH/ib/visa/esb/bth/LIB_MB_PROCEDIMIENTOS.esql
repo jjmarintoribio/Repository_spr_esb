@@ -188,6 +188,14 @@ BEGIN
 	IF (FIELDNAME(refOutParam.Batch.nombreArchivo) IS NOT NULL) THEN
 		SET chrBody = chrBody || '<TR><TD>Archivo cargado:</TD><TD><B>'|| refOutParam.Batch.nombreArchivo ||'<B></TD></TR>';
 	END IF;
+	
+	/*Inicio Synopsis: RMQ Agrega para CE*/
+	IF (refOutParam.Batch.Metadata.tipoCanal = 'CE') THEN --Comercio Electronico
+		SET chrBody = chrBody || '<TR><TD><b>SFTP:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.ipCreacion ||'<B></TD></TR>';
+		SET chrBody = chrBody || '<TR><TD><b>Archivo comercio:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.rutaArchivo ||'<B></TD></TR>';
+		SET chrBody = chrBody || '<TR><TD><b>Archivo log:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.rutaOutLog || refOutParam.Batch.Metadata.fileOutLog ||'<B></TD></TR>';
+	END IF;
+	/*Fin Synopsis: RMQ Agrega para CE*/
 		
 	SET chrBody = chrBody || '<TR><TD>BUS:</TD><TD>'|| BrokerName ||'</TD></TR>';
 	
@@ -356,4 +364,58 @@ BEGIN
 	SET refOut.XMLNSC.Email.Header.To	 	= refOutParam.EMAIL_TARJETAHABIENTE;
 	SET refOut.XMLNSC.Email.Header.Subject	= 'Visanet - Cobro Autorizado';
 	SET refOut.XMLNSC.Email.Body 			= chrBody;
+END;
+
+
+/*
+ * Synopsis: RMQ - Nuevo para CE
+ * Prepara el mensaje para el correo de finalizacion de carga de archivos de cargos del tipo de canal "CE" (Comercios Electronicos)
+*/
+CREATE PROCEDURE prepararMensajeCorreoNotificacionCargosCE(IN refOut REFERENCE,IN refOutParam REFERENCE,IN intRegistrosFail INTEGER, IN intRegistrosTotal INTEGER, IN estadoProcesoImp INTEGER)
+BEGIN
+	
+	DECLARE chrTo, chrCc, chrBody, chrIdTran CHARACTER '';
+	DECLARE chrDestinos CHARACTER  refOutParam.Batch.Metadata.correoAdmComercio;
+	DECLARE intPosicion INTEGER POSITION(',' IN chrDestinos);
+	
+	SET chrIdTran = CAST(COALESCE(refOutParam.Batch.idTransaccion,'') AS CHARACTER);
+	IF intPosicion > 0 THEN
+		SET chrTo = SUBSTRING(chrDestinos FROM 1 FOR intPosicion-1);
+		SET chrCc = SUBSTRING(chrDestinos FROM intPosicion+1 FOR LENGTH(chrDestinos)-intPosicion);
+	ELSE
+		SET chrTo = chrDestinos;
+		SET chrCc = '';
+	END IF;
+	SET refOut.Properties.MessageFormat 	= 'XML';
+	SET refOut.MQMD.Format 	= 'XML';			
+	CREATE LASTCHILD OF refOut DOMAIN 'XMLNSC';
+
+	SET refOut.XMLNSC.Email.Header.From 	= refOutParam.ESB.REMITENTE;	
+	SET refOut.XMLNSC.Email.Header.To		= chrTo;
+	SET refOut.XMLNSC.Email.Header.Cc		= chrCc;
+	
+	IF (chrIdTran<>'') THEN	
+		SET chrBody = chrBody || '<TR><TD>Id Transaccion:</TD><TD>'|| chrIdTran||'</TD></TR>';
+	END IF;
+	SET chrBody = chrBody || '<TR><TD>Fecha Proceso:</TD><TD>'|| refOutParam.Batch.fechaInicioProceso ||'</TD></TR>';
+	SET chrBody = chrBody || '<TR><TD>Hora Inicio:</TD><TD>'|| refOutParam.Batch.horaInicioProceso ||'</TD></TR>';
+	IF (FIELDNAME(refOutParam.Batch.horaFinProceso) IS NOT NULL) THEN
+		SET chrBody = chrBody || '<TR><TD>Hora Fin:</TD><TD>'|| refOutParam.Batch.horaFinProceso ||'</TD></TR>';
+	END IF;	
+
+	IF (refOutParam.Batch.Metadata.tipoCanal = 'CE') THEN --Comercio Electronico
+		SET chrBody = chrBody || '<TR><TD>SFTP:</TD><TD><B>'|| refOutParam.Batch.Metadata.ipCreacion ||'<B></TD></TR>';
+		SET chrBody = chrBody || '<TR><TD>Archivo comercio:</TD><TD><B>'|| refOutParam.Batch.Metadata.rutaArchivo ||'<B></TD></TR>';
+		SET chrBody = chrBody || '<TR><TD>Archivo log:</TD><TD><B>'|| refOutParam.Batch.Metadata.rutaOutLog || refOutParam.Batch.Metadata.fileOutLog ||'<B></TD></TR>';
+		--SET chrBody = chrBody || '<TR><TD>Cantidad registros:</TD><TD><B>'|| CAST(intRegistrosTotal AS CHARACTER) ||'<B></TD></TR>';
+		--SET chrBody = chrBody || '<TR><TD>Registros fallidos:</TD><TD><B>'|| CAST(intRegistrosFail AS CHARACTER) ||'<B></TD></TR>';
+		--SET chrBody = chrBody || '<TR><TD>Estado proceso:</TD><TD><B>'|| getESTADO_IMPORTACION(estadoProcesoImp) ||'<B></TD></TR>';
+		
+	END IF;
+		
+	SET refOut.XMLNSC.Email.Header.Subject	= 'Visanet - Archivo de Cargo ' || ' (Proceso:' || chrIdTran || ')';	
+	
+	SET chrBody =  '<HTML><BODY><TABLE BORDER = 2 CELLSPACING = 2 >' || chrBody || '</TABLE></BODY></HTML>';
+	SET refOut.XMLNSC.Email.Body = chrBody;
+	
 END;

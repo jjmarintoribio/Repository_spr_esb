@@ -564,3 +564,22 @@ CREATE FUNCTION getID_PARAMETRO_PERIODO_OPERACION() RETURNS INTEGER
 BEGIN
 	RETURN C_ID_PARAMETRO_PERIODO_OPERACION;
 END;
+
+/*Synopsis: RMQ Nuevo para CE*/
+CREATE FUNCTION getESTADO_IMPORTACION(IN intEstadoImportacion INTEGER) RETURNS CHARACTER
+BEGIN 
+ 
+	DECLARE chrEstadoImportacion CHARACTER '';
+	
+	IF (intEstadoImportacion = 0) THEN
+		SET chrEstadoImportacion = 'PENDIENTE';
+	ELSEIF (intEstadoImportacion = 1) THEN
+		SET chrEstadoImportacion = 'EN PROCESO'; 
+	ELSEIF (intEstadoImportacion = 2) THEN
+		SET chrEstadoImportacion = 'PROCESADO';
+	ELSEIF (intEstadoImportacion = 3) THEN
+		SET chrEstadoImportacion = 'FALLIDO';
+	END IF;
+	
+	RETURN chrEstadoImportacion;
+END;
