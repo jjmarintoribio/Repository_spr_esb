@@ -30,7 +30,7 @@ CREATE COMPUTE MODULE MF_ESB_BATCH_LANZADOR_ObtenerParametros
 		SET refParam.Batch.fechaInicioProceso	= obtenerFechaActual(4);
 		SET refParam.Batch.fechaProcesoOtros	= obtenerFechaActual(1);--'20171018';--obtenerFechaActual(1);--'20160728';
 		--SET refParam.Batch.fechaProceso			= obtenerTimestampSinHora(CURRENT_DATE);		
-		SET refParam.Batch.fechaProceso			= CAST('2024-04-27 00:00:00.000000' AS TIMESTAMP FORMAT getFORMATO_FECHAHORA1_BD());   --obtenerTimestampSinHora(CURRENT_DATE);
+		SET refParam.Batch.fechaProceso			= CAST('2024-05-06 00:00:00.000000' AS TIMESTAMP FORMAT getFORMATO_FECHAHORA1_BD());   --obtenerTimestampSinHora(CURRENT_DATE);
 		SET refParam.Batch.cola = obtenerColaInicioProceso(InputBody.MENSAJE.SERVICIO.IDENTIFICADOR);
 		IF Environment.MRM.MENSAJE.FILLER IS NOT NULL THEN			 		
 			SET refParam.Batch.Mgr.idTransaccion = CAST(SUBSTRING(Environment.MRM.MENSAJE.FILLER BEFORE '|') AS INTEGER);	
