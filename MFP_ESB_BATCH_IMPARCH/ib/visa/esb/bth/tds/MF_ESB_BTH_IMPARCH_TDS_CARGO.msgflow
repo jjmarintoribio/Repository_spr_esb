@@ -15,7 +15,7 @@
     <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj16/MF_ESB_BTH_IMPARCH_TDS_CARGO.gif"/>
     <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj30/MF_ESB_BTH_IMPARCH_TDS_CARGO.gif"/>
     <composition>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="188,444" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-error-tds.log" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="188,444" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-error-tds.log" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;Env: ${Environment}&#xD;&#xA;">
         <translation xmi:type="utility:ConstantString" string="T_Error"/>
       </nodes>
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="205,114" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_TDS_CARGO_ValidarArchivo.Main" computeMode="destinationAndMessage">

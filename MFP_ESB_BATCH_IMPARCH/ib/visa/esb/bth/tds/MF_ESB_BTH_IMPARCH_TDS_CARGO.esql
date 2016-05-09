@@ -40,6 +40,15 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_CARGO_ValidarArchivo
 			--TODO :::fin	        
 	            
 		ELSE
+			/* Inicio Synopsis RMQ Nuevo para CE*/
+			IF InputLocalEnvironment.File.Record = 2 OR InputLocalEnvironment.File.Record = 3 THEN -- Validar formato cabecera con 6 columnas
+				CALL split(CAST(InputRoot.BLOB.BLOB AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId), Environment,',');			
+				IF (CARDINALITY(Environment.Split.Array[])<>6) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES('<F>ARCHIVO CON FORMATO INCORRECTO</F>');
+				END IF;
+			
+			END IF;
+			/* Fin Synopsis RMQ Nuevo para CE*/
 			
 			IF InputLocalEnvironment.File.Record > 2 THEN -- Obviar la cabecera del archivo CSV
 				
@@ -348,8 +357,12 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_CARGO_ControlarFinArchivo
 		END IF;
 		
 		--((5))	 Se cierra el archivo de errores
-
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+		
+		/*Inicio Synopsis RMQ Modificado para CE*/
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+		/*Fin Synopsis RMQ Modificado para CE*/
+		
 		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log';
 											
 		PROPAGATE TO TERMINAL 4 ; 
@@ -416,7 +429,12 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_CARGO_ControlarErrorRecepcion
 		DECLARE inEncoding INT InputProperties.Encoding;
 		                        
 		SET OutputRoot.BLOB.BLOB = ASBITSTREAM(Environment.XMLNSC, inEncoding, inCCSID); 
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+		
+		/*Inicio Synopsis RMQ Nuevo para CE*/
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+		/*Fin Synopsis RMQ Nuevo para CE*/
+		
 		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log';
 		
 		PROPAGATE TO TERMINAL 1 ;
