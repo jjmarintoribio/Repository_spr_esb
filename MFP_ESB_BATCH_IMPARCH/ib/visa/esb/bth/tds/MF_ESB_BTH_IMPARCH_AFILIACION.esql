@@ -99,9 +99,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 
 				--TODO :::inicio									                        
 				--Validaciones adicionales
---				IF (esMayorIgualAnioActual(CAST( Environment.DFDL.[1].MENSAJE.NRO_ANHO_EXPIRACION_TARJETA AS INTEGER)) IS NOT TRUE ) THEN
---					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES(getMSJ_ERROR_2006());
---				END IF;	
+				IF (esMayorIgualAnioActual(CAST( Environment.DFDL.[1].MENSAJE.NRO_ANHO_EXPIRACION_TARJETA AS INTEGER)) IS NOT TRUE ) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+				END IF;	
 				--0709
 				--IF (CAST(Environment.DFDL.[1].NRO_TARJETA AS FLOAT DEFAULT 0.0) = 0.0) THEN
 				/*IF (isNumericValid(REPLACE(Environment.DFDL.[1].NRO_TARJETA,'''',''), TRUE) IS FALSE) THEN
@@ -170,6 +170,21 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 				IF (monto > montoMax) THEN
 					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO DEL CARGO NO DEBE SER MAYOR AL MAXIMO</F>');	
 				END IF;
+				
+				--26042016
+				IF(Environment.DFDL.[1].MENSAJE.TIPO_CARGO = 'V' ) THEN -- Tipo de cargo Variable
+					--Validar que el monto no sea mayor a cero
+					IF (monto > 0) THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO DEL CARGO NO DEBE SER MAYOR A CERO CUANDO ES VARIABLE</F>');	
+					END IF;
+				END IF;
+				IF(Environment.DFDL.[1].MENSAJE.TIPO_CARGO = 'F' ) THEN -- Tipo de cargo Fijo
+					--Validar que el monto no sea mayor a cero
+					IF (monto <= 0) THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES('<F>EL MONTO DEL CARGO DEBE SER MAYOR A CERO CUANDO ES FIJO</F>');	
+					END IF;
+				END IF;
+				--fin 26042016
 												
 				--PASA EL CASTEO O VALIDACION
 				/*SET Environment.Validacion.flgError = FALSE;	
