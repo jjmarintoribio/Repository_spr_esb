@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0" xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/" xmlns:tns="http://visanet.com.pe/esbXML/v1.0">
+    <xs:import namespace="http://visanet.com.pe/bus/generic/header/v1.0/" schemaLocation="../../bus/generic/header/v10/IBBUSInputServiceHeader_v1.0.mxsd"/>
+    <xs:element name="esbXML" type="tns:esbXML">
+    <xs:annotation>
+      <xs:appinfo source="WMQI_APPINFO">
+        <MRMessage messageDefinition="/0/esbXML;XSDElementDeclaration$MRObject"/>
+      </xs:appinfo>
+    </xs:annotation>
+  </xs:element>
+	<xs:complexType name="esbXML">
+		<xs:sequence>
+			<xs:element name="Header" type="tns:HeaderRequest"/>
+			<xs:element name="Body" type="tns:Body"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Body"> 
+		<xs:sequence>
+            <xs:element name="ComercioSolicitudAfiliacion" type="tns:ComercioSolicitudAfiliacion"/>
+        </xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderRequest">
+		<xs:sequence>
+			<xs:element ref="Q1:HeaderRequest"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="ComercioSolicitudAfiliacion">
+		<xs:sequence>
+			<xs:element maxOccurs="1" minOccurs="1" name="codComercio">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="40"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="codProducto">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="40"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="numTarjeta">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="19"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="mesExpTarjeta">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+						<xs:maxInclusive value="12"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="anoExpTarjeta">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="nomTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="apePatTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="0" name="tipDocTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="0"/>
+						<xs:maxLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="0" name="idDocTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="0"/>
+						<xs:maxLength value="12"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="0" name="telTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="0"/>
+						<xs:maxLength value="15"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="correoTarHabiente">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="75"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="idBeneficiario">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="24"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="nomBeneficiario">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="apePatBeneficiario">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="monMaximo">
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:minInclusive value="0"/>
+						<xs:maxInclusive value="1000000000000"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element maxOccurs="1" minOccurs="1" name="canal">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+    <xs:element name="Body" type="tns:Body">
+  </xs:element>
+    <xs:element name="HeaderRequest" type="tns:HeaderRequest">
+  </xs:element>
+    <xs:element name="ComercioSolicitudAfiliacion" type="tns:ComercioSolicitudAfiliacion">
+  </xs:element>
+</xs:schema>

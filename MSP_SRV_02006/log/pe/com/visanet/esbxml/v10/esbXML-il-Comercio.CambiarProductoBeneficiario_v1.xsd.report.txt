@@ -1,0 +1,14 @@
+
+
+Importing file: C:\Fuente\interfaces\bus\service\interface\comercio\cambiarProducto\esbXML-il-Comercio.CambiarProductoBeneficiario_v1.xsd
+
+BIP0224W The message set has no XML Wire Format layer defined. Only the logical information will appear in the model.
+Changing schema location for import statement "../../bus/generic/header/v10/IBBUSInputServiceHeader_v1.0.mxsd".
+
+Elapsed time processing this message definition file: 0.32 seconds
+Number of warnings for this message definition file: 1
+
+
+Number of files processed: 1
+
+

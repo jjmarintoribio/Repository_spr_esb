@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://visanet.com.pe/bus/generic/header/v1.0/" 
+xmlns:tns="http://visanet.com.pe/bus/generic/header/v1.0/" 
+xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified">
+
+    <element name="HeaderRequest" type="tns:HeaderRequestType"></element>
+	 
+    <complexType name="HeaderRequestType" >
+    	<sequence>
+    		<element name="serviceId" minOccurs="1" maxOccurs="1">
+    			<annotation>
+    				<documentation>Valor que identifica el servicio invocado 
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="15" />
+					</restriction>
+				</simpleType>
+    		</element> 
+			<element name="consumerId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Valor que identifica la aplicación cliente que está invocando el servicio
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="15" />
+					</restriction>
+				</simpleType>
+    		</element>
+			<element name="moduleId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Identificador del módulo de la aplicación cliente desde donde se generó la transacción
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="15" />
+					</restriction>
+				</simpleType>
+    		</element>			
+			<element name="channelCode" minOccurs="1" maxOccurs="1">
+    			<annotation>
+    				<documentation>Código del canal desde donde se envió la transacción
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="10" />
+					</restriction>
+				</simpleType>
+    		</element>  			
+			<element name="messageId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Identificador único de la transacción del canal desde donde se invoca el servicio.
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="40" />
+					</restriction>
+				</simpleType>
+    		</element>
+    		<element name="timestamp" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>fecha en la que se origina la transacción en el consumidor
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="dateTime">
+					</restriction>
+				</simpleType>
+    		</element> 		
+			<element name="countryCode" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Código del pais
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="2" />
+					</restriction>
+				</simpleType>
+    		</element>   
+			<element name="groupMember" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Identificador de miembro del grupo
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="5" />
+					</restriction>
+				</simpleType>
+    		</element>  
+    		<element name="referenceNumber" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Número de referencia de la transacción
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="20" />
+					</restriction>
+				</simpleType>
+    		</element>
+    		<element name="userId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Identificador del usuario que realizo la transacción
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="10" />
+					</restriction>
+				</simpleType>
+    		</element>
+			<element name="deviceId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>Identificador del dispositivo de donde se realizo la transacción. Ejemplo: Para ventanilla la IP de la OC, para ATM el còdigo del cajero, etc
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="20" />
+					</restriction>
+				</simpleType>
+    		</element> 
+ 			<element name="serverId" minOccurs="1" maxOccurs="1">
+				<annotation>
+    				<documentation>IP o Hostname del servidor de donde se realizó la transacción.
+    				</documentation>
+    			</annotation>
+				<simpleType>
+					<restriction base="string">
+						<maxLength value="25" />
+					</restriction>
+				</simpleType>
+    		</element>
+    	</sequence>
+    </complexType>
+</schema>

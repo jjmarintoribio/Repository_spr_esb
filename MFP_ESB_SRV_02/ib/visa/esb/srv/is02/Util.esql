@@ -1,0 +1,507 @@
+BROKER SCHEMA ib.visa.esb.srv.is02
+PATH ib.visa.esb.core, ib.visa.esb.srv;
+/*
+ * Prepara el mensaje request del servicio SolicitudAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildSolicitudAfiliacion(IN refInput REFERENCE,IN refOutput REFERENCE) 
+BEGIN
+		DECLARE chrSrv CHARACTER getNS_VISA();
+		DECLARE chrSoap CHARACTER getNS_SOAP();
+		DECLARE nsSrv NAMESPACE chrSrv; 
+		DECLARE nsSoap NAMESPACE chrSoap;
+		
+		DECLARE chrHeaderBus CHARACTER getNS_HEADERBUS();
+		DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+		DECLARE nsHeaderBus NAMESPACE chrHeaderBus;
+		DECLARE nsEsbXml NAMESPACE chrEsbXml;
+		
+		DECLARE namMetodo NAME 'SolicitarAfiliacionRequest'; 
+		DECLARE refCabIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Header.nsHeaderBus:HeaderRequest;
+		DECLARE refBodyIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioSolicitudAfiliacion;
+		
+		--Se arma la cabecera request
+		CALL buildHeaderFromRest(refOutput,chrSoap, chrSrv, namMetodo, refCabIn);
+		--Se arma el cuerpo request
+		CALL buildBodySolicitudAfiliacion(refBodyIn, refOutput.XMLNSC, chrSoap, chrSrv);
+END;
+
+/*
+ * Prepara el mensaje request del servicio RegistrarAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildRegistrarAfiliacion(IN refInput REFERENCE,IN refOutput REFERENCE) 
+BEGIN
+		DECLARE chrSrv CHARACTER getNS_VISA();
+		DECLARE chrSoap CHARACTER getNS_SOAP();
+		DECLARE nsSrv NAMESPACE chrSrv; 
+		DECLARE nsSoap NAMESPACE chrSoap;
+		
+		DECLARE chrHeaderBus CHARACTER getNS_HEADERBUS();
+		DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+		DECLARE nsHeaderBus NAMESPACE chrHeaderBus;
+		DECLARE nsEsbXml NAMESPACE chrEsbXml;
+		
+		DECLARE namMetodo NAME 'RegistrarAfiliacionRequest'; 
+		DECLARE refCabIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Header.nsHeaderBus:HeaderRequest;
+		DECLARE refBodyIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioRegistrarAfiliacion;
+		
+		--Se arma la cabecera request
+		CALL buildHeaderFromRest(refOutput,chrSoap, chrSrv, namMetodo, refCabIn);
+		--Se arma el cuerpo request
+		CALL buildBodyRegistrarAfiliacion(refBodyIn, refOutput.XMLNSC, chrSoap, chrSrv);
+END;
+
+/*
+ * Prepara el mensaje request del servicio RegistrarDesafiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildRegistrarDesafiliacion(IN refInput REFERENCE,IN refOutput REFERENCE) 
+BEGIN
+		DECLARE chrSrv CHARACTER getNS_VISA();
+		DECLARE chrSoap CHARACTER getNS_SOAP();
+		DECLARE nsSrv NAMESPACE chrSrv; 
+		DECLARE nsSoap NAMESPACE chrSoap;
+		
+		DECLARE chrHeaderBus CHARACTER getNS_HEADERBUS();
+		DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+		DECLARE nsHeaderBus NAMESPACE chrHeaderBus;
+		DECLARE nsEsbXml NAMESPACE chrEsbXml;
+		
+		DECLARE namMetodo NAME 'RegistrarDesafiliacionRequest'; 
+		DECLARE refCabIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Header.nsHeaderBus:HeaderRequest;
+		DECLARE refBodyIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioRegistrarDesafiliacion;
+		
+		--Se arma la cabecera request
+		CALL buildHeaderFromRest(refOutput,chrSoap, chrSrv, namMetodo, refCabIn);
+		--Se arma el cuerpo request
+		CALL buildBodyRegistrarDesafiliacion(refBodyIn, refOutput.XMLNSC, chrSoap, chrSrv);
+END;
+
+/*
+ * Prepara el mensaje request del servicio CambiarProducto del SPR Web
+*/ 
+CREATE PROCEDURE buildCambiarProducto(IN refInput REFERENCE,IN refOutput REFERENCE) 
+BEGIN
+		DECLARE chrSrv CHARACTER getNS_VISA();
+		DECLARE chrSoap CHARACTER getNS_SOAP();
+		DECLARE nsSrv NAMESPACE chrSrv; 
+		DECLARE nsSoap NAMESPACE chrSoap;
+		
+		DECLARE chrHeaderBus CHARACTER getNS_HEADERBUS();
+		DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+		DECLARE nsHeaderBus NAMESPACE chrHeaderBus;
+		DECLARE nsEsbXml NAMESPACE chrEsbXml;
+		
+		DECLARE namMetodo NAME 'CambiarProductoRequest'; 
+		DECLARE refCabIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Header.nsHeaderBus:HeaderRequest;
+		DECLARE refBodyIn REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioCambiarProductoBeneficiario;
+		
+		--Se arma la cabecera request
+		CALL buildHeaderFromRest(refOutput,chrSoap, chrSrv, namMetodo, refCabIn);
+		--Se arma el cuerpo request
+		CALL buildBodyCambiarProducto(refBodyIn, refOutput.XMLNSC, chrSoap, chrSrv);
+END;
+
+/*
+ * Prepara el cuerpo del mensaje Envelope request del servicio SolicitudAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildBodySolicitudAfiliacion(IN refInput REFERENCE,IN refOutput REFERENCE, IN chrNsSoap CHARACTER, IN chrNsSrv CHARACTER) 
+BEGIN
+	
+	DECLARE nsSoap NAMESPACE chrNsSoap;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	
+	CREATE FIELD refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:SolicitarAfiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+	DECLARE refOut REFERENCE TO refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:SolicitarAfiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Comercio.nsSrv:Codigo						 			 	=	refInput.codComercio;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Producto.nsSrv:Codigo										=	refInput.codProducto;
+
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:Numero										=	refInput.numTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:MesExpiracion								=	refInput.mesExpTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:AnhoExpiracion								=	refInput.anoExpTarjeta;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:Nombres									=	refInput.nomBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:ApellidoPaterno							=	refInput.apePatBeneficiario;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:MontoMaximo												=	refInput.monMaximo;		
+		
+		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:TipoCobro										=	refInput.tipoCargoCobro;
+		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:Monto											=	refInput.monCargo;
+		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:FechaPago										=	refInput.fecCargoPago;
+		
+		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Periodicidad												=	refInput.periodicidad;
+		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:ReintentoAutomatico										=	refInput.reintentoAuto;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Canal			 											=	refInput.canal;
+
+		SET refOut.nsSrv:FechaSolicitudAfiliacion = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+
+END;
+
+/*
+ * Prepara el cuerpo del mensaje Envelope request del servicio RegistrarAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildBodyRegistrarAfiliacion(IN refInput REFERENCE,IN refOutput REFERENCE, IN chrNsSoap CHARACTER, IN chrNsSrv CHARACTER) 
+BEGIN
+
+	DECLARE nsSoap NAMESPACE chrNsSoap;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	
+	CREATE FIELD refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:RegistrarAfiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+	DECLARE refOut REFERENCE TO refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:RegistrarAfiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Comercio.nsSrv:Codigo						 			 	=	refInput.codComercio;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Producto.nsSrv:Codigo										=	refInput.codProducto;
+
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:Numero										=	refInput.numTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:MesExpiracion								=	refInput.mesExpTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:AnhoExpiracion								=	refInput.anoExpTarjeta;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:Nombres									=	refInput.nomBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:ApellidoPaterno							=	refInput.apePatBeneficiario;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:MontoMaximo												=	refInput.monMaximo;		
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:TipoCobro										=	refInput.tipoCargoCobro;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:Monto											=	refInput.monCargo;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:FechaPago										=	refInput.fecCargoPago;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Periodicidad												=	refInput.periodicidad;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:ReintentoAutomatico										=	refInput.reintentoAuto;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Canal			 											=	refInput.canal;
+
+		SET refOut.nsSrv:FechaSolicitudAfiliacion = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+
+END;
+
+/*
+ * Prepara el cuerpo del mensaje Envelope request del servicio RegistrarDesafiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildBodyRegistrarDesafiliacion(IN refInput REFERENCE,IN refOutput REFERENCE, IN chrNsSoap CHARACTER, IN chrNsSrv CHARACTER) 
+BEGIN
+
+	DECLARE nsSoap NAMESPACE chrNsSoap;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	
+	CREATE FIELD refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:RegistrarDesafiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+	DECLARE refOut REFERENCE TO refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:RegistrarDesafiliacionRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+
+	SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Comercio.nsSrv:Codigo						 		=	refInput.codComercio;		
+	SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Producto.nsSrv:Codigo								=	refInput.codProducto;
+	SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion			=	refInput.idBeneficiario;
+	SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Canal			 									=	refInput.canal;
+
+	SET refOut.nsSrv:FechaSolicitudAfiliacion = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+
+END;
+
+/*
+ * Prepara el cuerpo del mensaje Envelope request del servicio RegistrarAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE buildBodyCambiarProducto(IN refInput REFERENCE,IN refOutput REFERENCE, IN chrNsSoap CHARACTER, IN chrNsSrv CHARACTER) 
+BEGIN
+
+	DECLARE nsSoap NAMESPACE chrNsSoap;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	
+	CREATE FIELD refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:CambiarProductoRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+	DECLARE refOut REFERENCE TO refOutput.nsSoap:Envelope.nsSoap:Body.nsSrv:CambiarProductoRequest.nsSrv:Detalle.nsSrv:Afiliacion;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Comercio.nsSrv:Codigo						 			 	=	refInput.codComercio;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Producto.nsSrv:Codigo										=	refInput.codProductoActual;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:ProductoNuevo.nsSrv:Codigo									=	refInput.codProductoNuevo;
+
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:Numero										=	refInput.numTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:MesExpiracion								=	refInput.mesExpTarjeta;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjeta.nsSrv:AnhoExpiracion								=	refInput.anoExpTarjeta;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:Nombres									=	refInput.nomBeneficiario;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:ApellidoPaterno							=	refInput.apePatBeneficiario;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:MontoMaximo												=	refInput.monMaximo;		
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:TipoCobro										=	refInput.tipoCargoCobro;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:Monto											=	refInput.monCargo;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:FechaPago										=	refInput.fecCargoPago;
+		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Periodicidad												=	refInput.periodicidad;
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:ReintentoAutomatico										=	refInput.reintentoAuto;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Canal			 											=	refInput.canal;
+
+		SET refOut.nsSrv:FechaSolicitudAfiliacion = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+
+END;
+
+/*
+ * Valida los campos del request del servicio SolicitudAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE validarCamposSolicitudAfiliacion(IN refInput REFERENCE,IN refMqRFH2 REFERENCE) 
+BEGIN
+
+	DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+	DECLARE nsEsbXml NAMESPACE chrEsbXml;
+	
+	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioSolicitudAfiliacion;
+	
+	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+	END IF;
+	
+	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
+	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
+	
+	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
+	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
+	
+	IF (LENGTH(tipoDoc)>0) THEN
+		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
+		END IF;
+		
+		IF numDoc = '' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		END IF;	
+		IF tipoDoc = '1' THEN --DNI
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+			END IF;
+		END IF;
+		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+			IF LENGTH(numDoc) > 12  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+		END IF;
+	END IF;
+	
+	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
+	CREATE FIELD refInput.Split;
+	CALL split(parametroCanal, refInput, '-');
+	DECLARE canalReq CHARACTER refInput.XMLNSC.*[>].Body.*[>].canal;
+	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
+	
+	IF isValidCanal IS FALSE THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+	END IF;
+END;
+
+/*
+ * Valida los campos del request del servicio RegistrarAfiliacion del SPR Web
+*/ 
+CREATE PROCEDURE validarCamposRegistrarAfiliacion(IN refInput REFERENCE,IN refMqRFH2 REFERENCE) 
+BEGIN
+
+	DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+	DECLARE nsEsbXml NAMESPACE chrEsbXml;
+	
+	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioRegistrarAfiliacion;
+	
+	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+	END IF;
+	
+	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
+	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
+	
+	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	IF (isDecimalValid(refBody.monCargo, FALSE) IS FALSE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
+	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
+	
+	IF (LENGTH(tipoDoc)>0) THEN
+		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
+		END IF;
+		
+		IF numDoc = '' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		END IF;	
+		IF tipoDoc = '1' THEN --DNI
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+			END IF;
+		END IF;
+		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+			IF LENGTH(numDoc) > 12  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+		END IF;
+	END IF;
+	
+	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
+	CREATE FIELD refInput.Split;
+	CALL split(parametroCanal, refInput, '-');
+	DECLARE canalReq CHARACTER refInput.XMLNSC.*[>].Body.*[>].canal;
+	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
+	
+	IF isValidCanal IS FALSE THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+	END IF;
+END;
+
+/*
+ * Valida los campos del request del servicio RegistrarDesafiliacion del SPR Web
+*/ 
+CREATE PROCEDURE validarCamposRegistrarDesafiliacion(IN refInput REFERENCE,IN refMqRFH2 REFERENCE) 
+BEGIN
+	
+	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
+	CREATE FIELD refInput.Split;
+	CALL split(parametroCanal, refInput, '-');
+	DECLARE canalReq CHARACTER refInput.XMLNSC.*[>].Body.*[>].canal;
+	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
+	
+	IF isValidCanal IS FALSE THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+	END IF;
+END;
+
+/*
+ * Valida los campos del request del servicio CambiarProducto del SPR Web
+*/ 
+CREATE PROCEDURE validarCamposCambiarProducto(IN refInput REFERENCE,IN refMqRFH2 REFERENCE) 
+BEGIN
+
+	DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+	DECLARE nsEsbXml NAMESPACE chrEsbXml;
+	
+	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioCambiarProductoBeneficiario;
+	
+	IF (refBody.codProductoActual = refBody.codProductoNuevo) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+	END IF;
+	
+	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+	END IF;
+	
+	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
+	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
+	
+	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+	END IF;	
+	
+	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+	END IF;	
+	
+	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
+	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
+	
+	IF (LENGTH(tipoDoc)>0) THEN
+		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
+		END IF;
+		
+		IF numDoc = '' THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		END IF;	
+		IF tipoDoc = '1' THEN --DNI
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+			END IF;
+		END IF;
+		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+			IF LENGTH(numDoc) > 12  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			END IF;
+		END IF;
+	END IF;
+	
+	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
+	CREATE FIELD refInput.Split;
+	CALL split(parametroCanal, refInput, '-');
+	DECLARE canalReq CHARACTER refInput.XMLNSC.*[>].Body.*[>].canal;
+	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
+	
+	IF isValidCanal IS FALSE THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+	END IF;
+END;
