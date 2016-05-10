@@ -6,20 +6,64 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_CARGO_INI_CE_GetFiles
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
 
-		SET Environment.archivos = getFiles();
-		IF (LENGTH(Environment.archivos)>0 ) THEN
-			SET cacheHostSFTP = SUBSTRING(Environment.archivos BEFORE ':');
-			RETURN TRUE;
-		END IF;
-		RETURN FALSE;
+			--((1)) Se obtienen los parametros de BD
+			CALL obtenerParametrosBD(getTIPO_SERVICIO_GENERAL(),Environment.Params[]);
+	 
+	 		SET Environment.host 	= THE (SELECT ITEM P.VALOR FROM Environment.Params[] as P WHERE P.CODIGO_ATRIBUTO = 'HOSTSEGURIDAD');
+	 		SET Environment.port 	= THE (SELECT ITEM P.VALOR FROM Environment.Params[] as P WHERE P.CODIGO_ATRIBUTO = 'PORTSEGURIDAD');
+	 		SET Environment.lmkId 	= THE (SELECT ITEM P.VALOR FROM Environment.Params[] as P WHERE P.CODIGO_ATRIBUTO = 'LMKID');
+	
+			--((2)) Se obtienen las llaves encriptadas de BD
+			CALL obtenerParametrosSeguridadBD(Environment.Llaves[]);
+	
+	 		SET Environment.llaveMaestra	= THE (SELECT ITEM L.VAL_LLAVE FROM Environment.Llaves[] as L WHERE L.TIPO_LLAVE = 0);
+	 		SET Environment.llaveHexadecimal = THE (SELECT ITEM L.VAL_LLAVE FROM Environment.Llaves[] as L WHERE L.TIPO_LLAVE = 13);
+	  
+			--((3)) Se incia el proxy en java 		      
+	 		    		         
+	 		CALL iniciarProxy(Environment.host,Environment.port, Environment.lmkId );
+	 		
+	 		--((4)) Se manda a desencriptar la llave	 			 		
+			DECLARE llaveDesencriptada CHARACTER desencriptarLlave(Environment.llaveMaestra, Environment.llaveHexadecimal);
+			SET Environment.llaveDesencriptada = llaveDesencriptada;
+				
+			SET Environment.archivos = getFiles(llaveDesencriptada);
+			
+			IF (LENGTH(Environment.archivos)>0 ) THEN
+				SET cacheHostSFTP = SUBSTRING(Environment.archivos BEFORE ':');
+				RETURN TRUE;
+			END IF;
+			
+			RETURN FALSE;
+			
 	END;
 
 
-	CREATE FUNCTION getFiles()
+	/*CREATE FUNCTION getFiles()
+	RETURNS CHARACTER
+	LANGUAGE JAVA
+	EXTERNAL NAME "ib.visa.esb.bth.gen.GetFilesCargosCE.getFiles";*/
+	
+	CREATE FUNCTION getFiles(IN llaveDesencriptada CHARACTER) 
 	RETURNS CHARACTER
 	LANGUAGE JAVA
 	EXTERNAL NAME "ib.visa.esb.bth.gen.GetFilesCargosCE.getFiles";
 
+	/*
+	Inicia el proxy de seguridad
+	*/
+	CREATE FUNCTION  iniciarProxy(IN chrHost CHARACTER, IN intPort CHARACTER, IN chrLmkId CHARACTER)
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.GetFilesCargosCE.iniciarProxy";
+ 	
+ 	/* 
+	Desencripta las llaves para mantenerlo en memoria de las clases Java 
+	*/
+	CREATE FUNCTION  desencriptarLlave(IN chrLlaveMaestra CHARACTER, IN chrLlaveHexEncriptada CHARACTER)
+ 	RETURNS CHARACTER
+ 	LANGUAGE JAVA 
+ 	EXTERNAL NAME "ib.visa.esb.bth.gen.GetFilesCargosCE.desencriptarLlave";
+ 	
 END MODULE;
 
 

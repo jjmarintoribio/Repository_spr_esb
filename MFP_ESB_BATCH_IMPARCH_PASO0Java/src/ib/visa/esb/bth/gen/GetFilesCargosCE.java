@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import pe.com.visanet.spr.crypto.hsm.HsmProxy;
+
 import com.ibm.broker.config.proxy.BrokerProxy;
 import com.ibm.broker.config.proxy.ConfigurableService;
 import com.jcraft.jsch.Channel;
@@ -26,8 +28,9 @@ public class GetFilesCargosCE {
 	private static String EXT;
 	private static String STRICHOSTKEYKEYCHECKING;
 	private static String LOCALDIR;
-
-	public static String getFiles() {
+	private static HsmProxy hsm;
+	
+	public static String getFiles(String strLlaveHexDesencriptada) {
 
 		Session session = null;
 		Channel channel = null;
@@ -49,7 +52,9 @@ public class GetFilesCargosCE {
 				SFTPHOST = csSftpIn.getProperties().getProperty("host");
 				SFTPPORT = Integer.parseInt(csSftpIn.getProperties().getProperty("port"));
 			    SFTPUSER = csSftpIn.getProperties().getProperty("user");
-				SFTPPASS = csSftpIn.getProperties().getProperty("psw");  // TODO obtenerlo del encriptado en BD
+			    
+				SFTPPASS = strLlaveHexDesencriptada;  // TODO obtenerlo del encriptado en BD
+				
 				EXT = csSftpIn.getProperties().getProperty("extension");
 				STRICHOSTKEYKEYCHECKING = csSftpIn.getProperties().getProperty("strictHostKeyChecking");
 				LOCALDIR = csSftpIn.getProperties().getProperty("localDirectory");				
@@ -175,5 +180,19 @@ public class GetFilesCargosCE {
 		}
 
 	}
+	
+	public static String desencriptarLlave(String strLlaveMaestra, String strLlaveHexEncriptada){
+		
+		String strLlaveHex = null;
+				
+		strLlaveHex = hsm.desencriptar(strLlaveMaestra,strLlaveHexEncriptada);
+		
+		return strLlaveHex;
+	}
+   
+	 public static void iniciarProxy(String strHost, String intPort, String strLmkId) {
 
+	        hsm = new HsmProxy(strHost, Integer.parseInt(intPort) , strLmkId);
+
+    }
 }

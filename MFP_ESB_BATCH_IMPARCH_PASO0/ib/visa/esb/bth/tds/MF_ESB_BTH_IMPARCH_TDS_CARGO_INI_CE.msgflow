@@ -18,14 +18,14 @@
       <nodes xmi:type="ComIbmTimeoutNotification.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="216,183" uniqueIdentifier="ctrlCargoCE" transactionMode="no" timeoutInterval="20">
         <translation xmi:type="utility:ConstantString" string="ControlGetFilesCargosCE"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="431,183" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_TDS_CARGO_INI_CE_GetFiles.Main">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="431,183" dataSource="DSESB_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_TDS_CARGO_INI_CE_GetFiles.Main" computeMode="destinationAndMessage">
         <translation xmi:type="utility:ConstantString" string="GetFiles"/>
         <longDescription xmi:type="utility:ConstantString" string="Se conecta al SFTP de los comercios y recorre todos los subdirectorios buscando archivos que cumplan el filtro *.csv y los mueve al directorio local /storage_ib/dat_importaciones_ce/"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="385,277" destination="file" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR - Error 1 ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="385,277" destination="file" pattern="=============== IMPORTACION ARCHIVOS CARGO - ERROR - Error 1 ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;Environment = ${Environment}">
         <translation xmi:type="utility:ConstantString" string="T_Error1"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="534,184" destination="file" pattern="${CURRENT_TIMESTAMP} : ARCHIVOS TRANSFERIDOS: ${Environment.archivos}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="534,184" destination="file" pattern="${CURRENT_TIMESTAMP} : ARCHIVOS TRANSFERIDOS: ${Environment.archivos}&#xD;&#xA;">
         <translation xmi:type="utility:ConstantString" string="T_Debug"/>
       </nodes>
       <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="179,406" inputDirectory="/storage_ib/importaciones_comercios_sftp" filenamePattern="*.csv" messageDomainProperty="BLOB" waitInterval="20">
