@@ -1,0 +1,68 @@
+BROKER SCHEMA ib.visa.esb.srv.is02
+
+/*
+* Valida que el anio de tarjeta sea mayor a la fecha actual del sistema
+*/
+CREATE FUNCTION esMayorIgualAnioActual(IN anioTarjeta INTEGER)
+RETURNS BOOLEAN
+BEGIN
+	RETURN (CAST(anioTarjeta AS INTERVAL YEAR) >= CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTERVAL YEAR));
+END;
+
+/*
+* Valida que el mes de tarjeta sea mayor a la fecha actual en caso que el anio sea igual del sistema
+*/
+CREATE FUNCTION esMayorIgualMesActual(IN mesTarjeta INTEGER, IN anioTarjeta INTEGER)
+RETURNS BOOLEAN
+BEGIN
+	DECLARE anioActual INTERVAL;
+	DECLARE mesActual INTERVAL;
+	SET anioActual = CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTERVAL YEAR);
+	SET mesActual = CAST(EXTRACT(MONTH FROM CURRENT_DATE) AS INTERVAL MONTH);
+	
+	IF (CAST(anioTarjeta AS INTERVAL YEAR) = CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTERVAL YEAR))THEN
+		RETURN (CAST(mesTarjeta AS INTERVAL MONTH) >= CAST(EXTRACT(MONTH FROM CURRENT_DATE) AS INTERVAL MONTH));
+	END IF;
+END;
+	
+/*
+* Funcion de valida que el campo ingresado sea numerico
+*/
+CREATE FUNCTION isNumericValid(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+RETURNS BOOLEAN 
+BEGIN
+
+	IF (bolVacio IS TRUE) THEN
+		IF (LENGTH(TRIM(chrNumber))=0) THEN
+			RETURN FALSE;
+		END IF;
+	END IF;
+	
+	IF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789',''))) <> 0 THEN 
+		RETURN FALSE ;
+	ELSEIF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789',''))) = 0 THEN
+		RETURN TRUE ;
+	END IF;	
+	
+END;
+
+/*
+* Funcion de valida que el campo ingresado sea decimal
+*/
+CREATE FUNCTION isDecimalValid(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+RETURNS BOOLEAN 
+BEGIN
+
+	IF (bolVacio IS TRUE) THEN
+		IF (LENGTH(TRIM(chrNumber))=0) THEN
+			RETURN FALSE;
+		END IF;
+	END IF;
+	
+	IF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789.',''))) <> 0 THEN 
+		RETURN FALSE ;
+	ELSEIF LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789.',''))) = 0 THEN
+		RETURN TRUE ;
+	END IF;	
+	
+END;

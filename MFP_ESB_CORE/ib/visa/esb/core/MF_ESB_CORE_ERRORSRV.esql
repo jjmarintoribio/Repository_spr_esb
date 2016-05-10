@@ -102,6 +102,14 @@ CREATE COMPUTE MODULE MF_ESB_CORE_ERRORSRV_PrepararRespuestaError
 										CAST(refRespuesta.codigoRespuesta AS INTEGER),
 										refRespuesta.descripcion);
 	
+			ELSEIF chrProtocolo =  getPROTOCOLO_ENTRADA_JSON() THEN
+	
+				SET OutputRoot.Properties = InputProperties;
+	
+				SET OutputRoot.MQMD = InputRoot.MQMD;
+				SET OutputRoot.MQRFH2.usr.Parametros.Protocolo.Datos = InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos;
+	 
+				CALL prepararEnvelopeJSONRespESB(OutputRoot,InputRoot.MQRFH2.usr,Environment);	
 			END IF;
 	
 			PROPAGATE TO TERMINAL 2;

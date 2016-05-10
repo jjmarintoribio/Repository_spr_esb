@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ComIbmWSInput.msgnode="ComIbmWSInput.msgnode" xmlns:ComIbmWSReply.msgnode="ComIbmWSReply.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_core_SMF_ESB_CORE_ERRORGEN.subflow="ib/visa/esb/core/SMF_ESB_CORE_ERRORGEN.subflow"
+    xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/core/input/MF_ESB_CORE_REST_INPUT.msgflow"
+    nsPrefix="ib_visa_esb_core_input_MF_ESB_CORE_REST_INPUT.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Debug" name="T_Debug" defaultValueLiteral="/app/visa/esb/srv/logs/JSON_IN.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/srv/logs/JSON_IN-Error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_CORE_REST_INPUT" bundleName="ib/visa/esb/core/input/MF_ESB_CORE_REST_INPUT" pluginId="MFP_ESB_CORE"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj16/MF_ESB_CORE_REST_INPUT.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_CORE/icons/full/obj30/MF_ESB_CORE_REST_INPUT.gif"/>
+    <shortDescription xmi:type="utility:ConstantString" string="Entrada generica HTTP del ESB"/>
+    <longDescription xmi:type="utility:ConstantString" string="* Flujo que recibe las peticiones mediante HTTP.  Este flujo expone una interfaz generica HTTP con un Body Variable por servicios."/>
+    <version xmi:type="utility:ConstantString" string="2.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="314,67" computeExpression="esql://routine/ib.visa.esb.core.input#MF_ESB_CORE_REST_INPUT_AdaptarMensaje.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AdaptarMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="318,176" computeExpression="esql://routine/ib.visa.esb.core.input#MF_ESB_CORE_REST_INPUT_PrepararMensajeError.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararMensajeError"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="414,68" destinationMode="list" transactionMode="no" persistenceMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.RUTEO.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="230,176" destination="file" filePath="/app/visa/esb/srv/logs/JSON_IN_Error.log" pattern="********/Error1 /********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="60,71" URLSpecifier="/ib/visa/bus/rest/*" parseQueryString="true" messageDomainProperty="JSON" timeoutForClient="30" faultFormat="SOAP 1.2">
+        <translation xmi:type="utility:ConstantString" string="EntradaJSONREST"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="42,254" queueName="IB.GEN.RESPUESTAJSON.REQ.01" messageDomainProperty="JSON">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.RESPUESTAJSON.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="226,254" computeExpression="esql://routine/ib.visa.esb.core.input#MF_ESB_CORE_REST_INPUT_PrepararRespuesta.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararRespuesta"/>
+      </nodes>
+      <nodes xmi:type="ComIbmWSReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="488,255">
+        <translation xmi:type="utility:ConstantString" string="RespuestaJSONGenerica"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="481,177" destinationMode="list" transactionMode="no" persistenceMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.AUDITORIA.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="218,332" destination="file" filePath="/app/visa/esb/srv/logs/JSON_IN_Error.log" pattern="********/Error 2/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}&#xD;&#xA;Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Error2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="226,67" destination="file" pattern="********/Info 1/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;LocalEnvironment = ${LocalEnvironment}&#xD;&#xA;Root In= ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Info1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="326,255" destination="file" filePath="/app/visa/esb/srv/logs/JSON_IN.log" pattern="********/Info 2/********************&#xD;&#xA;Respuesta HTTPReply&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;Root Out= ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Info2"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_core_SMF_ESB_CORE_ERRORGEN.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="294,332">
+        <translation xmi:type="utility:ConstantString" string="SMF_ESB_CORE_ERRORGEN"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.timeout" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_21" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_28" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_Debug">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Debug" bundleName="ib/lpg/esb/core/input/MF_ESB_CORE_JSONREST_INPUT" pluginId="MFP_ESB_CORE"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_Error">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/lpg/esb/core/input/MF_ESB_CORE_JSONREST_INPUT" pluginId="MFP_ESB_CORE"/>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Debug" overriddenNodes="FCMComposite_1_11 FCMComposite_1_4">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_6 FCMComposite_1_8">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

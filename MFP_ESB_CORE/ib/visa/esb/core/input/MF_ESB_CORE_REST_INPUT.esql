@@ -1,0 +1,182 @@
+/*
+ *
+ * Nombre		: MF_ESB_CORE_REST_INPUT.esql
+ * Proposito	: Flujo de entrada generica HTTP del ESB
+ * Fecha		: 2016-04-26
+ * Autores		: Javier Quintana - Synopsis
+ * Version		: 2.0
+ * 
+ *--------------------------------------------------------------------
+ */
+  
+BROKER SCHEMA ib.visa.esb.core.input
+PATH ib.visa.esb.core;
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_AdaptarMensaje
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		SET OutputRoot.Properties = InputProperties;
+		
+		--Crear la Cabecera MQMD
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQMD';
+
+		--Generacion del msgid unico de la transaccion
+		SET OutputRoot.MQMD.MsgId 		= getMsgId();
+
+		--Crear de la cabecera MQRHF2 para el paso de parametros y cabeceras
+		CREATE NEXTSIBLING OF OutputRoot.MQMD DOMAIN 'MQRFH2';
+
+		CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		DECLARE refParams REFERENCE TO OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		 
+		SET refParams.Datos.RequestIdentifier	= COALESCE(InputLocalEnvironment.Destination.HTTP.RequestIdentifier);
+		--SET refParams.Datos."$wsra"			= InputRoot.HTTPInputHeader."$wsra";  
+		SET refParams.Datos."X-Remote-Addr"		= InputRoot.HTTPInputHeader."X-Remote-Addr";
+		SET refParams.Datos."X-Remote-Host"		= InputRoot.HTTPInputHeader."X-Remote-Host";
+		SET refParams.Datos.Encoding			= InputRoot.Properties.Encoding;
+		SET refParams.Datos.CodedCharSetId		= InputRoot.Properties.CodedCharSetId;
+		SET refParams.Datos.ReplyProtocol		= InputRoot.Properties.ReplyProtocol;	
+			
+		SET refParams.IdProtocolo 				= getID_PROTOCOLO_ENTRADA_JSON();
+		SET refParams.TipoProtocolo 			= getPROTOCOLO_ENTRADA_JSON();
+			
+		--Guardado de datos de la auditoria
+		SET OutputRoot.MQRFH2.usr.Auditoria.fechaHora 	= obtenerFechaHoraAuditoria();
+		SET OutputRoot.MQRFH2.usr.Auditoria.hora 		= obtenerHoraAuditoria();
+		SET OutputRoot.MQRFH2.usr.Auditoria.indOrigen	= COALESCE(refParams.Datos."X-Remote-Addr",refParams.Datos."$wsra");
+		SET OutputRoot.MQRFH2.usr.Auditoria.broker		= BrokerName;
+							
+		--Validacion del cuerpo
+		IF FIELDNAME(InputRoot.JSON) IS NULL THEN
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1000() VALUES(getMSJ_ERROR_1000());
+		END IF;			
+ 
+ 		DECLARE chrCodSrv CHARACTER;
+		SET chrCodSrv 	= COALESCE(InputLocalEnvironment.HTTP.Input.QueryString.codservicio, '');		
+		
+		--Control del codigo del servicio
+		IF chrCodSrv <> '' THEN
+			SET OutputRoot.MQRFH2.usr.IdentificadorServicio			= chrCodSrv;
+		END IF;
+
+		--Validacion del codigo de servicio
+		IF COALESCE(OutputRoot.MQRFH2.usr.IdentificadorServicio,'') ='' THEN
+			SET Environment.usr = OutputRoot.MQRFH2.usr;
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1001() VALUES(getMSJ_ERROR_1001());	
+		END IF;			
+				
+		--Paso de los tags del cuerpo
+		DECLARE blobMsg BLOB;
+		DECLARE chrHeaderBus CHARACTER getNS_HEADERBUS();
+		DECLARE chrEsbXml CHARACTER getNS_ESBXML();
+		DECLARE nsHeaderBus NAMESPACE chrHeaderBus;
+		DECLARE nsEsbXml NAMESPACE chrEsbXml;
+
+		CREATE FIELD OutputRoot.XMLNSC.nsEsbXml:esbXML;
+		
+		SET OutputRoot.XMLNSC.nsEsbXml:esbXML.Header.nsHeaderBus:HeaderRequest = InputRoot.JSON.Data.MessageRequest.Header.HeaderRequest;
+		SET OutputRoot.XMLNSC.nsEsbXml:esbXML.Body = InputRoot.JSON.Data.MessageRequest.Body;
+		
+     	SET OutputRoot.BLOB.BLOB = ASBITSTREAM(OutputRoot.XMLNSC CCSID InputRoot.Properties.CodedCharSetId);
+		SET OutputRoot.XMLNSC = NULL;
+				
+		--Se envia al flujo de ruteo		 
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_RUTEO();
+		
+		RETURN TRUE;
+		
+	END;
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararMensajeError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+		DECLARE chrCodigoError CHARACTER '';
+		DECLARE chrDescripcionError CHARACTER '';
+		CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
+				
+		SET OutputRoot.Properties = InputProperties;
+	
+		-- Preparacion de la respuesta JSON	
+		CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
+		DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
+ 	
+		SET refMsj.codRespuesta = chrCodigoError;
+		SET refMsj.descripcion = chrDescripcionError;
+
+		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier = COALESCE(InputLocalEnvironment.Destination.HTTP.RequestIdentifier,CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB));
+		PROPAGATE TO TERMINAL 1;
+		
+		--Preparacion de la informacion de la app consumidora y del protocolo en el MQRFH2
+		
+		SET OutputRoot.Properties = InputProperties;		
+		CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN 'MQRFH2';
+		
+		CREATE FIELD OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		DECLARE refParams REFERENCE TO OutputRoot.MQRFH2.usr.Parametros.Protocolo;
+		
+		SET refParams.Datos.RequestIdentifier	= InputLocalEnvironment.Destination.HTTP.RequestIdentifier;
+		--SET refParams.Datos."$wsra"			= InputRoot.HTTPInputHeader."$wsra";  		
+		SET refParams.Datos."X-Remote-Addr"		= InputRoot.HTTPInputHeader."X-Remote-Addr";
+		SET refParams.Datos."X-Remote-Host"		= InputRoot.HTTPInputHeader."X-Remote-Host";
+		SET refParams.Datos.Encoding			= InputRoot.Properties.Encoding;
+		SET refParams.Datos.CodedCharSetId		= InputRoot.Properties.CodedCharSetId;
+		SET refParams.Datos.ReplyProtocol		= InputRoot.Properties.ReplyProtocol;	
+		
+		SET refParams.IdProtocolo 				= getID_PROTOCOLO_ENTRADA_JSON();
+		SET refParams.TipoProtocolo 			= getPROTOCOLO_ENTRADA_JSON();
+
+		-- Generamos el mensaje para la auditoria de error
+		CALL armarAuditoriaEventoError(OutputRoot,
+								getMsgId(),
+								Environment.usr,--InputRoot.MQRFH2.usr,
+								CAST(chrCodigoError AS INTEGER),
+								chrDescripcionError,
+								InputExceptionList,
+								NULL,
+								getID_PROTOCOLO_ENTRADA_JSON());
+
+ 		--Asignacion dinamica de la cola de entrada del flujo de auditoria
+		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();
+		
+		PROPAGATE TO TERMINAL 3;
+		
+		RETURN FALSE;
+		
+	END;
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararRespuesta 
+	
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot.Properties 	= InputProperties;
+
+		--Si el error viene desde el flujo core de Ruteo
+		IF COALESCE(InputRoot.MQRFH2.usr.ControlRuteo.codigo,'')<>''  THEN
+	
+			CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
+			DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
+	 
+			SET refMsj.codRespuesta = InputRoot.MQRFH2.usr.ControlRuteo.codigo;
+			SET refMsj.descripcion = InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
+	
+		ELSE
+			SET OutputRoot.JSON = InputRoot.JSON;
+			
+		END IF;
+	
+		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier = CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB);
+		PROPAGATE TO TERMINAL 1;
+		
+		RETURN FALSE;
+	END;
+
+END MODULE;

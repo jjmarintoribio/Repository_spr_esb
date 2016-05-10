@@ -1,0 +1,25 @@
+/*
+ *
+ * Nombre		: LIB_MB_CONSTANTES.esql
+ * Proposito	: Archivo que contiene las constantes utilizadas en los flujos
+ * Fecha		: 2016-05-05
+ * Autores		: Amelia Lopez - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */
+BROKER SCHEMA ib.visa.esb.srv
+
+--Namespaces servicios de SPR WEB----------/
+
+DECLARE C_NSSPRWEB_SCHEMA CONSTANT CHARACTER 'http://www.visanet.com.pe/spr/web/ws/schema'; 
+
+--Codigo de respuestas de los servicios de CavaliServices 
+DECLARE C_BUS_RESPONSE_CODE_EXITO CONSTANT CHARACTER '000'; -- ejecucion sin problemas
+DECLARE C_COD_PARAM_INVALIDO CONSTANT CHARACTER '10001'; -- parametros invalidos 
+DECLARE C_BUS_RESPONSE_TYPE_EXITO CONSTANT CHARACTER '0';
+DECLARE C_BUS_RESPONSE_TYPE_ERROR CONSTANT CHARACTER '1';
+DECLARE C_BUS_MESSAGE_DESC_EXITO CONSTANT CHARACTER 'Exito';
+DECLARE C_SRV_MESSAGE_EXITO CONSTANT CHARACTER 'Afiliacion con exito';
+DECLARE C_CODE_ERROR_CANAL CONSTANT INTEGER '1001';
+DECLARE C_DESC_MENSAJE_ERROR_CANAL CONSTANT CHARACTER 'Canal invalido para el Comercio Electronico';
