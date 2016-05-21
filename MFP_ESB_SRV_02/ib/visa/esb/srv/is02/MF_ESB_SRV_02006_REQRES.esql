@@ -21,7 +21,7 @@ CREATE COMPUTE MODULE MF_ESB_SRV_02006_REQRES_AdecuarMensaje
 		SET OutputRoot.MQRFH2.usr.JsonIn = Environment.XMLNSC;
 		
 		--(4) Validaciones
-		--CALL validarCamposCambiarProducto(Environment,InputRoot.MQRFH2.usr);
+		CALL validarCamposCambiarProducto(Environment,InputRoot.MQRFH2.usr);
 		
 		--(5) Se construye Mensaje Request que sera enviado a la app proveedora
 		CALL buildCambiarProducto(Environment, OutputRoot);	
@@ -33,6 +33,9 @@ CREATE COMPUTE MODULE MF_ESB_SRV_02006_REQRES_AdecuarMensaje
 		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaEntradaFlujoSalida(InputRoot.MQRFH2.usr);
 
 		PROPAGATE TO TERMINAL 1;
+		
+		CALL setEnmascararTarjeta(Environment);
+		
 		--((7)) Se registra Auditoria
 		CALL armarAuditoriaEventoFormateo(OutputRoot,
 		InputRoot.MQMD.MsgId,
@@ -85,13 +88,13 @@ CREATE COMPUTE MODULE MF_ESB_SRV_02006_REQRES_PrepararRespuesta
 		DECLARE descMensaje CHARACTER COALESCE(refInput.nsSrv:Cabecera.nsSrv:Descripcion, InputRoot.MQRFH2.usr.ResultadoInvocacion.descripcion);
 		
 		--Construyendo la cabecera de respuesta
-		CALL buildHeaderResponse(refOut, refCabIn,  isExito, codigo,descMensaje); 
+		CALL buildHeaderResponse(refOut, refCabIn,  isExito, codigo,descMensaje, getDESC_MENSAJE_CAMBIOPRODUCTO_EXITO()); 
 		CALL buildBodyResponse(refOut, refData, 'ComercioCambiarProductoBeneficiarioResponse', isExito, nsSrv); 			
 		
 		
 		--((5))Guardado del mensaje de salida formateado para registrarlo en auditoria
-		CREATE LASTCHILD OF Environment DOMAIN 'XMLNSC';
-		SET Environment.XMLNSC = OutputRoot.JSON.Data;
+		CREATE LASTCHILD OF Environment DOMAIN 'JSON';		
+		SET Environment.JSON = refOut.JSON;
 	
         --((6))Se asigna la cola generica de respuesta del protocolo
 		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = obtenerColaEntradaProtocoloRespuesta(InputRoot.MQRFH2.usr);
@@ -102,7 +105,7 @@ CREATE COMPUTE MODULE MF_ESB_SRV_02006_REQRES_PrepararRespuesta
 		CALL armarAuditoriaEventoRespuestaConsumidor(OutputRoot,
 							InputRoot.MQMD.MsgId,
 							InputRoot.MQRFH2.usr,
-							Environment.XMLNSC,
+							Environment.JSON.Data,
 							NULL); 
  
 		SET OutputLocalEnvironment.Destination.MQ.DestinationData.queueName = getCOLA_ENTRADA_FLUJO_AUDITORIA();

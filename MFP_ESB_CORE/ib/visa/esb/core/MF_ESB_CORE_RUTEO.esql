@@ -41,11 +41,11 @@ CREATE COMPUTE MODULE MF_ESB_CORE_RUTEO_ObtenerParametros
 		
 		IF FIELDTYPE(Environment.DatosServicio) IS NULL THEN
 			
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1008() VALUES(getMSJ_ERROR_1008());			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_203() VALUES(getMSJ_ERROR_203());			
 			
 		ELSEIF FIELDVALUE(Environment.DatosServicio.ESTADO) = getEST_INACTIVO() THEN
 			
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1002() VALUES(getMSJ_ERROR_1002());			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_203() VALUES(getCOD_ERROR_203());			
 			
 		END IF;
 		
@@ -75,13 +75,13 @@ CREATE COMPUTE MODULE MF_ESB_CORE_RUTEO_ObtenerParametros
 			SET chrMensajeVal = validarParametrosPorProtocolo(OutputRoot.MQRFH2.usr.Parametros.Servicio, OutputRoot.MQRFH2.usr.CodigoServicio,OutputRoot.MQRFH2.usr.Parametro.Protocolo.TipoProtocolo);
 			
 			IF chrMensajeVal <> '' THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(chrMensajeVal);					
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_204() VALUES(chrMensajeVal);					
 			END IF;
 	
 			
 		ELSE
 			
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1004() VALUES(getMSJ_ERROR_1004());			
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_204() VALUES(getMSJ_ERROR_203());			
 			
 		END IF;
 		

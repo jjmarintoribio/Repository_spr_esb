@@ -121,23 +121,33 @@ BEGIN
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		
+		IF (COALESCE(refInput.tipDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	0;
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	refInput.tipDocTarHabiente;	
+		END IF;
+		
+		IF (COALESCE(refInput.idDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	'11111111';
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	refInput.idDocTarHabiente;			
+		END IF;
+		
+		IF (COALESCE(refInput.telTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	'22222222';				
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	refInput.telTarHabiente;			
+			
+		END IF;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:Nombres									=	refInput.nomBeneficiario;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:ApellidoPaterno							=	refInput.apePatBeneficiario;
 		
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:MontoMaximo												=	refInput.monMaximo;		
-		
-		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:TipoCobro										=	refInput.tipoCargoCobro;
-		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:Monto											=	refInput.monCargo;
-		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Cargo.nsSrv:FechaPago										=	refInput.fecCargoPago;
-		
-		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Periodicidad												=	refInput.periodicidad;
-		--SET refOut.nsSrv:DetalleAfiliacion.nsSrv:ReintentoAutomatico										=	refInput.reintentoAuto;		
+		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:MontoMaximo												=	refInput.monMaximo;	
+					
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Canal			 											=	refInput.canal;
 
 		SET refOut.nsSrv:FechaSolicitudAfiliacion = CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
@@ -165,9 +175,25 @@ BEGIN
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		
+		IF (COALESCE(refInput.tipDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	0;
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	refInput.tipDocTarHabiente;	
+		END IF;
+		
+		IF (COALESCE(refInput.idDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	'11111111';
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	refInput.idDocTarHabiente;			
+		END IF;
+		
+		IF (COALESCE(refInput.telTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	'22222222';				
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	refInput.telTarHabiente;			
+			
+		END IF;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
@@ -231,9 +257,25 @@ BEGIN
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Nombres						 		=	refInput.nomTarHabiente;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno						=	refInput.apePatTarHabiente;
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad				=	COALESCE(refInput.tipDocTarHabiente, 'DNI');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 			=	COALESCE(refInput.idDocTarHabiente, '11111111');
-		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono								=	COALESCE(refInput.telTarHabiente, '22222222');				
+		
+		IF (COALESCE(refInput.tipDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	0;
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:TipoDocumentoIdentidad			=	refInput.tipDocTarHabiente;	
+		END IF;
+		
+		IF (COALESCE(refInput.idDocTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	'11111111';
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:NumeroDocumentoIdentidad 		=	refInput.idDocTarHabiente;			
+		END IF;
+		
+		IF (COALESCE(refInput.telTarHabiente, '') = '') THEN
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	'22222222';				
+		ELSE
+			SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Telefono							=	refInput.telTarHabiente;			
+			
+		END IF;
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Tarjetahabiente.nsSrv:Email   								=	refInput.correoTarHabiente;
 		
 		SET refOut.nsSrv:DetalleAfiliacion.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion					=	refInput.idBeneficiario;
@@ -265,54 +307,48 @@ BEGIN
 	
 	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioSolicitudAfiliacion;
 	
-	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
-	END IF;
-	
 	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
 	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
 	
 	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('mesExpTarjeta'));
 	END IF;	
 	
 	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('anoExpTarjeta'));
 	END IF;	
 	
 	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
+	END IF;
+	
+	IF ( CAST(refBody.monMaximo AS DECIMAL) <= 0) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
 	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
 	
 	IF (LENGTH(tipoDoc)>0) THEN
-		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
-		END IF;
 		
 		IF numDoc = '' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente es vacio'));
 		END IF;	
-		IF tipoDoc = '1' THEN --DNI
+		IF tipoDoc = '0' THEN --DNI
 			IF LENGTH(numDoc) <> 8  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;
 			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
 			END IF;
 		END IF;
-		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
 			IF LENGTH(numDoc) > 12  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
 	END IF;
@@ -324,8 +360,7 @@ BEGIN
 	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
 	
 	IF isValidCanal IS FALSE THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('canal'));
 	END IF;
 END;
 
@@ -340,58 +375,52 @@ BEGIN
 	
 	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioRegistrarAfiliacion;
 	
-	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
-	END IF;
-	
 	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
 	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
 	
 	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('mesExpTarjeta'));
 	END IF;	
 	
 	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('anoExpTarjet'));
 	END IF;	
 	
 	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	IF (isDecimalValid(refBody.monCargo, FALSE) IS FALSE) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monCargo'));					
+	END IF;
+	
+	IF (CAST(refBody.monMaximo AS DECIMAL) <= 0) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
 	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
 	
 	IF (LENGTH(tipoDoc)>0) THEN
-		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
-		END IF;
 		
 		IF numDoc = '' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente es vacio'));
 		END IF;	
-		IF tipoDoc = '1' THEN --DNI
+		IF tipoDoc = '0' THEN --DNI
 			IF LENGTH(numDoc) <> 8  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;
 			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
 			END IF;
 		END IF;
-		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
 			IF LENGTH(numDoc) > 12  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
 	END IF;
@@ -403,8 +432,7 @@ BEGIN
 	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
 	
 	IF isValidCanal IS FALSE THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('canal'));
 	END IF;
 END;
 
@@ -421,8 +449,7 @@ BEGIN
 	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
 	
 	IF isValidCanal IS FALSE THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('canal'));
 	END IF;
 END;
 
@@ -438,58 +465,51 @@ BEGIN
 	DECLARE refBody REFERENCE TO refInput.XMLNSC.nsEsbXml:esbXML.Body.ComercioCambiarProductoBeneficiario;
 	
 	IF (refBody.codProductoActual = refBody.codProductoNuevo) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
-	END IF;
-	
-	IF 	(LENGTH(refBody.numTarjeta)<>16 AND LENGTH(refBody.numTarjeta)<>19) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-	--	THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('codProductoNuevo'));
 	END IF;
 	
 	DECLARE intAnoTarjeta INTEGER refBody.anoExpTarjeta;
 	DECLARE intMesTarjeta INTEGER refBody.mesExpTarjeta;
 	
 	IF (esMayorIgualMesActual(intMesTarjeta,intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('mesExpTarjeta'));
 	END IF;	
 	
 	IF (esMayorIgualAnioActual(intAnoTarjeta) IS FALSE ) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getMSJ_ERROR_2006() VALUES(getMSJ_ERROR_2006());
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('anoExpTarjeta'));
 	END IF;	
 	
 	IF (LENGTH(CAST(refBody.monMaximo AS CHARACTER))>12) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	IF (isDecimalValid(refBody.monMaximo, FALSE) IS FALSE) THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
+	END IF;
+	
+	IF (CAST(refBody.monMaximo AS DECIMAL) <= 0) THEN
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('monMaximo'));					
 	END IF;	
 	
 	DECLARE tipoDoc CHARACTER refBody.tipDocTarHabiente;
 	DECLARE numDoc CHARACTER COALESCE(FIELDVALUE(refBody.idDocTarHabiente),'');
 	
 	IF (LENGTH(tipoDoc)>0) THEN
-		IF tipoDoc <> '1' and tipoDoc <> '2' and tipoDoc <> '3' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());			
-		END IF;
 		
 		IF numDoc = '' THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente es vacio'));
 		END IF;	
-		IF tipoDoc = '1' THEN --DNI
+		IF tipoDoc = '0' THEN --DNI
 			IF LENGTH(numDoc) <> 8  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;
 			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());					
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
 			END IF;
 		END IF;
-		IF tipoDoc = '2' or tipoDoc = '3' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
+		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
 			IF LENGTH(numDoc) > 12  THEN
-				THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
 	END IF;
@@ -501,7 +521,6 @@ BEGIN
 	DECLARE isValidCanal BOOLEAN validateParameterCanal(canalReq, refInput.Split);
 	
 	IF isValidCanal IS FALSE THEN
-		THROW USER EXCEPTION MESSAGE getCOD_ERROR_1003() VALUES(getMSJ_ERROR_1003());
-		--THROW USER EXCEPTION MESSAGE getCodeErrorCanal() VALUES(getMensajeErrorCanal()); 
+		THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('canal')); 
 	END IF;
 END;

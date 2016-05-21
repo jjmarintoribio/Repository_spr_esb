@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0" xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/" xmlns:tns="http://visanet.com.pe/esbXML/v1.0">
+<?xml version="1.0" encoding="iso-8859-1"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0" xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/" xmlns:tns="http://visanet.com.pe/esbXML/v1.0">
     <xs:import namespace="http://visanet.com.pe/bus/generic/header/v1.0/" schemaLocation="../../bus/generic/header/v10/IBBUSInputServiceHeader_v1.0.mxsd"/>
     <xs:element name="esbXML" type="tns:esbXML">
     <xs:annotation>
@@ -29,21 +29,25 @@
 			<xs:element maxOccurs="1" minOccurs="1" name="codComercio">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="40"/>
+						<xs:pattern value="[a-zA-Z0-9]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="codProducto">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="40"/>
+						<xs:pattern value="[a-zA-Z0-9]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="numTarjeta">
 				<xs:simpleType>
-					<xs:restriction base="xs:integer">
-						<xs:totalDigits value="19"/>
+					<xs:restriction base="xs:integer">						
+						<xs:pattern value="\d{16}|\d{19}"/>						
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -65,14 +69,18 @@
 			<xs:element maxOccurs="1" minOccurs="1" name="nomTarHabiente">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
-					</xs:restriction>
-				</xs:simpleType>
+						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>						
+					</xs:restriction>						
+				</xs:simpleType>												
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="apePatTarHabiente">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
+						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -81,14 +89,15 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="0"/>
 						<xs:maxLength value="1"/>
+						<xs:pattern value="(0|1|2)*"/>						
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="0" name="idDocTarHabiente">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
-						<xs:minLength value="0"/>
 						<xs:maxLength value="12"/>
+						<xs:pattern value="[0-9A-Za-z]*"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -97,6 +106,7 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="0"/>
 						<xs:maxLength value="15"/>
+						<xs:pattern value="(\d)*"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -104,6 +114,7 @@
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:maxLength value="75"/>
+						<xs:pattern value="[^@]+@[^\.]+\..+"/>						
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -111,20 +122,25 @@
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:maxLength value="24"/>
+						<xs:pattern value="[0-9a-zA-Z]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="nomBeneficiario">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
-						<xs:maxLength value="50"/>
+						<xs:minLength value="1"/>
+						<xs:maxLength value="50"/>						
+						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>												
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="apePatBeneficiario">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
+						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>						
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>

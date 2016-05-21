@@ -114,12 +114,17 @@ BEGIN
 		SET refA.FLUJO			= MessageFlowLabel;
 		SET refA.CODERROR		= '';
 		
-		DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);  
-		DECLARE chrMensaje CHARACTER CAST(blobMensaje AS CHARACTER CCSID 819) ;
- 
-	 	SET refA.DATO				= chrMensaje;
-	
-				
+		--DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);  
+		--DECLARE chrMensaje CHARACTER CAST(blobMensaje AS CHARACTER CCSID 819) ;
+ 		DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 1208);  
+		DECLARE chrMensaje CHARACTER CAST(blobMensaje AS CHARACTER CCSID 1208) ;
+ 		SET refA.DATO				= chrMensaje;
+ 		
+ 		DECLARE tipoProtocolo CHARACTER refMQRFH2usr.Parametros.Protocolo.TipoProtocolo;
+ 		
+ 		IF (tipoProtocolo = getPROTOCOLO_ENTRADA_JSON()) THEN 			
+ 			SET refA.DATO = refMQRFH2usr.JsonInCharacter;
+ 		END IF;	 					
 END;
 
 
@@ -181,6 +186,7 @@ BEGIN
 		IF refBodyBlob IS NULL THEN
 			
 			 IF (charset = '1208') THEN
+			 	
 				DECLARE blobMensaje2 BLOB ASBITSTREAM(refBody CCSID 1208);  
 				SET chrMensaje = CAST(blobMensaje2 AS CHARACTER CCSID 1208) ;
 				
@@ -284,15 +290,16 @@ BEGIN
 		
 		DECLARE chrMensaje CHARACTER;
 		IF refBodyBlob IS NULL THEN
-			IF refBody IS NOT NULL THEN
-				DECLARE blobMensaje BLOB ASBITSTREAM(refBody CCSID 819);
-				SET chrMensaje = CAST(blobMensaje AS CHARACTER CCSID 819) ;
+			IF LASTMOVE(refBody) IS NOT NULL THEN
+				
+				DECLARE blobMensaje BLOB ASBITSTREAM(refBody, 546, 1208);
+				SET chrMensaje = CAST(blobMensaje AS CHARACTER CCSID 1208) ;
 			ELSE
 				SET chrMensaje = '';
 			END IF;  
 			
 		ELSE
-			SET chrMensaje = CAST(refBodyBlob AS CHARACTER CCSID 819) ;
+			SET chrMensaje = CAST(refBodyBlob AS CHARACTER CCSID 1208) ;
 		END IF;
  
 	 	SET refA.DATO				= chrMensaje;
@@ -446,7 +453,7 @@ END;
 CREATE PROCEDURE crearTagResultadoInvocacion(IN refHeader REFERENCE,IN chrTipoCodigo CHARACTER,IN chrCodigo INTEGER, IN chrDescripcion CHARACTER)  
 BEGIN
 	CREATE FIELD refHeader.ResultadoInvocacion;  
-	SET refHeader.ResultadoInvocacion.tipoCodigo		=chrTipoCodigo;  	
+	SET refHeader.ResultadoInvocacion.tipoCodigo		=CAST(chrTipoCodigo AS INTEGER);  	
 	SET refHeader.ResultadoInvocacion.codigoRespuesta	=chrCodigo;  		
 	SET refHeader.ResultadoInvocacion.descripcion		=chrDescripcion;  
 				
@@ -663,4 +670,31 @@ BEGIN
 			
 		END IF;
 	
+END;
+
+CREATE PROCEDURE setEnmascararTarjeta(IN refEnv REFERENCE)
+BEGIN
+		DECLARE chrNs CHARACTER FIELDNAMESPACE(refEnv.XMLNSC.*[<].*[<].*[<]);
+		DECLARE ns NAMESPACE chrNs;		
+		
+		--Enmascarando campo Tarjetas
+		--Environment.XMLNSC.*[<].*[<].*[<] = Environment.XMLNSC.soapenv:Envelope.soapenv:Body.ns:metodo		
+		SET refEnv.XMLNSC.*[<].*[<].*[<].ns:Detalle.ns:Afiliacion.ns:DetalleAfiliacion.ns:Tarjeta.ns:Numero = enmascararNumeroTarjeta(refEnv.XMLNSC.*[<].*[<].*[<].ns:Detalle.ns:Afiliacion.ns:DetalleAfiliacion.ns:Tarjeta.ns:Numero);
+		
+END;
+
+CREATE PROCEDURE buildJsonResponseError(IN refIn REFERENCE, IN refOut REFERENCE, IN metodoRes CHARACTER)
+BEGIN
+	CREATE LASTCHILD OF refOut DOMAIN 'JSON';
+	CREATE FIELD refOut.JSON.Data.MessageResponse;
+	DECLARE refRespuesta REFERENCE TO refOut.JSON.Data.MessageResponse;
+	
+	SET refRespuesta.Header.HeaderResponse = refIn.MessageRequest.Header.HeaderRequest;
+	SET refRespuesta.Header.Status.busResponseType = '1';
+	SET refRespuesta.Header.Status.busResponseCode = getCOD_ERROR_201();
+	SET refRespuesta.Header.Status.busResponseMessage = getMSJ_ERROR_201();
+	--SET refRespuesta.Header.Status.busResponseMsgId = CAST(msgId AS CHARACTER);
+	
+	CREATE LASTCHILD OF refRespuesta.Body TYPE Name NAME metodoRes;
+ 		
 END;

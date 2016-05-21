@@ -33,17 +33,27 @@ CREATE COMPUTE MODULE SMF_ESB_SRV_ERRORSRV_PrepararMensaje
 			SET chrMensajeError = chrDescripcionError ;
 			
 			--Si el error no es de una validacion de datos del servicio especifico 
-			IF (chrCodigoError <> getCOD_ERROR_1013() AND chrCodigoError <> getCOD_ERROR_1015() AND chrCodigoError <> getCOD_ERROR_1017()) THEN
-				SET chrCodigoErrorSrv = getCOD_ERROR_1018(); --Se asigna el error generico de los servicios especificos
+			IF (chrCodigoError <> getCOD_ERROR_201() AND  
+				chrCodigoError <> getCOD_ERROR_202() AND  
+				chrCodigoError <> getCOD_ERROR_203() AND  
+				chrCodigoError <> getCOD_ERROR_204() AND 
+				chrCodigoError <> getCOD_ERROR_205() AND
+				chrCodigoError <> getCOD_ERROR_301() AND
+				chrCodigoError <> getCOD_ERROR_302() AND
+				chrCodigoError <> getCOD_ERROR_401() AND
+				chrCodigoError <> getCOD_ERROR_402()) THEN
+				
+				SET chrCodigoErrorSrv = getCOD_ERROR_401(); --Se asigna el error generico de los servicios especificos
+			
 			ELSE 
 				SET chrCodigoErrorSrv = chrCodigoError;
 			END IF;
-					 	 
+												 	 
 			SET chrDescripcionErrorSrv = chrMensajeError;			
 			
 			IF (chrCodigoError = getCOD_VALIDA_XSD()) THEN
-				SET chrCodigoErrorSrv = getCOD_ERROR_1013();
-				SET chrDescripcionErrorSrv = 'Error en: '||SUBSTRING(chrMensajeError AFTER ':esbXML/');
+				SET chrCodigoErrorSrv = getCOD_ERROR_201();
+				SET chrDescripcionErrorSrv = getMSJ_ERROR_201() || '. Error en: '||SUBSTRING(chrMensajeError AFTER ':esbXML/');
 			END IF;
 		END IF; 
  

@@ -38,7 +38,7 @@ BEGIN
 	
 END;
 
-CREATE PROCEDURE buildHeaderResponse(INOUT refOut REFERENCE, IN refCabIn REFERENCE, IN isExito BOOLEAN, IN codigo CHARACTER, IN mensaje CHARACTER) 
+CREATE PROCEDURE buildHeaderResponse(INOUT refOut REFERENCE, IN refCabIn REFERENCE, IN isExito BOOLEAN, IN codigo CHARACTER, IN mensaje CHARACTER, IN msgExito CHARACTER) 
 BEGIN
 	CREATE LASTCHILD OF refOut DOMAIN 'JSON';
 	
@@ -59,8 +59,13 @@ BEGIN
 	SET refCab.HeaderResponse.userId 			= refCabIn.userId;
 	SET refCab.HeaderResponse.deviceId 			= refCabIn.deviceId;
 	SET refCab.HeaderResponse.serverId 			= refCabIn.serverId;
-			
-	SET refCab.Status.busResponseType = C_BUS_RESPONSE_TYPE_EXITO;
+	
+	IF codigo = C_BUS_RESPONSE_CODE_EXITO THEN
+		SET refCab.Status.busResponseType = C_BUS_RESPONSE_TYPE_EXITO;	
+	ELSE
+		SET refCab.Status.busResponseType = C_BUS_RESPONSE_TYPE_ERROR;	
+	END IF;
+	
 	SET refCab.Status.busResponseCode = C_BUS_RESPONSE_CODE_EXITO;
 	SET refCab.Status.busResponseMessage = C_BUS_MESSAGE_DESC_EXITO;
 	SET refCab.Status.busResponseMsgId = SUBSTRING(CAST(refOut.MQMD.MsgId AS CHARACTER) FROM 3 FOR 48);
@@ -68,7 +73,7 @@ BEGIN
 	
 	IF isExito THEN		
 		--Afiliacion Exitosa
-		SET refCab.Status.srvResponseMessage = C_SRV_MESSAGE_EXITO;	
+		SET refCab.Status.srvResponseMessage = msgExito;	
 	ELSE		
 		SET refCab.Status.srvResponseMessage = mensaje;
 	END IF;
@@ -117,7 +122,8 @@ CREATE PROCEDURE validateEsbXML(IN refEnv REFERENCE, IN msgBlob BLOB, IN msgSet 
 BEGIN
 		DECLARE parseOptions INTEGER BITOR(ValidateContentAndValue,ValidateExceptionList);
 		CREATE LASTCHILD OF refEnv DOMAIN 'XMLNSC';
-		CREATE LASTCHILD OF refEnv.XMLNSC DOMAIN 'XMLNSC' PARSE (msgBlob
+		CREATE LASTCHILD OF refEnv.XMLNSC DOMAIN 'XMLNSC' PARSE (msgBlob 
+															   ENCODING 546 CCSID 1208
 															   OPTIONS parseOptions
 															   SET msgSet
 															   TYPE msgType);

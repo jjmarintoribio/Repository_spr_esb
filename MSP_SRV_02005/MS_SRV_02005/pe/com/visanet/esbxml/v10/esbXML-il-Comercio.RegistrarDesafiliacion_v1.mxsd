@@ -29,14 +29,18 @@
 			<xs:element maxOccurs="1" minOccurs="1" name="codComercio">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="40"/>
+						<xs:pattern value="[a-zA-Z0-9]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element maxOccurs="1" minOccurs="1" name="codProducto">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
 						<xs:maxLength value="40"/>
+						<xs:pattern value="[a-zA-Z0-9]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -44,6 +48,7 @@
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:maxLength value="24"/>
+						<xs:pattern value="[0-9a-zA-Z]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>

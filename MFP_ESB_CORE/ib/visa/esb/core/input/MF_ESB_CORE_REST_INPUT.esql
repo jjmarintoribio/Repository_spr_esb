@@ -49,21 +49,29 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_AdaptarMensaje
 							
 		--Validacion del cuerpo
 		IF FIELDNAME(InputRoot.JSON) IS NULL THEN
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1000() VALUES(getMSJ_ERROR_1000());
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201());
 		END IF;			
- 
+ 		--Enmascarando campo Tarjetas
+ 		CREATE LASTCHILD OF Environment DOMAIN 'JSON';
+ 		 
+ 		SET Environment.JSON = InputRoot.JSON; 		
+		SET Environment.JSON.Data.MessageRequest.Body.*[>].numTarjeta = enmascararNumeroTarjeta(InputRoot.JSON.Data.MessageRequest.Body.*[>].numTarjeta);
+ 		SET OutputRoot.MQRFH2.usr.JsonInCharacter = castJsonToCharacter(Environment.JSON);
+ 		
  		DECLARE chrCodSrv CHARACTER;
 		SET chrCodSrv 	= COALESCE(InputLocalEnvironment.HTTP.Input.QueryString.codservicio, '');		
 		
 		--Control del codigo del servicio
 		IF chrCodSrv <> '' THEN
 			SET OutputRoot.MQRFH2.usr.IdentificadorServicio			= chrCodSrv;
+		ELSE
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_202() VALUES(getMSJ_ERROR_202());	
 		END IF;
 
 		--Validacion del codigo de servicio
 		IF COALESCE(OutputRoot.MQRFH2.usr.IdentificadorServicio,'') ='' THEN
 			SET Environment.usr = OutputRoot.MQRFH2.usr;
-			THROW USER EXCEPTION MESSAGE getCOD_ERROR_1001() VALUES(getMSJ_ERROR_1001());	
+			THROW USER EXCEPTION MESSAGE getCOD_ERROR_203() VALUES(getMSJ_ERROR_203());	
 		END IF;			
 				
 		--Paso de los tags del cuerpo
@@ -98,16 +106,21 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararMensajeError
 		DECLARE chrCodigoError CHARACTER '';
 		DECLARE chrDescripcionError CHARACTER '';
 		CALL obtenerDetalleError(InputExceptionList,chrCodigoError,chrDescripcionError);
-				
+		
+		--DECLARE msgId CHARACTER = getMsgId();
+		--SET OutputRoot.MQMD.CorrelId    = CAST(OutputRoot.MQMD.MsgId AS CHARACTER);
+		
 		SET OutputRoot.Properties = InputProperties;
 	
 		-- Preparacion de la respuesta JSON	
-		CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
-		DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
- 	
-		SET refMsj.codRespuesta = chrCodigoError;
-		SET refMsj.descripcion = chrDescripcionError;
-
+		--CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
+		--DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
+ 		DECLARE metodoRes CHARACTER FIELDNAME(InputRoot.JSON.Data.MessageRequest.Body.*[<]) || 'Response';
+ 		
+ 		CALL buildJsonResponseError(InputRoot.JSON.Data, OutputRoot, metodoRes); 
+		--SET refMsj.codRespuesta = chrCodigoError;
+		--SET refMsj.descripcion = getMSJ_ERROR_201();
+		
 		SET OutputLocalEnvironment.Destination.HTTP.RequestIdentifier = COALESCE(InputLocalEnvironment.Destination.HTTP.RequestIdentifier,CAST(InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos.RequestIdentifier AS BLOB));
 		PROPAGATE TO TERMINAL 1;
 		
@@ -132,7 +145,7 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararMensajeError
 
 		-- Generamos el mensaje para la auditoria de error
 		CALL armarAuditoriaEventoError(OutputRoot,
-								getMsgId(),
+								OutputRoot.MQMD.MsgId,
 								Environment.usr,--InputRoot.MQRFH2.usr,
 								CAST(chrCodigoError AS INTEGER),
 								chrDescripcionError,
@@ -158,16 +171,21 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararRespuesta
 	BEGIN
 		
 		SET OutputRoot.Properties 	= InputProperties;
-
+		SET OutputRoot.MQMD = NULL;
+		
 		--Si el error viene desde el flujo core de Ruteo
 		IF COALESCE(InputRoot.MQRFH2.usr.ControlRuteo.codigo,'')<>''  THEN
 	
-			CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
-			DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
+			--CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
+			--DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
 	 
-			SET refMsj.codRespuesta = InputRoot.MQRFH2.usr.ControlRuteo.codigo;
-			SET refMsj.descripcion = InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
-	
+			--SET refMsj.codRespuesta = InputRoot.MQRFH2.usr.ControlRuteo.codigo;
+			--SET refMsj.descripcion = InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
+			
+			DECLARE metodoRes CHARACTER FIELDNAME(InputRoot.JSON.Data.MessageRequest.Body.*[<]) || 'Response'; 		
+ 			CALL buildJsonResponseError(InputRoot.JSON.Data, OutputRoot, metodoRes);
+ 			
+ 			--SET OutputRoot.JSON = InputRoot.JSON;
 		ELSE
 			SET OutputRoot.JSON = InputRoot.JSON;
 			

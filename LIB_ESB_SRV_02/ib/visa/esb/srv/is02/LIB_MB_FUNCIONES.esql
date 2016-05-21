@@ -66,3 +66,9 @@ BEGIN
 	END IF;	
 	
 END;
+
+CREATE FUNCTION getMsgErrorValidacionCampo(IN strCampo CHARACTER) 
+RETURNS CHARACTER
+BEGIN
+	RETURN ' .Error en campo ' || strCampo; 
+END;
