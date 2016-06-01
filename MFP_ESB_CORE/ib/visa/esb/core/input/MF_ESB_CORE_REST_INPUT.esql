@@ -117,7 +117,7 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararMensajeError
 		--DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
  		DECLARE metodoRes CHARACTER FIELDNAME(InputRoot.JSON.Data.MessageRequest.Body.*[<]) || 'Response';
  		
- 		CALL buildJsonResponseError(InputRoot.JSON.Data, OutputRoot, metodoRes); 
+ 		CALL buildJsonResponseError(InputRoot.JSON.Data, OutputRoot, metodoRes, getCOD_ERROR_201(), getMSJ_ERROR_201());
 		--SET refMsj.codRespuesta = chrCodigoError;
 		--SET refMsj.descripcion = getMSJ_ERROR_201();
 		
@@ -179,11 +179,13 @@ CREATE COMPUTE MODULE MF_ESB_CORE_REST_INPUT_PrepararRespuesta
 			--CREATE FIELD OutputRoot.JSON.Data.RespuestaBUS;
 			--DECLARE refMsj REFERENCE TO OutputRoot.JSON.Data.RespuestaBUS;
 	 
-			--SET refMsj.codRespuesta = InputRoot.MQRFH2.usr.ControlRuteo.codigo;
-			--SET refMsj.descripcion = InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
+			DECLARE codError INTEGER InputRoot.MQRFH2.usr.ControlRuteo.codigo;
+			DECLARE msgError CHARACTER InputRoot.MQRFH2.usr.ControlRuteo.descripcion;
+			DECLARE charMensaje CHARACTER InputRoot.MQRFH2.usr.JsonInCharacter;
+			CALL castCharToJson(Environment, charMensaje);
 			
-			DECLARE metodoRes CHARACTER FIELDNAME(InputRoot.JSON.Data.MessageRequest.Body.*[<]) || 'Response'; 		
- 			CALL buildJsonResponseError(InputRoot.JSON.Data, OutputRoot, metodoRes);
+			DECLARE metodoRes CHARACTER FIELDNAME(Environment.JSON.Data.MessageRequest.Body.*[<]) || 'Response'; 		
+ 			CALL buildJsonResponseError(Environment.JSON.Data, OutputRoot, metodoRes, codError, msgError); 
  			
  			--SET OutputRoot.JSON = InputRoot.JSON;
 		ELSE

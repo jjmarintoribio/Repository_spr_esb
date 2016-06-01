@@ -188,15 +188,7 @@ BEGIN
 	IF (FIELDNAME(refOutParam.Batch.nombreArchivo) IS NOT NULL) THEN
 		SET chrBody = chrBody || '<TR><TD>Archivo cargado:</TD><TD><B>'|| refOutParam.Batch.nombreArchivo ||'<B></TD></TR>';
 	END IF;
-	
-	/*Inicio Synopsis: RMQ Agrega para CE*/
-	IF (refOutParam.Batch.Metadata.tipoCanal = 'CE') THEN --Comercio Electronico
-		SET chrBody = chrBody || '<TR><TD><b>SFTP:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.ipCreacion ||'<B></TD></TR>';
-		SET chrBody = chrBody || '<TR><TD><b>Archivo comercio:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.rutaArchivo ||'<B></TD></TR>';
-		SET chrBody = chrBody || '<TR><TD><b>Archivo log:</b></TD><TD><B>'|| refOutParam.Batch.Metadata.rutaOutLog || refOutParam.Batch.Metadata.fileOutLog ||'<B></TD></TR>';
-	END IF;
-	/*Fin Synopsis: RMQ Agrega para CE*/
-		
+			
 	SET chrBody = chrBody || '<TR><TD>BUS:</TD><TD>'|| BrokerName ||'</TD></TR>';
 	
 	

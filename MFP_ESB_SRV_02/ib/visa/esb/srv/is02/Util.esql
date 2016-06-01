@@ -347,11 +347,21 @@ BEGIN
 			END IF;
 		END IF;
 		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
-			IF LENGTH(numDoc) > 12  THEN
+			IF LENGTH(numDoc) < 7 OR LENGTH(numDoc) > 12  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
 	END IF;
+	
+	IF COALESCE(tipoDoc, '') = '' THEN
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
+			END IF;
+	END IF;
+	
 	
 	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
 	CREATE FIELD refInput.Split;
@@ -419,10 +429,19 @@ BEGIN
 			END IF;
 		END IF;
 		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
-			IF LENGTH(numDoc) > 12  THEN
+			IF LENGTH(numDoc) < 7 OR LENGTH(numDoc) > 12  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
+	END IF;
+	
+	IF COALESCE(tipoDoc, '') = '' THEN
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
+			END IF;
 	END IF;
 	
 	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');
@@ -508,10 +527,19 @@ BEGIN
 			END IF;
 		END IF;
 		IF tipoDoc = '1' or tipoDoc = '2' THEN --PASAPORTE Y CARNE DE EXTRANJERIA
-			IF LENGTH(numDoc) > 12  THEN
+			IF LENGTH(numDoc) < 7 OR LENGTH(numDoc) > 12  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente'));
 			END IF;
 		END IF;
+	END IF;
+	
+	IF COALESCE(tipoDoc, '') = '' THEN
+			IF LENGTH(numDoc) <> 8  THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
+			END IF;
+			IF (isNumericValid(numDoc, FALSE) IS FALSE) THEN
+				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente no es numerico'));					
+			END IF;
 	END IF;
 	
 	DECLARE parametroCanal CHARACTER COALESCE(refMqRFH2.Parametros.Servicio.PRAD1SRV, '');

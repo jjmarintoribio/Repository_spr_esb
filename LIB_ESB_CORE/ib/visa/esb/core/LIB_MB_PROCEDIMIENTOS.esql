@@ -644,7 +644,7 @@ BEGIN
 		SET refCab.HeaderResponse.serverId 			= refCabIn.serverId;
 		
 		SET refCab.Status.busResponseType = chrTipo;
-		SET refCab.Status.busResponseCode = chrCod;
+		SET refCab.Status.busResponseCode = CAST(chrCod AS CHARACTER);--ANLT 31052016
 		SET refCab.Status.busResponseMessage = chrDesc;
 		SET refCab.Status.busResponseMsgId = SUBSTRING(CAST(refOutput.MQMD.MsgId AS CHARACTER) FROM 3 FOR 48);
 		--SET refCab.Status.srvResponseCode = codigo;
@@ -683,7 +683,7 @@ BEGIN
 		
 END;
 
-CREATE PROCEDURE buildJsonResponseError(IN refIn REFERENCE, IN refOut REFERENCE, IN metodoRes CHARACTER)
+CREATE PROCEDURE buildJsonResponseError(IN refIn REFERENCE, IN refOut REFERENCE, IN metodoRes CHARACTER, IN codigoError INTEGER, IN msgError CHARACTER)
 BEGIN
 	CREATE LASTCHILD OF refOut DOMAIN 'JSON';
 	CREATE FIELD refOut.JSON.Data.MessageResponse;
@@ -691,10 +691,15 @@ BEGIN
 	
 	SET refRespuesta.Header.HeaderResponse = refIn.MessageRequest.Header.HeaderRequest;
 	SET refRespuesta.Header.Status.busResponseType = '1';
-	SET refRespuesta.Header.Status.busResponseCode = getCOD_ERROR_201();
-	SET refRespuesta.Header.Status.busResponseMessage = getMSJ_ERROR_201();
+	SET refRespuesta.Header.Status.busResponseCode = CAST(codigoError AS CHARACTER);
+	SET refRespuesta.Header.Status.busResponseMessage = msgError;
 	--SET refRespuesta.Header.Status.busResponseMsgId = CAST(msgId AS CHARACTER);
 	
 	CREATE LASTCHILD OF refRespuesta.Body TYPE Name NAME metodoRes;
  		
+END;
+
+CREATE PROCEDURE castCharToJson(IN refEnv REFERENCE, IN charMsg CHARACTER) 
+BEGIN
+		CREATE LASTCHILD OF refEnv DOMAIN 'JSON' PARSE (charMsg ENCODING 546 CCSID 1208);
 END;

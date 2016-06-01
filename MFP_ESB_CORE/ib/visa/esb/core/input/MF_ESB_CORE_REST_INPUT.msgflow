@@ -51,7 +51,7 @@
       <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="226,67" destination="file" pattern="********/Info 1/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;LocalEnvironment = ${LocalEnvironment}&#xD;&#xA;Root In= ${Root}">
         <translation xmi:type="utility:ConstantString" string="T_Info1"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="326,255" destination="file" filePath="/app/visa/esb/srv/logs/JSON_IN.log" pattern="********/Info 2/********************&#xD;&#xA;Respuesta HTTPReply&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;Root Out= ${Root}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="326,255" destination="file" filePath="/app/visa/esb/srv/logs/JSON_IN.log" pattern="********/Info 2/********************&#xD;&#xA;Respuesta HTTPReply&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${LocalEnvironment.Destination.HTTP.RequestIdentifier}&#xD;&#xA;Root Out= ${Root}&#xD;&#xA;Environment =  ${Environment}">
         <translation xmi:type="utility:ConstantString" string="T_Info2"/>
       </nodes>
       <nodes xmi:type="ib_visa_esb_core_SMF_ESB_CORE_ERRORGEN.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="294,332">

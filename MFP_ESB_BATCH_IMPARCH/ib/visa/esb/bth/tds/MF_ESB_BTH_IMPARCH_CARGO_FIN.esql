@@ -119,9 +119,12 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_EjecutarFinalizacionCarga
 		
 		/*Inicio Synopsis RMQ: Nuevo para CE*/
 		--((4.1)) Envio de correo de alerta al comercio de finalizacion de proceso de su archivo de cargos
-		CALL prepararMensajeCorreoNotificacionCargosCE(OutputRoot,refParam, intRegistrosFail,  intRegistrosTotal, estadoProcesoImp); 
-		
-		PROPAGATE TO TERMINAL 4;
+		IF (Environment.Parametros.Batch.Metadata.tipoCanal = 'CE') THEN -- Si es del canal CE el log se deja en el SFTP del comercio.
+			
+			CALL prepararMensajeCorreoNotificacionCargosCE(OutputRoot,refParam, intRegistrosFail,  intRegistrosTotal, estadoProcesoImp);
+			PROPAGATE TO TERMINAL 4;
+			
+		END IF;
 		/*Fin Synopsis RMQ: Nuevo para CE*/
 		
 		RETURN FALSE;
