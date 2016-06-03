@@ -353,7 +353,7 @@ BEGIN
 		END IF;
 	END IF;
 	
-	IF COALESCE(tipoDoc, '') = '' THEN
+	IF COALESCE(tipoDoc, '') = '' AND LENGTH(numDoc) >0 THEN
 			IF LENGTH(numDoc) <> 8  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;
@@ -435,7 +435,7 @@ BEGIN
 		END IF;
 	END IF;
 	
-	IF COALESCE(tipoDoc, '') = '' THEN
+	IF COALESCE(tipoDoc, '') = '' AND LENGTH(numDoc) >0 THEN
 			IF LENGTH(numDoc) <> 8  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;
@@ -533,7 +533,7 @@ BEGIN
 		END IF;
 	END IF;
 	
-	IF COALESCE(tipoDoc, '') = '' THEN
+	IF COALESCE(tipoDoc, '') = '' AND LENGTH(numDoc) >0 THEN
 			IF LENGTH(numDoc) <> 8  THEN
 				THROW USER EXCEPTION MESSAGE getCOD_ERROR_201() VALUES(getMSJ_ERROR_201()  ||  getMsgErrorValidacionCampo('idDocTarHabiente en DNI'));
 			END IF;

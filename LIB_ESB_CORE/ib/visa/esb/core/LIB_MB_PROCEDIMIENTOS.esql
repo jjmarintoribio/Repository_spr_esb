@@ -101,7 +101,7 @@ BEGIN
 		SET refA.MSGID			= SUBSTRING(CAST(chrMsgId AS CHARACTER) FROM 3 FOR 48);
 		SET refA.FECHAHORA		= obtenerFechaHoraAuditoria();
 		SET refA.HORA			= obtenerHoraAuditoria();
-		SET refA.INDORIGEN		= '';
+		SET refA.INDORIGEN		= COALESCE(refMQRFH2usr.Auditoria.indOrigen, '');--Cambio
 		SET refA.CODSERVICIO	= refMQRFH2usr.CodigoServicio;
 		SET refA.PROTOCOLOENTRADA= refMQRFH2usr.Parametros.Protocolo.IdProtocolo;
 		SET refA.RUTASERVICIO	= refMQRFH2usr.Auditoria.rutaServicio;
