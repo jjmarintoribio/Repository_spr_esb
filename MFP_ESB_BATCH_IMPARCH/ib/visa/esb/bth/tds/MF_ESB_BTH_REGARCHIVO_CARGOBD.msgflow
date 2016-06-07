@@ -15,7 +15,7 @@
     <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj16/MF_ESB_BTH_REGARCHIVO_CARGOBD.gif"/>
     <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_IMPARCH/icons/full/obj30/MF_ESB_BTH_REGARCHIVO_CARGOBD.gif"/>
     <composition>
-      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="40,226" queueName="IB.BTH.IMPCARGO.REGARCHIVO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="35,228" queueName="IB.BTH.IMPCARGO.REGARCHIVO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="IB.BTH.IMPCARGO.REGARCHIVO.REQ.01"/>
         <longDescription xmi:type="utility:ConstantString" string="Cola que sera diferente dependiendo de las instancias que se le asignen"/>
       </nodes>
@@ -28,22 +28,22 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="360,80" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_REGARCHIVO_CARGOBD_ControlarError.Main" computeMode="destinationAndMessage">
         <translation xmi:type="utility:ConstantString" string="ControlarError"/>
       </nodes>
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="532,370" destinationMode="list" transactionMode="no">
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="561,362" destinationMode="list" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="IB.BTH.IMPCARGO.CTRLREGISTRO.REQ.01"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="657,223" outputDirectory="/temp" outputFilename="temp.dat" writeMode="writeInPlace" recordDefinition="delimited">
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="726,233" outputDirectory="/temp" outputFilename="temp.dat" writeMode="writeInPlace" recordDefinition="delimited">
         <translation xmi:type="utility:ConstantString" string="EscribirArchivoLog"/>
       </nodes>
       <nodes xmi:type="ib_visa_esb_bth_SMF_ESB_BTH_CONTROLERROR.subflow:FCMComposite_1" xmi:id="FCMComposite_1_13" location="474,86">
         <translation xmi:type="utility:ConstantString" string="SMF_ESB_BTH_CONTROLERROR"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="415,361" destination="file" filePath="/app/visa/esb/batch/logs/importacion-cargo-db-error.log" pattern="********/DEBUG 2 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root.XMLNSC = ${Root.XMLNSC}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="412,361" destination="file" filePath="/app/visa/esb/batch/logs/importacion-cargo-db-error.log" pattern="********/DEBUG 2 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root.XMLNSC = ${Root.XMLNSC}">
         <translation xmi:type="utility:ConstantString" string="Trace"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="254,340" destination="file" pattern="XMLNSC = ${Root.XMLNSC}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="265,228" destination="file" pattern="XMLNSC = ${Root.XMLNSC}">
         <translation xmi:type="utility:ConstantString" string="T_Debug01"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="536,321" destination="file" filePath="/app/visa/esb/batch/logs/importacion-cargo-db-error.log" pattern="********/DEBUG 2 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root.XMLNSC = ${Root.XMLNSC}">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="490,360" destination="file" filePath="/app/visa/esb/batch/logs/importacion-cargo-db-error.log" pattern="********/DEBUG 2 /********************&#xD;&#xA;Fecha Hora: ${CURRENT_TIMESTAMP}&#xD;&#xA;Root.XMLNSC = ${Root.XMLNSC}">
         <translation xmi:type="utility:ConstantString" string="Trace1"/>
       </nodes>
       <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="651,117" queueName="IB.BTH.GENBTH.CORREO.REQ.01" transactionMode="no">
@@ -56,10 +56,10 @@
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.Input1"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out3" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out4" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
     </composition>
     <propertyOrganizer>
       <propertyDescriptor groupName="Group.Auditoria" configurable="true" describedAttribute="Property.T_Error">

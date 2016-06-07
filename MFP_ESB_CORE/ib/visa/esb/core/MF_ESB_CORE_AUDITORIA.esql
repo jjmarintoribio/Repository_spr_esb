@@ -54,12 +54,12 @@ CREATE COMPUTE MODULE MF_ESB_CORE_AUDITORIA_ObtenerParametros
 				
 				SET OutputRoot = InputRoot;
 
-				IF refIn.TIPOEVENTO = getEVENTO_FORMATEO() THEN
+				IF refIn.TIPOEVENTO = getEVENTO_ENTRADA() THEN
 					
 						PROPAGATE TO TERMINAL 1;  --registra en transaccion, evento y mensaje
 						
-				ELSEIF refIn.TIPOEVENTO = getEVENTO_ENTRADA() OR  
-					   refIn.TIPOEVENTO = getEVENTO_RESPPROV() OR 
+				ELSEIF refIn.TIPOEVENTO = getEVENTO_FORMATEO() OR
+					   refIn.TIPOEVENTO = getEVENTO_RESPPROV() OR
 					   refIn.TIPOEVENTO = getEVENTO_RESPCONS() OR
 	   				   refIn.TIPOEVENTO = getEVENTO_ERROR() THEN
 					   

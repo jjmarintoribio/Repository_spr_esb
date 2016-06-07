@@ -218,8 +218,12 @@ CREATE PROCEDURE obtenerDetalleError(IN InputTree REFERENCE, OUT messageNumber C
 
 			IF numInserts > 0 THEN	    			
 
-				SET messageText = messageText || '(';	    			
-
+				IF FIELDNAME(ptrException) <> 'UserException' THEN
+					SET messageText = messageText || '(';					
+				ELSE
+					SET messageText = '';
+				END IF;
+				
 				WHILE intInsert <= numInserts DO
 					SET messageText = messageText || ptrException.Insert[intInsert].Text;	    				
 
@@ -230,7 +234,11 @@ CREATE PROCEDURE obtenerDetalleError(IN InputTree REFERENCE, OUT messageNumber C
 					SET intInsert = intInsert + 1;
 				END WHILE;	    			
 
-				SET messageText = messageText || ')';
+				IF FIELDNAME(ptrException) <> 'UserException' THEN
+					SET messageText = messageText || ')';
+				END IF;
+				
+				
 			END IF;
 		END IF;			
 		-- now move to the last child which should be the next exceptionlist
@@ -712,3 +720,24 @@ BEGIN
 	END IF;	
 		
 END;	
+
+CREATE FUNCTION castJsonToCharacter(IN refJsonIn REFERENCE)
+RETURNS CHARACTER
+BEGIN
+	
+	DECLARE blobJson BLOB ASBITSTREAM(refJsonIn, 546, 1208);
+	DECLARE msgChar CHAR CAST(blobJson AS CHAR CCSID 1208);  			 
+	
+	RETURN msgChar;
+	
+END;
+
+/*
+	* Enmascarar número de tarjeta
+	*/
+	CREATE FUNCTION enmascararNumeroTarjeta(IN nroTarjeta CHARACTER)
+	RETURNS CHARACTER
+	BEGIN
+		RETURN LEFT(nroTarjeta,6) || REPLICATE('*',LENGTH(nroTarjeta)-10) || RIGHT(nroTarjeta,4);
+		
+	END;

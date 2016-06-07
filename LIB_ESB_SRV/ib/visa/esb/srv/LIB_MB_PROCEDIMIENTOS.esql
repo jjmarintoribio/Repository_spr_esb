@@ -1,0 +1,133 @@
+
+/*
+ *
+ * Nombre		: LIB_MB_PROCEDIMIENTOS.esql
+ * Proposito	: Procedimientos para funcionalidades especificas de las app JSON
+ * Fecha		: 2016-05-05
+ * Autores		: Amelia Lopez - Synopsis
+ * Version		: 1.0
+ * 
+ *--------------------------------------------------------------------
+ */  
+ 
+BROKER SCHEMA ib.visa.esb.srv
+PATH ib.visa.esb.core;
+
+/*
+ * Prepara la cabecera del mensaje Envelope request de los servicios de SPR Web
+*/ 
+CREATE PROCEDURE buildHeaderFromRest(IN refOutput REFERENCE, IN chrNsSoap CHARACTER, IN chrNsSrv CHARACTER, IN namMetodo NAME, IN refCabIn REFERENCE) 
+BEGIN
+	DECLARE nsSoap NAMESPACE chrNsSoap;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	
+	CREATE LASTCHILD OF refOutput DOMAIN 'XMLNSC';
+	SET refOutput.XMLNSC.nsSoap:Envelope.(XMLNSC.NamespaceDecl)xmlns:soapenv = nsSoap; 
+	SET refOutput.XMLNSC.nsSoap:Envelope.(XMLNSC.NamespaceDecl)xmlns:sch = nsSrv;
+	
+	CREATE FIELD refOutput.XMLNSC.nsSoap:Envelope.nsSoap:Header;
+	CREATE FIELD refOutput.XMLNSC.nsSoap:Envelope.nsSoap:Body.nsSrv:namMetodo.nsSrv:Cabecera; 
+	DECLARE refCab REFERENCE TO refOutput.XMLNSC.nsSoap:Envelope.nsSoap:Body.nsSrv:namMetodo.nsSrv:Cabecera;
+	
+	SET refCab.nsSrv:CodigoConsumidor 	= getID_ESB_VISA(); 
+	SET refCab.nsSrv:TipoConsumidor 		= getID_ESB_VISA();
+	SET refCab.nsSrv:FechaRequerimiento 	= CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU'); 
+	SET refCab.nsSrv:IdMensaje = SUBSTRING(CAST(refOutput.MQMD.MsgId AS CHARACTER) FROM 3 FOR 48);
+	SET refCab.nsSrv:CodigoUsuarioCreacion = refCabIn.userId; 
+	SET refCab.nsSrv:IPCreacion = refCabIn.serverId;
+	
+END;
+
+CREATE PROCEDURE buildHeaderResponse(INOUT refOut REFERENCE, IN refCabIn REFERENCE, IN isExito BOOLEAN, IN codigo CHARACTER, IN mensaje CHARACTER, IN msgExito CHARACTER) 
+BEGIN
+	CREATE LASTCHILD OF refOut DOMAIN 'JSON';
+	
+	CREATE FIELD refOut.JSON.Data;
+	CREATE FIELD refOut.JSON.Data.MessageResponse.Header;
+	
+	DECLARE refCab REFERENCE TO refOut.JSON.Data.MessageResponse.Header;
+	
+	SET refCab.HeaderResponse.serviceId 		= refCabIn.serviceId;
+	SET refCab.HeaderResponse.consumerId 		= refCabIn.consumerId;
+	SET refCab.HeaderResponse.moduleId 			= refCabIn.moduleId; 
+	SET refCab.HeaderResponse.channelCode 		= refCabIn.channelCode;
+	SET refCab.HeaderResponse.messageId 		= refCabIn.messageId;
+	SET refCab.HeaderResponse.timestamp 		= CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'IU');
+	SET refCab.HeaderResponse.countryCode 		= refCabIn.countryCode;
+	SET refCab.HeaderResponse.groupMember 		= refCabIn.groupMember;
+	SET refCab.HeaderResponse.referenceNumber 	= refCabIn.referenceNumber;
+	SET refCab.HeaderResponse.userId 			= refCabIn.userId;
+	SET refCab.HeaderResponse.deviceId 			= refCabIn.deviceId;
+	SET refCab.HeaderResponse.serverId 			= refCabIn.serverId;
+	
+	IF codigo = C_BUS_RESPONSE_CODE_EXITO THEN
+		SET refCab.Status.busResponseType = C_BUS_RESPONSE_TYPE_EXITO;	
+	ELSE
+		SET refCab.Status.busResponseType = C_BUS_RESPONSE_TYPE_ERROR;	
+	END IF;
+	
+	SET refCab.Status.busResponseCode = C_BUS_RESPONSE_CODE_EXITO;
+	SET refCab.Status.busResponseMessage = C_BUS_MESSAGE_DESC_EXITO;
+	SET refCab.Status.busResponseMsgId = SUBSTRING(CAST(refOut.MQMD.MsgId AS CHARACTER) FROM 3 FOR 48);
+	SET refCab.Status.srvResponseCode = codigo;
+	
+	IF isExito THEN		
+		--Afiliacion Exitosa
+		SET refCab.Status.srvResponseMessage = msgExito;	
+	ELSE		
+		SET refCab.Status.srvResponseMessage = mensaje;
+	END IF;
+END;
+
+CREATE PROCEDURE buildBodyResponse(INOUT refOut REFERENCE, IN refIn REFERENCE, IN namMetodo CHARACTER, IN isExito BOOLEAN, IN chrNsSrv CHARACTER)  
+BEGIN
+	
+	CREATE FIELD refOut.JSON.Data.MessageResponse.Body;
+	CREATE LASTCHILD OF refOut.JSON.Data.MessageResponse.Body NAME namMetodo;
+	DECLARE nsSrv NAMESPACE chrNsSrv;
+	IF isExito THEN
+		
+		DECLARE refBody REFERENCE TO refOut.JSON.Data.MessageResponse.Body.*[>];
+		
+		SET refBody.idBeneficiario			= COALESCE(refIn.nsSrv:Beneficiario.nsSrv:NumeroIdentificacion , ''); 
+		SET refBody.nomBeneficiario			= COALESCE(refIn.nsSrv:Beneficiario.nsSrv:Nombres , '');	
+		SET refBody.apePatBeneficiario		= COALESCE(refIn.nsSrv:Beneficiario.nsSrv:ApellidoPaterno , '');	
+		SET refBody.codProducto				= COALESCE(refIn.nsSrv:Producto.nsSrv:Codigo , '');	
+		SET refBody.nomProducto				= COALESCE(refIn.nsSrv:Producto.nsSrv:Nombre , '');	
+		SET refBody.nomTarHabiente			= COALESCE(refIn.nsSrv:Tarjetahabiente.nsSrv:Nombres , '');	
+		SET refBody.apePatTarHabiente		= COALESCE(refIn.nsSrv:Tarjetahabiente.nsSrv:ApellidoPaterno, '');	
+	END IF;
+
+END;
+
+CREATE FUNCTION validateParameterCanal(IN canalReq CHARACTER, IN refSplitCanales REFERENCE) RETURNS BOOLEAN
+BEGIN
+	DECLARE refArray REFERENCE TO refSplitCanales.Array[1];
+	DECLARE result BOOLEAN FALSE;
+	
+	WHILE LASTMOVE(refArray) DO 
+		
+		IF canalReq = COALESCE(refArray, '') THEN
+			SET result = TRUE;
+		END IF;
+		
+		MOVE refArray NEXTSIBLING;
+		
+	END WHILE;
+	
+	RETURN result;
+END;
+
+CREATE PROCEDURE validateEsbXML(IN refEnv REFERENCE, IN msgBlob BLOB, IN msgSet CHARACTER, IN msgType CHARACTER)
+BEGIN
+		DECLARE parseOptions INTEGER BITOR(ValidateContentAndValue,ValidateExceptionList);
+		CREATE LASTCHILD OF refEnv DOMAIN 'XMLNSC';
+		CREATE LASTCHILD OF refEnv.XMLNSC DOMAIN 'XMLNSC' PARSE (msgBlob 
+															   ENCODING 546 CCSID 1208
+															   OPTIONS parseOptions
+															   SET msgSet
+															   TYPE msgType);
+		SET refEnv.XMLNSC =refEnv.XMLNSC.XMLNSC;
+		SET refEnv.XMLNSC.XMLNSC = NULL;
+END;
+

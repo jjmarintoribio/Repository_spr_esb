@@ -131,7 +131,11 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVO_CARGOBD_PrepararLectura
 		--SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSOK = Environment.cantidadRegistrosOk ;
 		--SET OutputRoot.XMLNSC.MENSAJE.CANTIDADREGISTROSFAIL = Environment.cantidadRegistrosFail;
 
-		PROPAGATE TO TERMINAL 3;
+		/**/
+		/*Inicio Synopsis RMQ Modificado para CE*/
+		--PROPAGATE TO TERMINAL 3;
+		PROPAGATE TO TERMINAL 0;
+		/*Fin Synopsis RMQ Modificado para CE*/
 
 		RETURN FALSE;		
 	END;

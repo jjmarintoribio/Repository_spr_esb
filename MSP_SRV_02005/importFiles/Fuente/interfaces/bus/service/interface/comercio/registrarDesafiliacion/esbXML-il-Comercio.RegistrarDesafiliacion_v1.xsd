@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified"
+	elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://visanet.com.pe/esbXML/v1.0"
+	xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/">
+	<xs:import schemaLocation="../../../../generic/header/IBBUSInputServiceHeader_v1.0.xsd" namespace="http://visanet.com.pe/bus/generic/header/v1.0/"></xs:import>
+	<xs:element name="esbXML" type="tns:esbXML" />
+	<xs:complexType name="esbXML">
+		<xs:sequence>
+			<xs:element name="Header" type="tns:HeaderRequest" />
+			<xs:element name="Body" type="tns:Body" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Body"> 
+		<xs:sequence>
+			<xs:element ref="tns:ComercioRegistrarDesafiliacion" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderRequest">
+		<xs:sequence>
+			<xs:element ref="Q1:HeaderRequest" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="ComercioRegistrarDesafiliacion">
+		<xs:sequence>
+			<xs:element minOccurs="1" maxOccurs="1" name="codComercio">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="40" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="1" maxOccurs="1" name="codProducto">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="40" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="1" maxOccurs="1" name="idBeneficiario">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="24" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element minOccurs="1" maxOccurs="1" name="canal">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:totalDigits value="1" />
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmTrace.msgnode="ComIbmTrace.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:ib_visa_esb_srv_SMF_ESB_SRV_ERRORSRV.subflow="ib/visa/esb/srv/SMF_ESB_SRV_ERRORSRV.subflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="ib/visa/esb/srv/is02/MF_ESB_SRV_02005_REQRES.msgflow"
+    nsPrefix="ib_visa_esb_srv_is02_MF_ESB_SRV_02005_REQRES.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Debug" name="T_Debug" defaultValueLiteral="/app/visa/esb/srv/logs/Srv02005.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.T_Error" name="T_Error" defaultValueLiteral="/app/visa/esb/srv/logs/Srv02005_Error.log">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="MF_ESB_SRV_02005_REQRES" bundleName="ib/visa/esb/srv/is02/MF_ESB_SRV_02005_REQRES" pluginId="MFP_ESB_SRV_02"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_SRV_02/icons/full/obj16/MF_ESB_SRV_02005_REQRES.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_SRV_02/icons/full/obj30/MF_ESB_SRV_02005_REQRES.gif"/>
+    <version xmi:type="utility:ConstantString" string="1.0"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="48,64" queueName="IB.SRV.02005.REQ.01" messageDomainProperty="BLOB" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.SRV.02005.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="60,250" queueName="IB.SRV.02005.RES.01" messageDomainProperty="XMLNSC" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.SRV.02005.RES.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="290,250" computeExpression="esql://routine/ib.visa.esb.srv.is02#MF_ESB_SRV_02005_REQRES_PrepararRespuesta.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="PrepararRespuesta"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="502,251" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="QRespuestaProtocolo"/>
+      </nodes>
+      <nodes xmi:type="ib_visa_esb_srv_SMF_ESB_SRV_ERRORSRV.subflow:FCMComposite_1" xmi:id="FCMComposite_1_9" location="275,147">
+        <translation xmi:type="utility:ConstantString" string="SMF_ESB_SRV_ERRORSRV"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="190,185" destination="file" pattern="********/Error 2 /********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="187,124" destination="file" pattern="********/Error 1 /********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;ExceptionList = ${ExceptionList}">
+        <translation xmi:type="utility:ConstantString" string="T_Error1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="513,172" destinationMode="list" transactionMode="no" persistenceMode="no">
+        <translation xmi:type="utility:ConstantString" string="IB.GEN.AUDITORIA.REQ.01"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="423,251" destination="file" pattern="********/Info 4/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;Root Out = ${Root}&#xD;&#xA;Environment = ${Environment}">
+        <translation xmi:type="utility:ConstantString" string="T_Info4"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="204,250" destination="file" pattern="********/Info 3/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;Root In = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Info3"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="195,64" destination="file" pattern="********/Info 1/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;Root In = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Info1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="305,64" computeExpression="esql://routine/ib.visa.esb.srv.is02#MF_ESB_SRV_02005_REQRES_AdecuarMensaje.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="AdecuarMensaje"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="554,65" destinationMode="list" transactionMode="no">
+        <translation xmi:type="utility:ConstantString" string="QSalidaProtocolo"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="457,65" destination="file" pattern="********/Info 2/********************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;CorrelId = ${Root.MQMD.CorrelId}&#xD;&#xA;Environment = ${Environment}&#xD;&#xA;Root In = ${Root}&#xD;&#xA;">
+        <translation xmi:type="utility:ConstantString" string="T_Info2"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_11" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_7" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_19" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_20" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_2" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_14" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_Debug">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.T_Debug" bundleName="ib/visa/esb/srv/is01/MF_ESB_SRV_02005_REQRES" pluginId="MFP_ESB_SRV_01"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" describedAttribute="Property.T_Error">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.T_Error" bundleName="ib/visa/esb/srv/is01/MF_ESB_SRV_02005_REQRES" pluginId="MFP_ESB_SRV_01"/>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <attributeLinks promotedAttribute="Property.T_Debug" overriddenNodes="FCMComposite_1_13 FCMComposite_1_7 FCMComposite_1_15 FCMComposite_1_2">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <attributeLinks promotedAttribute="Property.T_Error" overriddenNodes="FCMComposite_1_11 FCMComposite_1_10">
+      <overriddenAttribute href="ComIbmTrace.msgnode#Property.filePath"/>
+    </attributeLinks>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -58,7 +58,7 @@ CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararEnvio
 				SET OutputRoot.MQMD 			= InputRoot.MQMD;
 				SET OutputRoot.MQMD.CorrelId 	= InputRoot.MQMD.MsgId;
 				SET OutputRoot.MQRFH2 = InputRoot.MQRFH2;
-				SET OutputRoot.XMLNSC = InputRoot.XMLNS;
+				SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
 	
 				SET OutputLocalEnvironment.Destination.MQDestinationList.DestinationData.queueName = obtenerColaFlujoResponse(InputRoot.MQRFH2.usr.CodigoServicio);
 					 
@@ -74,10 +74,11 @@ CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararEnvio
 		--Preparado de parametros de la llamada al servicio Web
 		SET OutputRoot.HTTPRequestHeader."X-Original-HTTP-URL"  = InputRoot.MQRFH2.usr.Parametros.Servicio.URLDEST;
 		SET OutputRoot.HTTPRequestHeader.SOAPAction 			= InputRoot.MQRFH2.usr.Parametros.Servicio.METODO;
+		--SET OutputRoot.HTTPRequestHeader."Content-Type" = 'application/soap+xml; charset=utf-8; action="'||InputRoot.MQRFH2.usr.Parametros.Servicio.METODO||'"';
 		SET OutputLocalEnvironment.Destination.HTTP.Timeout 	= CAST(InputRoot.MQRFH2.usr.Parametros.Servicio.TIMEOUT AS INTEGER);
 
 		--Asignacion del Body del servicio
-		SET OutputRoot.XMLNS = InputRoot.XMLNS ;
+		SET OutputRoot.XMLNSC = InputRoot.XMLNSC ;
 	
 		--Guardado de cabeceras
 		SET Environment.Properties 	= InputRoot.Properties;
@@ -187,7 +188,7 @@ CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararRespuestaError
 			SET OutputRoot.MQRFH2.usr.Parametros.Reintento.NRORETRY	= Environment.Reintento.InputRoot.MQRFH2.usr.Parametros.Servicio.NRORETRY;
 			
 			
-			SET OutputRoot.XMLNS 		= Environment.Reintento.InputRoot.XMLNS;
+			SET OutputRoot.XMLNSC 		= Environment.Reintento.InputRoot.XMLNSC;
 			
 			PROPAGATE TO TERMINAL 1;	
 				
@@ -200,7 +201,7 @@ CREATE COMPUTE MODULE ME_ESB_CORE_HTTP_OUTPUT_PrepararRespuestaError
 			SET OutputRoot.MQMD.CorrelId 	= Environment.Reintento.InputRoot.MQMD.CorrelId;			
 			SET OutputRoot.MQRFH2 			= Environment.Reintento.InputRoot.MQRFH2;
 			
-			SET OutputRoot.XMLNS 			= Environment.Reintento.InputRoot.XMLNS;
+			SET OutputRoot.XMLNSC 			= Environment.Reintento.InputRoot.XMLNSC;
 
 			SET Environment.controlReenvio = getSI();
 							

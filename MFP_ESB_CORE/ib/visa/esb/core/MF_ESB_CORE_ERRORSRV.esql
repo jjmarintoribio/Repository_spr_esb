@@ -45,10 +45,15 @@ CREATE COMPUTE MODULE MF_ESB_CORE_ERRORSRV_PrepararRespuestaError
 		--Preparacion de respuestas segun el protocolo de entrada y el tipo de servicio del consumidor y proveedor
 
 
-		IF refRespuesta.codigoRespuesta = getCOD_ERROR_1018() OR  --error no controlado en flujos de servicio
-			refRespuesta.codigoRespuesta = getCOD_ERROR_1013() OR  --error de validaciones de campos de entrada del servicio
-			refRespuesta.codigoRespuesta = getCOD_ERROR_1010() OR  --error al invocar el servicio proveedor
-			refRespuesta.codigoRespuesta = getCOD_ERROR_1012() THEN --error en timeout en el servicio proveedor
+		IF  refRespuesta.codigoRespuesta  = getCOD_ERROR_201() OR  --error no controlado en flujos de servicio
+			refRespuesta.codigoRespuesta = getCOD_ERROR_202() OR  --error de validaciones de campos de entrada del servicio
+			refRespuesta.codigoRespuesta = getCOD_ERROR_203() OR  --error al invocar el servicio proveedor
+			refRespuesta.codigoRespuesta = getCOD_ERROR_204() OR --error en timeout en el servicio proveedor
+			refRespuesta.codigoRespuesta = getCOD_ERROR_205() OR
+			refRespuesta.codigoRespuesta = getCOD_ERROR_301() OR
+			refRespuesta.codigoRespuesta = getCOD_ERROR_302() OR
+			refRespuesta.codigoRespuesta = getCOD_ERROR_401() OR
+			refRespuesta.codigoRespuesta = getCOD_ERROR_402() THEN 
 
 			DECLARE chrProtocolo CHARACTER InputRoot.MQRFH2.usr.Parametros.Protocolo.TipoProtocolo;
 			--Se asigna la cola generica de respuesta del protocolo
@@ -102,6 +107,15 @@ CREATE COMPUTE MODULE MF_ESB_CORE_ERRORSRV_PrepararRespuestaError
 										CAST(refRespuesta.codigoRespuesta AS INTEGER),
 										refRespuesta.descripcion);
 	
+			ELSEIF chrProtocolo =  getPROTOCOLO_ENTRADA_JSON() THEN
+	
+				SET OutputRoot.Properties = InputProperties;
+				SET OutputRoot.MQMD = InputRoot.MQMD;				
+				SET OutputRoot.MQMD.MsgId = CAST(OutputRoot.MQMD.CorrelId AS BLOB);
+				SET OutputRoot.MQMD.CorrelId = OutputRoot.MQMD.MsgId;
+				SET OutputRoot.MQRFH2.usr.Parametros.Protocolo.Datos = InputRoot.MQRFH2.usr.Parametros.Protocolo.Datos;
+	 
+				CALL prepararEnvelopeJSONRespESB(OutputRoot,InputRoot.MQRFH2.usr,Environment);	
 			END IF;
 	
 			PROPAGATE TO TERMINAL 2;

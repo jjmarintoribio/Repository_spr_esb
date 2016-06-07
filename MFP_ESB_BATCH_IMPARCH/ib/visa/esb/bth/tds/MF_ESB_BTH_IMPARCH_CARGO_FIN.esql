@@ -118,6 +118,16 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_EjecutarFinalizacionCarga
 			PROPAGATE TO TERMINAL 4;
 		END IF;	
 		
+		/*Inicio Synopsis RMQ: Nuevo para CE*/
+		--((4.1)) Envio de correo de alerta al comercio de finalizacion de proceso de su archivo de cargos
+		IF (Environment.Parametros.Batch.Metadata.tipoCanal = 'CE') THEN -- Si es del canal CE el log se deja en el SFTP del comercio.
+			
+			CALL prepararMensajeCorreoNotificacionCargosCE(OutputRoot,refParam, intRegistrosFail,  intRegistrosTotal, estadoProcesoImp);
+			PROPAGATE TO TERMINAL 4;
+			
+		END IF;
+		/*Fin Synopsis RMQ: Nuevo para CE*/
+		
 		RETURN FALSE;
 	END;
 	
@@ -267,9 +277,22 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_CARGO_FIN_MoverArchivoFinal
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN		
 	SET OutputRoot = InputRoot;
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
-		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
-		RETURN TRUE;
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+		--SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		--RETURN TRUE;
+		/* Inicio Synopsis RMQ : Modificado para CE */
+		IF (Environment.Parametros.Batch.Metadata.tipoCanal = 'CE') THEN -- Si es del canal CE el log se deja en el SFTP del comercio.
+			SET OutputLocalEnvironment.Destination.File.Remote.ServerDirectory 	= Environment.Parametros.Batch.Metadata.rutaOutLog;
+			SET OutputLocalEnvironment.Destination.File.Name 					= Environment.Parametros.Batch.Metadata.fileOutLog;
+			PROPAGATE TO TERMINAL 2;
+		ELSE	
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+			SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+			PROPAGATE TO TERMINAL 1;
+		END IF;
+		
+		RETURN FALSE;
+		/* Fin Synopsis RMQ : Modificado para CE */
 	END;
 	
 END MODULE;
