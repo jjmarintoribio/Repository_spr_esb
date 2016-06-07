@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="con" path="com.ibm.etools.mft.uri.classpath.MBProjectReference"/>
+	<classpathentry kind="lib" path="/home/poisonbin/Documents/WORKSPACES/VISANET/CRIPTO/bcprov-jdk16-1.45.jar"/>
+	<classpathentry kind="lib" path="/home/poisonbin/Documents/WORKSPACES/VISANET/CRIPTO/bcpg-jdk16-1.45.jar"/>
+	<classpathentry kind="lib" path="/home/poisonbin/Documents/WORKSPACES/VISANET/CRIPTO/spr-crypto-1.0.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
