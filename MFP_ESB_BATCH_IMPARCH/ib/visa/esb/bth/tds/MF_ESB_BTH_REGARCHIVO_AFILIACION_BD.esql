@@ -71,7 +71,10 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVO_AFILIACION_BD_PrepararLectura
 				SET intTipoPeriocidad = 2;
 			ELSEIF UCASE(refRegis.TIPO_PERIODICIDAD) = '12' THEN
 				SET intTipoPeriocidad = 3;
-			END IF;			
+			ELSEIF UCASE(refRegis.TIPO_PERIODICIDAD) = '3' THEN --Req3_Mayo
+				SET intTipoPeriocidad = 4;
+			END IF;	
+						
 
 
 			IF UCASE(refRegis.TITULAR_TIPO_DOCUMENTO) = '1' THEN

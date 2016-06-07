@@ -97,7 +97,7 @@
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
                     
                   
-                  <dfdl:assert failureType="processingError" message="Periodicidad Errada solo 1,6,12,14">{xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('14') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('1') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('6') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('12')}</dfdl:assert>
+                  <dfdl:assert failureType="processingError" message="Periodicidad Errada solo 1,3,6,12,14">{xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('14') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('1') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('6') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('12') or xs:string( /ns0:AfiliacionDsSolicitud/MENSAJE[1]/CARGO_PERIODICIDAD)eq('3')}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>

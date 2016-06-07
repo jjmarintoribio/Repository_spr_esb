@@ -476,7 +476,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ControlarErrorRecepcion
  		--SET Environment.XMLNSC.resultado.mensaje = chrMsjError; 
  		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709
  		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';
-
+		--SET Environment.XMLNSC.resultado.nro_beneficiario = COALESCE(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_IDENTIFICACION_BENEFICIARIO,'''',''),'-');
+		
 		DECLARE inCCSID INT getENCODING();                     
 		DECLARE inEncoding INT InputProperties.Encoding;
 		                        

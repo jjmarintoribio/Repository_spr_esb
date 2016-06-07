@@ -136,7 +136,7 @@
                             <xsd:element name="TIPO_PERIODICIDAD" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Periodicidad Errada&lt;/F&gt;">{xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (1) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (6) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (12) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (14)}</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Periodicidad Errada&lt;/F&gt;">{xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (1) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (6) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (12) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (14) or xs:int( /ns0:Afiliacion/MENSAJE[1]/TIPO_PERIODICIDAD) eq (3)}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>

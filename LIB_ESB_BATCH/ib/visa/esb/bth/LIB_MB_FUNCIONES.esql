@@ -485,6 +485,12 @@ mensajeError CHARACTER, INOUT detalleError CHARACTER)
 						DECLARE DIA_PAGO_TEMP INTEGER obtenerDiaCargoSiguiente(FECHA_TEMP,DIA_PAGO_ORIGINAL);
 					RETURN obtenerFechaPosicionarDia(FECHA_TEMP,DIA_PAGO_TEMP);
 					
+				ELSEIF PERIOCIDAD = 4 THEN-- TRIMESTRAL --Req3_Mayo
+					
+						DECLARE FECHA_TEMP DATE concatenarFechaMesDia(FECHA_PAGO,3,1);
+						DECLARE DIA_PAGO_TEMP INTEGER obtenerDiaCargoSiguiente(FECHA_TEMP,DIA_PAGO_ORIGINAL);
+					RETURN obtenerFechaPosicionarDia(FECHA_TEMP,DIA_PAGO_TEMP);
+					
 				END IF;
 			END IF;			
 		END IF;

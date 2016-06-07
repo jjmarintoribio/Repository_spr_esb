@@ -411,11 +411,13 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_CARGO_ControlarErrorRecepcion
 		SET Environment.XMLNSC.resultado.nro_registro = COALESCE(InputLocalEnvironment.File.Record-1,''); --cambio importacion, aantes -1
  		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709 chrMsjError;
  		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';
+ 		--SET Environment.XMLNSC.resultado.nro_beneficiario = COALESCE(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_IDENTIFICACION_BENEFICIARIO,'''',''),'-');
 
 		DECLARE inCCSID INT getENCODING();                     
 		DECLARE inEncoding INT InputProperties.Encoding;
 		                        
 		SET OutputRoot.BLOB.BLOB = ASBITSTREAM(Environment.XMLNSC, inEncoding, inCCSID); 
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR)|| 'temp/';
 		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR);
 		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log';
 		
