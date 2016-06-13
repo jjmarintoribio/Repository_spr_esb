@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0" xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/" xmlns:tns="http://visanet.com.pe/esbXML/v1.0">
+<?xml version="1.0" encoding="UTF-8"?><xs:schema attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://visanet.com.pe/esbXML/v1.0" xmlns:Q1="http://visanet.com.pe/bus/generic/header/v1.0/" xmlns:tns="http://visanet.com.pe/esbXML/v1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:import namespace="http://visanet.com.pe/bus/generic/header/v1.0/" schemaLocation="../../bus/generic/header/v10/IBBUSInputServiceHeader_v1.0.mxsd"/>
     <xs:element name="esbXML" type="tns:esbXML">
     <xs:annotation>
@@ -71,7 +71,7 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
-						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>						
+						<xs:pattern value="[a-zA-ZÃ±Ã‘Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“Ãš -]+"/>						
 					</xs:restriction>						
 				</xs:simpleType>												
 			</xs:element>
@@ -80,7 +80,7 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
-						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>
+						<xs:pattern value="[a-zA-ZÃ±Ã‘Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“Ãš -]+"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -131,7 +131,7 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>						
-						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>												
+						<xs:pattern value="[a-zA-ZÃ±Ã‘Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“Ãš -]+"/>												
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -140,7 +140,7 @@
 					<xs:restriction base="xs:string">
 						<xs:minLength value="1"/>
 						<xs:maxLength value="50"/>
-						<xs:pattern value="[a-zA-ZñÑáéíóúÁÉÍÓÚ -]+"/>						
+						<xs:pattern value="[a-zA-ZÃ±Ã‘Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“Ãš -]+"/>						
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -175,11 +175,12 @@
 			<xs:element maxOccurs="1" minOccurs="1" name="periodicidad">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
-						<xs:enumeration value="0"/>
-						<xs:enumeration value="1"/>
-						<xs:enumeration value="2"/>
-						<xs:enumeration value="3"/>
-					</xs:restriction>
+                        <xs:enumeration value="0"/>
+                        <xs:enumeration value="1"/>
+                        <xs:enumeration value="2"/>
+                        <xs:enumeration value="3"/>
+                        <xs:enumeration value="4"/>
+                    </xs:restriction>
 				</xs:simpleType>
 			</xs:element>			
 			<xs:element maxOccurs="1" minOccurs="1" name="reintentoAuto">
