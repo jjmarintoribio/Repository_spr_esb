@@ -40,8 +40,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 	        PROPAGATE TO TERMINAL 1;
 			--TODO :::inicio
 			CREATE FIELD cacheProcesoImpAfiliacion.campo.Registros.REGISTRO;
-			--TODO :::fin	        
-	            
+			--TODO :::fin
+			
 		ELSE
 			
 			IF InputLocalEnvironment.File.Record > 2 THEN -- Obviar la cabecera del archivo CSV
@@ -73,7 +73,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 						PROPAGATE TO TERMINAL 3; 
 		
 						SET cacheProcesoImpAfiliacion.campo.cantidad 	= 0;
-						SET cacheProcesoImpAfiliacion.campo.grupo 	= cacheProcesoImpAfiliacion.campo.grupo + 1;				
+						SET cacheProcesoImpAfiliacion.campo.grupo 	= cacheProcesoImpAfiliacion.campo.grupo + 1;
+						
 						
 				END IF; 
 				
@@ -114,6 +115,11 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 				IF 	(LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>16 AND LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>19) THEN
 					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA SOLO DEBE TENER 16 O 19 DIGITOS</F>');
 				END IF;
+				--Req 21: 14062016
+				IF 	(validarDigitoChequeo(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''','')) IS FALSE) THEN
+					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA ES INVÁLIDO</F>');
+				END IF;
+				--Req 21 fin
 				
 				IF (isNumericValid(Environment.DFDL.[1].MENSAJE.TELEFONO_TARJETAHABIENTE, FALSE) IS FALSE) THEN
 					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES(getMSJ_ERROR_2010());					
@@ -205,6 +211,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_ValidarArchivo
 									                        
 		RETURN FALSE;
 	END;
+	
 END MODULE;
 
 CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_GrabarParametros
@@ -249,7 +256,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_GrabarParametros
 										getEST_IMP_EN_PROCESO(),
 										refMetadata.codigoUsuarioCreacion,
 										refMetadata.ipCreacion,
-										intIdTransaccion);
+										intIdTransaccion);															
 		--((2)) Guardado en memoria
 		  
 		ROUTING : BEGIN ATOMIC 

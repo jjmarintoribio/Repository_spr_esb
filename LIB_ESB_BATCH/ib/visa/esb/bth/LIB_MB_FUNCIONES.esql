@@ -819,12 +819,57 @@ mensajeError CHARACTER, INOUT detalleError CHARACTER)
 		--RETURN LENGTH(TRIM(TRANSLATE(chrNumber, '','0123456789')));
 		--RETURN TRIM(TRANSLATE(chrNumber, '','0123456789'));	
 		RETURN LENGTH(TRIM(TRANSLATE(chrNumber, '0123456789','')));	
-	END; 
+	END;
 	
+
 	CREATE FUNCTION isNumericValidChar(IN chrNumber CHARACTER)
 	RETURNS CHARACTER 
 	BEGIN
 		--RETURN TRIM(TRANSLATE(chrNumber, '','0123456789'));
 		RETURN 	chrNumber;
 	END; 
- 	
+
+	CREATE FUNCTION validarLuhn(IN nroTarjeta CHARACTER, IN posicionImpar BOOLEAN)
+	RETURNS INTEGER
+	BEGIN
+		DECLARE suma INTEGER 0;
+		DECLARE n INTEGER 0;
+		DECLARE digito INTEGER 0;
+		DECLARE lengthTarjeta INTEGER LENGTH(TRIM(nroTarjeta));
+		DECLARE index INTEGER 0;
+		SET index = lengthTarjeta;
+		
+		WHILE index >= 1 DO 
+            SET digito = CAST(SUBSTRING(nroTarjeta FROM index FOR 1) AS INTEGER);
+            IF (posicionImpar IS TRUE) THEN
+                SET n = (digito * 2);
+                IF (n > 9) THEN
+                   SET n = (n - 9);
+                END IF;
+            ELSE
+            	SET n = digito;
+            END IF;
+            SET suma = suma + n;
+            IF posicionImpar IS TRUE THEN
+            	SET posicionImpar = FALSE;
+            ELSE
+            	SET posicionImpar = TRUE;
+            END IF;
+            SET index = index - 1;
+        END WHILE;
+        RETURN suma;
+	END;
+	
+	CREATE FUNCTION validarDigitoChequeo(IN nroTarjeta CHARACTER)
+	RETURNS BOOLEAN
+	BEGIN
+		DECLARE result INTEGER;
+		DECLARE valido INTEGER;
+		SET result = validarLuhn(nroTarjeta, FALSE);
+		SET valido = MOD(result,10); 
+		IF (valido = 0) THEN 
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	END;
