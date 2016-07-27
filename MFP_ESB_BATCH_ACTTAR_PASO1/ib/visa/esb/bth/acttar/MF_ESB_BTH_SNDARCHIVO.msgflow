@@ -15,10 +15,10 @@
       <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="299,167" outputDirectory="/app/temp" outputFilename="*.pgp" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity" fileFtpDirectory="/IN">
         <translation xmi:type="utility:ConstantString" string="File Output"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="85,260" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="??????????.dat" processedFileAction="moveToArchiveWithTimestamp" replaceDuplicateArchives="true" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="85,260" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="??????????.dat" replaceDuplicateArchives="true" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">
         <translation xmi:type="utility:ConstantString" string="Emisores"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="488,298" outputDirectory="/storage_ib/acttar_out" outputFilename="*.dat" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="172.16.92.20:22" fileFtpUser="falabellaIdentity" fileFtpDirectory="falabella/out">
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="488,298" outputDirectory="/storage_ib/acttar_out" outputFilename="*.dat" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInBcp" fileFtpUser="falabellaIdentity" fileFtpDirectory="falabella/out">
         <translation xmi:type="utility:ConstantString" string="SFTPVisanet"/>
       </nodes>
       <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="84,440" inputDirectory="/storage_ib/tarjeta_emisores_envio" filenamePattern="?????????????????.dat" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpDirectory="">

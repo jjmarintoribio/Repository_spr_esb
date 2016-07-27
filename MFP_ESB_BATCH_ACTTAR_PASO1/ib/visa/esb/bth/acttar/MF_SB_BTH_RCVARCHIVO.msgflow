@@ -12,7 +12,7 @@
     <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj16/MF_SB_BTH_RCVARCHIVO.gif"/>
     <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/MFP_ESB_BATCH_ACTTAR_PASO1/icons/full/obj30/MF_SB_BTH_RCVARCHIVO.gif"/>
     <composition>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="102,262" inputDirectory="/app/temp" filenamePattern="*.pgp" processedFileAction="moveToArchive" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity" fileFtpDirectory="/OUT">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="102,262" inputDirectory="/app/temp" filenamePattern="*.pgp" processedFileAction="moveToArchive" messageDomainProperty="BLOB" waitInterval="60" remoteTransferType="SFTP" fileFtpServer="192.168.181.15" fileFtpUser="alignetIdentity" fileFtpDirectory="/OUT" fileFtpScanDelay="120">
         <translation xmi:type="utility:ConstantString" string="File Input"/>
       </nodes>
       <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="467,262" outputDirectory="/app/visa/esb/batch/ftp" outputFilename="*.pgp" fileFtpDirectory="">
@@ -61,18 +61,18 @@
       <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="439,437" destination="file" filePath="/app/visa/esb/batch/logs/ACTT_RCV.log" pattern="000000000: ${LocalEnvironment}">
         <translation xmi:type="utility:ConstantString" string="Trace3"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="94,610" inputDirectory="/storage_ib/acttar/ub_banbif" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInUBBanbif" fileFtpUser="unibancaIdentity" fileFtpDirectory="/IN" fileFtpScanDelay="120">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="94,610" inputDirectory="/storage_ib/acttar/ub_banbif" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInUBBanbif" fileFtpUser="unibancaIdentityBif" fileFtpDirectory="/in" fileFtpScanDelay="120">
         <translation xmi:type="utility:ConstantString" string="UB_Banbif"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
       <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_20" location="532,825" outputDirectory="/app/visa/esb/batch/ftp" outputFilename="*.dat">
         <translation xmi:type="utility:ConstantString" string="EscribirArchivoDesencripar"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="93,683" inputDirectory="/storage_ib/acttar/ub_gnb" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" remoteTransferType="SFTP" fileFtpServer="sftpInUBGnb" fileFtpUser="unibancaIdentity" fileFtpDirectory="/IN" fileFtpScanDelay="120">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="93,683" inputDirectory="/storage_ib/acttar/ub_gnb" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInUBGnb" fileFtpUser="unibancaIdentityGnb" fileFtpDirectory="/in" fileFtpScanDelay="120">
         <translation xmi:type="utility:ConstantString" string="UB_GNB"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_22" location="97,962" inputDirectory="/storage_ib/acttar/ub_scotia" filenamePattern="*.dat" processedFileAction="moveToArchiveWithTimestamp" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInUBScotia" fileFtpUser="unibancaIdentity" fileFtpDirectory="/IN" fileFtpScanDelay="120">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_22" location="97,962" inputDirectory="/storage_ib/acttar/ub_scotia" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInUBScotia" fileFtpUser="unibancaIdentitySco" fileFtpDirectory="/in" fileFtpScanDelay="120">
         <translation xmi:type="utility:ConstantString" string="UB_Scotia"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
@@ -80,7 +80,7 @@
         <translation xmi:type="utility:ConstantString" string="PMC_Crediscotia"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_24" location="90,1029" inputDirectory="/storage_ib/acttar/scotia" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInPMCScotia" fileFtpUser="procesosMCIdentity" fileFtpDirectory="/IN" fileFtpScanDelay="120">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_24" location="90,1029" inputDirectory="/storage_ib/acttar/scotia" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" remoteTransferType="SFTP" fileFtpServer="sftpInPMCScotia" fileFtpUser="procesosMCIdentity" fileFtpDirectory="/IN" fileFtpScanDelay="120">
         <translation xmi:type="utility:ConstantString" string="PMC_Scotia"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
@@ -92,7 +92,7 @@
         <translation xmi:type="utility:ConstantString" string="Interbank"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_27" location="96,546" inputDirectory="/storage_ib/acttar/bbva" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" remoteTransferType="SFTP" fileFtpServer="sftpInBbva" fileFtpUser="bbvaIdentity" fileFtpDirectory="/IN">
+      <nodes xmi:type="ComIbmFileInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_27" location="96,546" inputDirectory="/storage_ib/acttar/bbva" filenamePattern="*.dat" messageDomainProperty="BLOB" waitInterval="120" fileFtp="true" remoteTransferType="SFTP" fileFtpServer="sftpInBbva" fileFtpUser="bbvaIdentity" fileFtpDirectory="/IN">
         <translation xmi:type="utility:ConstantString" string="BBVA"/>
         <longDescription xmi:type="utility:ConstantString" string="/storage_ib/tarjeta_emisores_envio/"/>
       </nodes>

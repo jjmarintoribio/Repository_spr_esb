@@ -36,7 +36,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 		
 		DECLARE refTarjeta REFERENCE TO Environment.Tarjetas;
 		DECLARE refEmisor REFERENCE TO InputBody.MENSAJE;	 
-		DECLARE chrFecActual CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2()); 
+		--DECLARE chrFecActual CHARACTER CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA2()); 
+		DECLARE chrFecActual CHARACTER CAST(CURRENT_DATE AS CHAR FORMAT getFORMATO_FECHA2());
 	
 		--el campo NOM_ARCHIVO_ACTUALIZACION_TARJETAS ira el nombre del subdirectorio donde se creara el archivo para el emisor. No debe de comenzar con /
 		DECLARE chrRutaArchivo CHARACTER '';--CHARACTER TRIM(refEmisor.NOM_ARCHIVO_ACTUALIZACION_TARJETAS);
