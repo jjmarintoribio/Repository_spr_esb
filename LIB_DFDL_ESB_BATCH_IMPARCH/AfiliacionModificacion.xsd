@@ -25,7 +25,7 @@
 							<xsd:element ibmDfdlExtn:sampleValue="value2" minOccurs="0" name="NRO_TARJETA" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Número Tarjeta inválida&lt;/F&gt;">{fn:string-length(/AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA )ge(16) and fn:string-length(/AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA )le(19)}</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Número Tarjeta inválida&lt;/F&gt;">{fn:string-length(/ns0:AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA)ge(1) and fn:string-length(/ns0:AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA)le(20)}</dfdl:assert>
                   <dfdl:assert failureType="processingError" message="&lt;F&gt;La tarjeta tiene formato incorrecto&lt;/F&gt;">{fn:not(fn:contains(/ns0:AfiliacionModificacion/MENSAJE[1]/NRO_TARJETA,' '))}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>

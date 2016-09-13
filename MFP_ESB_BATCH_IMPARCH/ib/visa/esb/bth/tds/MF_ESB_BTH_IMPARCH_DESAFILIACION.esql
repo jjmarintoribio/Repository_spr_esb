@@ -126,7 +126,17 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_DESAFILIACION_GrabarParametros
 		DECLARE intIdArchivoImportacion INTEGER;
 		
 		--((1.1)) Registro del archivo log
-		CALL insertarArchivo(Environment.File.Name || '.log',
+		--Req8: log alignet
+		DECLARE extensionLog CHARACTER '.log';
+		DECLARE tipoArchivoLog INTEGER;
+		CALL obtenerComercioTipoArchivo(CAST(refMetadata.idComercio AS INTEGER), tipoArchivoLog); 
+		IF tipoArchivoLog = 1 THEN --LOG DE ALIGNET 
+			SET extensionLog = '.csv';
+		ELSE
+			SET extensionLog = '.log';
+		END IF;
+		--Req8: fin
+		CALL insertarArchivo(Environment.File.Name || extensionLog, --Req8: log alignet
 							CAST(refMetadata.tipoArchivoLog AS INTEGER),
 							CURRENT_TIMESTAMP,
 							intIdArchivoLog);
@@ -153,6 +163,10 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_DESAFILIACION_GrabarParametros
 										refMetadata.codigoUsuarioCreacion,
 										refMetadata.ipCreacion,
 										intIdTransaccion);
+		
+		--Req 6: logs ordenados
+		CALL crearImportacionDesafiliacionTemporalError(CAST(intIdTransaccion AS CHARACTER));
+		--Req 6: fin
 		--((2)) Guardado en memoria
 		  
 		ROUTING : BEGIN ATOMIC 
@@ -171,6 +185,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_DESAFILIACION_GrabarParametros
 			SET refParam.Batch.idTransaccion	= intIdTransaccion;
 			SET refParam.Batch.msgIdTransaccion	= getMsgId(); --identificador unico del procesamiento de un archivo
 			SET refParam.Batch.Metadata		    = refMetadata;
+			SET refParam.Batch.tipoArchivoLog	= tipoArchivoLog; --Req8: log alignet
 			
 			-- ((3)) Se obtiene el horario de proceso
 			
@@ -222,6 +237,16 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_DESAFILIACION_GrabarParametros
 
 		RETURN FALSE;
 	END;
+	--Req 6: logs ordenados
+   	CREATE PROCEDURE crearImportacionDesafiliacionTemporalError (IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_DESAFILIACION_CREAR_TEMPORAL_ERROR";
+	--Req 6: fin	
+	--Req8: log alignet
+	CREATE PROCEDURE obtenerComercioTipoArchivo(IN P_ID_COMERCIO INTEGER, OUT P_ID_ARCHIVO INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_COMERCIO_OBTENER_TIPOARCHIVOLOG";
+	--Req8: fin
 END MODULE;
 
 
@@ -374,16 +399,40 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_DESAFILIACION_ControlarErrorRecepcion
 		SET Environment.XMLNSC.resultado.nro_registro = COALESCE(InputLocalEnvironment.File.Record-1,'');
  		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709--chrMsjError;
  		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';
+ 		SET Environment.XMLNSC.resultado.nro_beneficiario = COALESCE(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_IDENTIFICACION_BENEFICIARIO,'''',''),'-');
 
 		DECLARE inCCSID INT getENCODING();                     
 		DECLARE inEncoding INT InputProperties.Encoding;
 		                        
 		SET OutputRoot.BLOB.BLOB = ASBITSTREAM(Environment.XMLNSC, inEncoding, inCCSID); 
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
-		SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log';
+		--Req 6: logs ordenados comentado
+		--SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(refParam.Servicio.PATHFILERROR,refParam.ESB.PATHFILERROR) || 'temp/';
+		--SET OutputLocalEnvironment.Destination.File.Name 		= refParam.Batch.nombreArchivo || '.log';
+		--Req 6: fin
 		
-		PROPAGATE TO TERMINAL 1 ;
+		--Req 6: logs ordenados
+		--Quitar el propagate final para que no vaya al fileoutput
+		CALL insertarImportacionDesafiliacionErrorTemporal( CAST(refParam.Batch.idTransaccion AS CHARACTER),
+													Environment.XMLNSC.resultado.nro_registro,
+													Environment.XMLNSC.resultado.mensaje,
+													Environment.XMLNSC.resultado.nro_beneficiario
+													);
+		--Req 6: fin
+		
+		--Req 6: logs ordenados comentado
+		--PROPAGATE TO TERMINAL 1 ;
+		--Req 6: fin
 		
 		RETURN FALSE;
 	END;
+	
+	--Req 6: logs ordenados
+   	CREATE PROCEDURE insertarImportacionDesafiliacionErrorTemporal (IN P_ID_TRANSACCION CHARACTER,
+   															IN P_NRO_REGISTRO INTEGER,
+															IN P_MENSAJE CHARACTER,
+															IN P_NRO_BENEFICIARIO CHARACTER
+   															)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_DESAFILIACION_INSERTAR_TEMPORAL";
+	--Req 6: fin
 END MODULE;

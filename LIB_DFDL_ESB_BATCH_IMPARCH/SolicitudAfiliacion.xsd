@@ -43,7 +43,7 @@
                             <xsd:element ibmDfdlExtn:sampleValue="value4" name="NRO_TARJETA" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Num. Tarjeta Inválida Min. 16 caracteres y Max. 19 caracteres&lt;/F&gt;">{fn:string-length( /ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_TARJETA)ge(17) and fn:string-length( /ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_TARJETA)le(20) }</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Num. Tarjeta Invalida Min. 16 caracteres y Max. 19 caracteres&lt;/F&gt;">{fn:string-length( /ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_TARJETA)ge(17) and fn:string-length( /ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_TARJETA)le(20) }</dfdl:assert>
                   <dfdl:assert failureType="processingError" message="&lt;F&gt;La tarjeta tiene formato incorrecto&lt;/F&gt;">{fn:not(fn:contains(/ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_TARJETA,' '))}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
@@ -51,7 +51,7 @@
                             <xsd:element dfdl:textNumberPattern="#0" name="NRO_MES_EXPIRACION_TARJETA" type="xsd:int">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Mes inválido&lt;/F&gt;">{xs:int(/ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA )gt(0) and xs:int(/ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA )le(12)}</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Mes invalido&lt;/F&gt;">{xs:int(/ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA )gt(0) and xs:int(/ns1:SolicitudAfiliacion/MENSAJE[1]/NRO_MES_EXPIRACION_TARJETA )le(12)}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>
@@ -86,7 +86,7 @@
                             <xsd:element ibmDfdlExtn:sampleValue="value10" name="TELEFONO_TARJETAHABIENTE" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Titular Teléfono Max. 15 caracteres&lt;/F&gt;">{fn:string-length(/ns1:SolicitudAfiliacion/MENSAJE[1]/TELEFONO_TARJETAHABIENTE )le(15)}</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Titular Telefono Max. 15 caracteres&lt;/F&gt;">{fn:string-length(/ns1:SolicitudAfiliacion/MENSAJE[1]/TELEFONO_TARJETAHABIENTE )le(15)}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>

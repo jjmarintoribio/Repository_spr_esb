@@ -33,7 +33,7 @@
       <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="-11,293" queueName="IB.BTH.IMPAFIDSSOL.FINPROCESO.REQ.01" messageDomainProperty="XMLNSC" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="IB.BTH.IMPAFIDSSOL.FINPROCESO.REQ.01"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="598,462" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ActualizarImportacionCantidad.Main" computeMode="destinationAndMessage">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="542,441" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ActualizarImportacionCantidad.Main" computeMode="destinationAndMessage">
         <translation xmi:type="utility:ConstantString" string="ActualizarImportacionCantidad"/>
       </nodes>
       <nodes xmi:type="ComIbmMQGet.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="373,387" queueName="IB.BTH.IMPAFIDSSOL.CTRLREGISTRO.REQ.01" transactionMode="no" getWithCorrelID="true">
@@ -42,20 +42,44 @@
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_11" location="663,364" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_ContadorImportaciones.Main">
         <translation xmi:type="utility:ConstantString" string="ContadorImportaciones"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="770,530" outputDirectory="/temp" outputFilename="temp.dat" writeMode="writeInPlace" outputMode="append">
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_12" location="694,439" outputDirectory="/temp" outputFilename="temp.dat" writeMode="writeInPlace" outputMode="append">
         <translation xmi:type="utility:ConstantString" string="File Output"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="890,530" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoTemp.Main" computeMode="destinationAndMessage">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_13" location="774,447" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoTemp.Main" computeMode="destinationAndMessage">
         <translation xmi:type="utility:ConstantString" string="MoverArchivoTemp"/>
       </nodes>
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="1123,509" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoFin.Main" computeMode="destinationAndMessage">
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_14" location="976,399" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoFin.Main" computeMode="destinationAndMessage">
         <translation xmi:type="utility:ConstantString" string="MoverArchivoFinal"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="1023,541" inputDirectory="temp" filenamePattern="ntemp" fileDispositionAction="delete" messageDomainProperty="BLOB">
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_15" location="888,412" inputDirectory="temp" filenamePattern="ntemp" fileDispositionAction="delete" messageDomainProperty="XMLNSC" recordDetection="delimited">
         <translation xmi:type="utility:ConstantString" string="File Read"/>
       </nodes>
-      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="1253,468" outputDirectory="temp" outputFilename="ntemp" writeMode="writeInPlace">
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_16" location="1008,487" outputDirectory="/temp" outputFilename="ntemp" writeMode="writeInPlace" recordDefinition="delimited">
         <translation xmi:type="utility:ConstantString" string="File Output1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_18" location="929,294" destination="file" filePath="/app/visa/esb/batch/logs/IMPMODAFI_AFILIACION_SOL_FIN_debug_000.log" pattern="Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_19" location="860,487" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_FinishFile.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="FinishFileTempOrdenado"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_21" location="760,513" destination="file" filePath="/app/visa/esb/batch/logs/IMPMODAFI_AFILIACION_SOL_FIN_debug_001.log" pattern="Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug3"/>
+      </nodes>
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_22" location="1142,383" destination="file" filePath="/app/visa/esb/batch/logs/IMPMODAFI_AFILIACION_SOL_FIN_debug_002.log" pattern="Root = ${Root}">
+        <translation xmi:type="utility:ConstantString" string="T_Debug2"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileRead.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_23" location="1083,580" inputDirectory="temp" filenamePattern="ntemp" fileDispositionAction="delete" messageDomainProperty="BLOB">
+        <translation xmi:type="utility:ConstantString" string="File Read1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_24" location="1158,576" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoFinal1.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MoverArchivoFinal1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_25" location="962,576" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_AFILIACION_DSD_SOL_FIN_MoverArchivoTemp1.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="MoverArchivoTemp1"/>
+      </nodes>
+      <nodes xmi:type="ComIbmFileOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_26" location="1280,580" outputDirectory="temp" outputFilename="ntemp" writeMode="writeInPlace">
+        <translation xmi:type="utility:ConstantString" string="LogFinal"/>
       </nodes>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_11" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
@@ -72,9 +96,18 @@
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_12" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_13" targetNode="FCMComposite_1_12" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.EOD"/>
       <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_15" targetNode="FCMComposite_1_13" sourceNode="FCMComposite_1_12" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_16" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_17" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_14" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_18" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_18" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_22" targetNode="FCMComposite_1_15" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_30" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.EOD"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_32" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_21" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_37" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_22" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_38" targetNode="FCMComposite_1_16" sourceNode="FCMComposite_1_19" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_39" targetNode="FCMComposite_1_19" sourceNode="FCMComposite_1_13" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_40" targetNode="FCMComposite_1_14" sourceNode="FCMComposite_1_15" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_41" targetNode="FCMComposite_1_23" sourceNode="FCMComposite_1_25" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_42" targetNode="FCMComposite_1_24" sourceNode="FCMComposite_1_23" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_43" targetNode="FCMComposite_1_25" sourceNode="FCMComposite_1_16" sourceTerminalName="OutTerminal.EOD" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_45" targetNode="FCMComposite_1_26" sourceNode="FCMComposite_1_24" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
     </composition>
     <propertyOrganizer/>
     <stickyBoard/>

@@ -136,7 +136,17 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_AFILI_DESDE_SOL_GrabarParametros
 		DECLARE intIdArchivoImportacion INTEGER;
 		
 		--((1.1)) Registro del archivo log
-		CALL insertarArchivo(Environment.File.Name || '.log',
+		--Req8: log alignet
+		DECLARE extensionLog CHARACTER '.log';
+		DECLARE tipoArchivoLog INTEGER;
+		CALL obtenerComercioTipoArchivo(CAST(refMetadata.idComercio AS INTEGER), tipoArchivoLog); 
+		IF tipoArchivoLog = 1 THEN --LOG DE ALIGNET 
+			SET extensionLog = '.csv';
+		ELSE
+			SET extensionLog = '.log';
+		END IF;
+		--Req8: fin
+		CALL insertarArchivo(Environment.File.Name || extensionLog,--Req8: log alignet
 							CAST(refMetadata.tipoArchivoLog AS INTEGER),
 							CURRENT_TIMESTAMP,
 							intIdArchivoLog);
@@ -188,6 +198,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_AFILI_DESDE_SOL_GrabarParametros
 			SET refParam.Batch.Metadata		    = refMetadata;
 			SET refParam.Batch.FlgSoloVisa		= COALESCE(Environment.Parametro1[1].VAL_NUMERICO,'S');
 			SET refParam.Batch.DiasExpSolAfi	= COALESCE(Environment.Parametro2[1].VAL_NUMERICO,1);
+			SET refParam.Batch.tipoArchivoLog	= tipoArchivoLog; --Req8: log alignet
 			
 			-- ((4)) Se obtiene el horario de proceso
 			
@@ -238,6 +249,11 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_AFILI_DESDE_SOL_GrabarParametros
 		
 		RETURN FALSE;
 	END;
+		--Req8: log alignet
+	CREATE PROCEDURE obtenerComercioTipoArchivo(IN P_ID_COMERCIO INTEGER, OUT P_ID_ARCHIVO INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_COMERCIO_OBTENER_TIPOARCHIVOLOG";
+	--Req8: fin
 END MODULE;
 
 CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_AFILI_DESDE_SOL_ControlarFinArchivo
@@ -380,6 +396,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_TDS_AFILI_DESDE_SOL_ControlarErrorRecep
 		SET Environment.XMLNSC.resultado.nro_registro = COALESCE(InputLocalEnvironment.File.Record-1,'');
  		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709chrMsjError;
  		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';--0709chrCodError;
+ 		--Req 7: nro beneficario logs
+		SET Environment.XMLNSC.resultado.nro_beneficiario = COALESCE(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_IDENTIFICACION,'''',''),'-');
+		--Req 7: fin
 
 		DECLARE inCCSID INT getENCODING();                     
 		DECLARE inEncoding INT InputProperties.Encoding;

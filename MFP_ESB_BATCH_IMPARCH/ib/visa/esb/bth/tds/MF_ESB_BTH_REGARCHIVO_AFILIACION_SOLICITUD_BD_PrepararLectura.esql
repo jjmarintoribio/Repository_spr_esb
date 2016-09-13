@@ -186,6 +186,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVO_AFILIACION_SOLICITUD_BD_PrepararLect
 				SET refError.nro_registro = COALESCE(refRegis.NRO_RECORD,'');
 				SET refError.mensaje = outResultadoMsj;							
 				SET refError.codigo = obtenerRespuestaPorCodigo(outResultado);
+				--Req 7: nro beneficario logs
+				SET refError.nro_beneficiario = REPLACE(refRegis.NRO_IDENTIFICACION,'''','');
+				--Req 7: fin
 				CREATE LASTCHILD OF Environment.XMLNSC.resultado NAME 'error';
 				MOVE refError NEXTSIBLING;
 				

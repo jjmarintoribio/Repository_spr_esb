@@ -92,18 +92,25 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_ValidarArchivo
 																     TYPE '{myNs:ModificacionAfiliacion}:AfiliacionModificacion' 
 																     OPTIONS RootBitStream); 
 				
-				--TODO :::inicio									                        
+				--TODO :::inicio		
+				DECLARE numTarjeta CHARACTER '';
+				SET numTarjeta = COALESCE(FIELDVALUE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA),'');
+				IF	numTarjeta <> '' THEN
+					IF (LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>16 AND LENGTH(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''))<>19) THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA SOLO DEBE TENER 16 O 19 DIGITOS</F>');
+					END IF;
+					IF 	(isNumericValid(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''), FALSE) IS FALSE) THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
+					END IF;
+					--Req 21: 14062016
+					IF 	(validarDigitoChequeo(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''','')) IS FALSE) THEN
+						THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA ES INVALIDO</F>');
+					END IF;	
+				END IF;										                        
 				--0709 Validaciones Adicionales
 				IF (esMayorIgualAnioActual(CAST( Environment.DFDL.[1].MENSAJE.NRO_ANHO_EXPIRACION_TARJETA AS INTEGER)) IS NOT TRUE ) THEN
 					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2006() VALUES(getMSJ_ERROR_2006());
 				END IF;	
-				IF 	(isNumericValid(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''',''), FALSE) IS FALSE) THEN
-					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES(getMSJ_ERROR_2009());
-				END IF;
-				--Req 21: 14062016
-				IF 	(validarDigitoChequeo(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_TARJETA,'''','')) IS FALSE) THEN
-					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2009() VALUES('<F>EL NRO DE TARJETA ES INVÁLIDO</F>');
-				END IF;
 				--Req 21 fin
 				IF (isNumericValid(Environment.DFDL.[1].MENSAJE.TELEFONO_TARJETAHABIENTE, FALSE) IS FALSE) THEN
 					THROW USER EXCEPTION MESSAGE getCOD_ERROR_2010() VALUES(getMSJ_ERROR_2010());					
@@ -141,7 +148,17 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_GrabarParametros
 		DECLARE intIdArchivoImportacion INTEGER;
 		
 		--((1.1)) Registro del archivo log
-		CALL insertarArchivo(Environment.File.Name || '.log',
+		--Req8: log alignet
+		DECLARE extensionLog CHARACTER '.log';
+		DECLARE tipoArchivoLog INTEGER;
+		CALL obtenerComercioTipoArchivo(CAST(refMetadata.idComercio AS INTEGER), tipoArchivoLog); 
+		IF tipoArchivoLog = 1 THEN --LOG DE ALIGNET 
+			SET extensionLog = '.csv';
+		ELSE
+			SET extensionLog = '.log';
+		END IF;
+		--Req8: fin
+		CALL insertarArchivo(Environment.File.Name || extensionLog, --Req8: log alignet
 							CAST(refMetadata.tipoArchivoLog AS INTEGER),
 							CURRENT_TIMESTAMP,
 							intIdArchivoLog);
@@ -186,6 +203,7 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_GrabarParametros
 			SET refParam.Batch.idTransaccion	= intIdTransaccion;
 			SET refParam.Batch.msgIdTransaccion	= getMsgId(); --identificador unico del procesamiento de un archivo
 			SET refParam.Batch.Metadata		    = refMetadata;
+			SET refParam.Batch.tipoArchivoLog	= tipoArchivoLog; --Req8: log alignet
 			
 			-- ((3)) Se obtiene el horario de proceso
 			
@@ -237,6 +255,11 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_GrabarParametros
 
 		RETURN FALSE;
 	END;
+	--Req8: log alignet
+	CREATE PROCEDURE obtenerComercioTipoArchivo(IN P_ID_COMERCIO INTEGER, OUT P_ID_ARCHIVO INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_COMERCIO_OBTENER_TIPOARCHIVOLOG";
+	--Req8: fin
 END MODULE;
 
 CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_ControlarFinArchivo
@@ -369,6 +392,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_MOD_AFILIACION_ControlarErrorRecepcion
 		SET Environment.XMLNSC.resultado.nro_registro = COALESCE(InputLocalEnvironment.File.Record-1,'');
  		SET Environment.XMLNSC.resultado.mensaje = construirMsgErrorDfdlImport(chrMsjError);--0709 chrMsjError;
  		SET Environment.XMLNSC.resultado.codigo  = 'FALLIDO';
+ 		--Req 7: nro beneficario logs
+		SET Environment.XMLNSC.resultado.nro_beneficiario = COALESCE(REPLACE(Environment.DFDL.[1].MENSAJE.NRO_IDENTIFICACION_BENEFICIARIO,'''',''),'-');
+		--Req 7: fin
 
 		DECLARE inCCSID INT getENCODING();                     
 		DECLARE inEncoding INT InputProperties.Encoding;

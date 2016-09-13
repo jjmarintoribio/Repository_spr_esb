@@ -860,6 +860,7 @@ mensajeError CHARACTER, INOUT detalleError CHARACTER)
         RETURN suma;
 	END;
 	
+	--Req 21: 14062016
 	CREATE FUNCTION validarDigitoChequeo(IN nroTarjeta CHARACTER)
 	RETURNS BOOLEAN
 	BEGIN
@@ -873,3 +874,20 @@ mensajeError CHARACTER, INOUT detalleError CHARACTER)
 			RETURN FALSE;
 		END IF;
 	END;
+	
+	/* --Req 34631 09082016Cambio Funcion de validacion de alfanumericos*/
+	CREATE FUNCTION isAlfanumericValid(IN chrNumber CHARACTER,IN bolVacio BOOLEAN)
+	RETURNS BOOLEAN 
+	BEGIN
+		IF (bolVacio IS TRUE) THEN
+			IF (LENGTH(TRIM(chrNumber))=0) THEN
+				RETURN FALSE;
+			END IF;
+		END IF;
+		IF LENGTH(TRIM(TRANSLATE(chrNumber, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',''))) <> 0 THEN 
+			RETURN FALSE ;
+		ELSEIF LENGTH(TRIM(TRANSLATE(chrNumber, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',''))) = 0 THEN
+			RETURN TRUE ;
+		END IF;	
+		
+	END; 

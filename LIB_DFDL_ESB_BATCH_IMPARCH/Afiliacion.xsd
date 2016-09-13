@@ -88,7 +88,7 @@
                   <dfdl:assert failureType="processingError" message="&lt;F&gt;Identificador debe iniciar con apostrofes&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/NRO_IDENTIFICACION_BENEFICIARIO ,"'" )}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
-              </xsd:element>
+                                                                          </xsd:element>
                             <xsd:element name="NOM_BENEFICIARIO" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
@@ -121,7 +121,7 @@
                             <xsd:element name="TIPO_CARGO" type="xsd:string">
                 <xsd:annotation>
                   <xsd:appinfo source="http://www.ogf.org/dfdl/">
-                    <dfdl:assert message="&lt;F&gt;Tipo de Cargo inválido , solo permitidos V (variable) y F (fijo)&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'V') or fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'F')}</dfdl:assert>
+                    <dfdl:assert message="&lt;F&gt;Tipo de Cargo invalido , solo permitidos V (variable) y F (fijo)&lt;/F&gt;">{fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'V') or fn:starts-with(/ns0:Afiliacion/MENSAJE[1]/TIPO_CARGO, 'F')}</dfdl:assert>
                   </xsd:appinfo>
                 </xsd:annotation>
               </xsd:element>

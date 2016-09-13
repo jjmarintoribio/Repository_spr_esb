@@ -94,26 +94,50 @@ CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_ActualizarImportacionCan
 										  intRegistrosTotal,
 										  estadoProcesoImp, 
 										  CAST( Environment.finArchivo.IdTransaccion AS INTEGER));
+		-- Req 6: logs ordenados
+		CALL crearImportacionAfiliacionTemporal(CAST(Environment.finArchivo.IdTransaccion AS CHARACTER));
+		--Req 6: fin
+		  										  
 		--TODO :: INICIO								  
 		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
 		--TODO :: FIN
-		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.csv'; --Req8: log alignet
 		PROPAGATE TO TERMINAL 0 DELETE NONE;
 		PROPAGATE TO TERMINAL 1;								  
 		RETURN FALSE;
 
 	END;
+	--Req 6: logs ordenados
+   	CREATE PROCEDURE crearImportacionAfiliacionTemporal (IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_AFILIACION_CREAR_TEMPORAL";
+	--Req 6: fin		
 END MODULE;
 
 
 CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_MoverArchivoTemp
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
-		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
-		RETURN TRUE;
+--		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+--		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+--		RETURN TRUE;
+		--	Req 6: logs ordenados
+		SET Environment.File.Offset = 0; 
+		SET Environment.File.EndOfFile = FALSE;   
+		DECLARE intRegistrosFail INTEGER;
+		SET intRegistrosFail = CAST(COALESCE(Environment.finArchivo.TotalRegistrosFail,0) AS INTEGER) + CAST(COALESCE(Environment.Parametros.registrosErrorDfdl,0) AS INTEGER);
+		
+		IF CAST(COALESCE(intRegistrosFail,0) AS INTEGER) > 0 THEN    
+		WHILE Environment.File.EndOfFile = FALSE DO 
+		    SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log'; 
+		    SET OutputLocalEnvironment.Destination.File.Offset = Environment.File.Offset; 
+		    PROPAGATE TO TERMINAL 0; 
+		END WHILE; 
+		end if;
+		PROPAGATE TO TERMINAL 1; 
+		RETURN FALSE; 
 	END;
-
 
 END MODULE;
 
@@ -121,13 +145,141 @@ END MODULE;
 CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_MoverArchivoFinal
 	CREATE FUNCTION Main() RETURNS BOOLEAN
 	BEGIN
-		SET OutputRoot = InputRoot;
-		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
-		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+--		SET OutputRoot = InputRoot;
+--		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+--		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || '.log';
+--		RETURN TRUE;
+		--Req 6: logs ordenados
+		
+			SET Environment.File.EndOfFile = InputLocalEnvironment.File.Read.EndOfFile; 
+	 		SET Environment.File.Offset = InputLocalEnvironment.File.Read.NextRecordOffset; 
+			CALL insertarImportacionAfiliacionTemporal(CAST(Environment.finArchivo.IdTransaccion AS CHARACTER),
+													    CAST(InputRoot.XMLNSC.resultado.nro_registro AS CHARACTER),
+													    CAST(InputRoot.XMLNSC.resultado.mensaje AS CHARACTER),
+													    CAST(InputRoot.XMLNSC.resultado.nro_beneficiario AS CHARACTER)); 													
+			RETURN TRUE;
+
+			
+		PROPAGATE TO TERMINAL 1;
+	END;
+   	CREATE PROCEDURE insertarImportacionAfiliacionTemporal (IN P_ID_TRANSACCION CHARACTER,
+   															IN P_NRO_REGISTRO CHARACTER,
+   															IN P_MENSAJE CHARACTER,
+   															IN P_NRO_BENEFICIARIO CHARACTER
+   															)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_AFILIACION_INSERTAR_TEMPORAL";
+	--Req 6: fin
+
+END MODULE;
+
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_FinishFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+			
+			DECLARE intRegistrosTotal INTEGER CAST(COALESCE(Environment.finArchivo.TotalRegistros,0) AS INTEGER);
+			
+			--Req8: log alignet
+--			DECLARE refMetadata REFERENCE TO Environment.Parametros.Batch.Metadata;
+--			DECLARE tipoArchivoLog INTEGER;
+--			CALL obtenerComercioTipoArchivo(CAST(refMetadata.idComercio AS INTEGER), tipoArchivoLog);
+			DECLARE extensionLog CHARACTER '.log';
+			--Req8 fin
+			
+			CALL actualizarProcesoImportacionAfiliacionCantidad(Environment.finArchivo.IdTransaccion,intRegistrosTotal);
+			
+			CALL obtenerLogImportacionAfiliacion(Environment.finArchivo.IdTransaccion,Environment.Resultset1[]); 
+			
+			DECLARE refResult REFERENCE TO Environment.Resultset1;			
+			
+			--Req8: log alignet
+			IF Environment.Parametros.Batch.tipoArchivoLog = 1 THEN --LOG DE ALIGNET 
+				SET extensionLog = '.csv';
+				SET OutputRoot.Properties.MessageSet 	= 'LogAlignet.xsd';
+				SET OutputRoot.Properties.MessageType 	= '{myNs:LogAlignet}:LogAlignet';
+				SET OutputRoot.Properties.Encoding 		= 273;
+				SET OutputRoot.Properties.CodedCharSetId 	= 819;
+				CREATE LASTCHILD OF OutputRoot DOMAIN 'DFDL' NAME 'DFDL';
+				DECLARE ns01 NAMESPACE 'myNs:LogAlignet';
+				
+				DECLARE inCCSID INT getENCODING();                     
+				DECLARE inEncoding INT InputProperties.Encoding;
+				WHILE LASTMOVE(refResult) DO
+					SET OutputRoot.DFDL.ns01:LogAlignet.MENSAJE.NRO_REGISTRO	= refResult.nro_registro;--'REGISTROPRUEBA';--
+					SET OutputRoot.DFDL.ns01:LogAlignet.MENSAJE.ERROR			= refResult.mensaje;--'MENSAJEPRUEBA';--
+					SET OutputRoot.BLOB.BLOB = ASBITSTREAM(OutputRoot.DFDL OPTIONS RootBitStream);
+					SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+					SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || extensionLog; --Req8: log alignet
+					PROPAGATE TO TERMINAL 0; --IN
+					MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+				END WHILE;
+			
+				ELSE
+						SET extensionLog = '.log';
+			--Req8 fin		
+				WHILE LASTMOVE(refResult) DO
+					SET OutputRoot.XMLNSC.resultado = refResult;
+					SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+					SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || extensionLog; --Req8: log alignet
+					PROPAGATE TO TERMINAL 0; --IN
+					MOVE refResult NEXTSIBLING REPEAT TYPE NAME;
+				END WHILE;
+			
+			END IF;
+			
+			SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+			SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || extensionLog; --Req8: log alignet
+			PROPAGATE TO TERMINAL 1; -- FIN DE ARCHIVO
+			
+			CALL dropImportacionAfiliacionTemporal(Environment.finArchivo.IdTransaccion);
+															
+			SET Environment.Archivo = TRIM(InputRoot.MQRFH2.usr.Servicio.PATHFILERROR) || 'temp/';
+			SET Environment.finArchivo.extensionLog	  = extensionLog;
+			PROPAGATE TO TERMINAL 1; 
+		
+	END;
+	--Req 6: logs ordenados
+	CREATE PROCEDURE obtenerLogImportacionAfiliacion(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	DYNAMIC RESULT SETS 1
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_AFILIACION_ERROR_GENERAR_LOG";
+	
+	CREATE PROCEDURE dropImportacionAfiliacionTemporal(IN P_ID_TRANSACCION CHARACTER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_AFILIACION_DROP_TEMPORAL";
+	
+	CREATE PROCEDURE actualizarProcesoImportacionAfiliacionCantidad(IN P_ID_TRANSACCION CHARACTER, IN P_NRO_TOTAL INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_IMPORTACION_AFILIACION_CANTIDAD_ACTUALIZAR";
+	
+	CREATE PROCEDURE obtenerComercioTipoArchivo(IN P_ID_COMERCIO INTEGER, OUT P_ID_ARCHIVO INTEGER)		
+	LANGUAGE DATABASE
+	EXTERNAL NAME "SPRESB.SP_COMERCIO_OBTENER_TIPOARCHIVOLOG";
+	--Req 6: fin
+END MODULE;
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_MoverArchivoTemp1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR) || 'temp/';
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || Environment.finArchivo.extensionLog; --Req8: log alignet
 		RETURN TRUE;
 	END;
 
 
 END MODULE;
 
+
+CREATE COMPUTE MODULE MF_ESB_BTH_IMPARCH_AFILIACION_FIN_MoverArchivoFinal1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		SET OutputLocalEnvironment.Destination.File.Directory 	= COALESCE(Environment.Parametros.Servicio.PATHFILERROR,Environment.MQRFH2.usr.Parametros.ESB.PATHFILERROR);
+		SET OutputLocalEnvironment.Destination.File.Name 		= Environment.Parametros.Batch.nombreArchivo || Environment.finArchivo.extensionLog; --Req8: log alignet
+		RETURN TRUE;
+	END;
+
+
+END MODULE;
 

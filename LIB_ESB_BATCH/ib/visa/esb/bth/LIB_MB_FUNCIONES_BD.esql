@@ -898,6 +898,8 @@ BROKER SCHEMA ib.visa.esb.bth
 												IN P_IP_CREACION CHARACTER,
 												IN P_ID_PROCESO_IMPORTACION INTEGER,
 												IN P_FLG_REINTENTOS_AUTOMATICOS INTEGER,
+												--IN P_ID_TRANSACCION CHARACTER, --Req 6: logs ordenados
+												--IN P_NRO_REGISTRO INTEGER, --Req 6: logs ordenados
 												OUT P_ID_PRODUCTO INTEGER,
 												OUT P_VIGENCIA_CADUCIDAD_AFILIACION INTEGER,	
 												OUT P_ID_AFILIACION INTEGER,
@@ -936,6 +938,8 @@ BROKER SCHEMA ib.visa.esb.bth
 													  IN P_PARAM_FLG_SOLO_VISA CHARACTER,
 													  IN P_PARAM_DIAS_EXPIRACION_SOL_AFI INT,
 													  IN P_MODULO INT,
+													  --IN P_ID_TRANSACCION CHARACTER, --Req 6: logs ordenados
+													  --IN P_NRO_REGISTRO INTEGER, --Req 6: logs ordenados
 													  OUT P_RESULTADO_MSJ CHARACTER,
 													  OUT P_RESULTADO INT)
    LANGUAGE DATABASE
@@ -955,6 +959,8 @@ BROKER SCHEMA ib.visa.esb.bth
 										  IN P_NRO_IDENTIFICACION_BENEFICIARIO CHARACTER,
 										  IN P_COD_USUARIO_MODIFICACION CHARACTER,
 										  IN P_IP_MODIFICACION CHARACTER,
+										 -- IN P_ID_TRANSACCION CHARACTER, --Req 6: logs ordenados
+										  --IN P_NRO_REGISTRO INTEGER, --Req 6: logs ordenados
 										  OUT P_RESULTADO_MSJ CHARACTER,
 										  OUT P_RESULTADO INT)
    LANGUAGE DATABASE
@@ -1434,7 +1440,9 @@ BROKER SCHEMA ib.visa.esb.bth
 												    IN P_FLG_REINTENTOS_AUTOMATICOS INT,
 												    IN P_MSG_DENEGADO  CHARACTER,
 												    IN P_ESTADO INT,    
-												    OUT P_ID_PRODUCTO INT,
+												    --IN P_ID_TRANSACCION CHARACTER, --Req 6: logs ordenados
+													--IN P_NRO_REGISTRO INTEGER, --Req 6: logs ordenados
+												    OUT P_ID_PRODUCTO INT, 
 												    OUT P_VIGENCIA_CADUCIDAD_AFILIACION  INT,
 												    OUT P_ID_AFILIACION INT,
 												    OUT P_FEC_CADUCIDAD TIMESTAMP,

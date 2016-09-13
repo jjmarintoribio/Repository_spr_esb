@@ -15,7 +15,7 @@
       <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="462,263" queueName="IB.BTH.GENBTH.RCVCONTROL.REQ.01" transactionMode="no">
         <translation xmi:type="utility:ConstantString" string="IB.BTH.GENBTH.RCVCONTROL.REQ.01"/>
       </nodes>
-      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="222,475" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-mod-afiliacion-error-tds.log" pattern="=============== IMPORTACION ARCHIVOS TDS - ERROR ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;">
+      <nodes xmi:type="ComIbmTrace.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="222,475" destination="file" filePath="C:\app\visa\esb\batch\logs\importacion-mod-afiliacion-error-tds.log" pattern="=============== IMPORTACION ARCHIVOS TDS - ERROR ==============&#xD;&#xA;************************************************************************************&#xD;&#xA;Fecha y Hora = ${CURRENT_TIMESTAMP}&#xD;&#xA;Root = ${ExceptionList}&#xD;&#xA;Environment = ${Environment}&#xD;&#xA;">
         <translation xmi:type="utility:ConstantString" string="T_Error"/>
       </nodes>
       <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="422,60" dataSource="DSSPR_DB" computeExpression="esql://routine/ib.visa.esb.bth.tds#MF_ESB_BTH_IMPARCH_MOD_AFILIACION_GrabarParametros.Main">

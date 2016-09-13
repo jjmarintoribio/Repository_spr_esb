@@ -31,8 +31,8 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVO_MOD_AFILIACION_BD_PrepararLectura
 		WHILE LASTMOVE(refRegis) DO	
 			CALL modificarAfiliacion(CAST(refMqrfh2.Metadata.idComercio AS INTEGER),
 							  REPLACE(refRegis.COD_PRODUCTO,'''',''),
-							  enmascararNumeroTarjeta(REPLACE(refRegis.NRO_TARJETA,'''','')),
-							  encriptarNroTarjeta(REPLACE(refRegis.NRO_TARJETA,'''','')),
+							  enmascararNumeroTarjeta(REPLACE(COALESCE(refRegis.NRO_TARJETA,''),'''','')),
+							  encriptarNroTarjeta(REPLACE(COALESCE(refRegis.NRO_TARJETA,''),'''','')),
 							  CAST(refRegis.NRO_MES_EXPIRACION_TARJETA AS INTEGER),
 							  CAST(refRegis.NRO_ANHO_EXPIRACION_TARJETA AS INTEGER),
 							  refRegis.TELEFONO_TARJETAHABIENTE,
@@ -56,6 +56,9 @@ CREATE COMPUTE MODULE MF_ESB_BTH_REGARCHIVO_MOD_AFILIACION_BD_PrepararLectura
 				SET refError.nro_registro = COALESCE(refRegis.NRO_RECORD,'');
 				SET refError.mensaje = outResultadoMsj;
 				SET refError.codigo = obtenerRespuestaPorCodigo(outResultado);
+				--Req 7: nro beneficario logs
+				SET refError.nro_beneficiario = REPLACE(refRegis.NRO_IDENTIFICACION_BENEFICIARIO,'''','');
+				--Req 7: fin
 				CREATE LASTCHILD OF Environment.XMLNSC.resultado NAME 'error';
 				MOVE refError NEXTSIBLING;
 				

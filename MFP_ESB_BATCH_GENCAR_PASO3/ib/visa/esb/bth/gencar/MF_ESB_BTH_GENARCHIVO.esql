@@ -26,15 +26,15 @@ CREATE COMPUTE MODULE MF_ESB_BTH_GENARCHIVO_GenerarArchivo
 		DECLARE intLote INTEGER;
 		
 				
---		DECLARE chrNomArchivo CHARACTER  InputBody.MENSAJE.COD_COMERCIO
---										|| '_'  
---										|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())	
---										|| refParam.Servicio.EXTFILEDEST;
---		Temporal0207 
 		DECLARE chrNomArchivo CHARACTER  InputBody.MENSAJE.COD_COMERCIO
 										|| '_'  
-										|| CAST(CAST(fechaTemporalProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())	
+										|| CAST(CAST(refParam.Batch.fechaProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())	
 										|| refParam.Servicio.EXTFILEDEST;
+--		Temporal0207 
+--		DECLARE chrNomArchivo CHARACTER  InputBody.MENSAJE.COD_COMERCIO
+--										|| '_'  
+--										|| CAST(CAST(fechaTemporalProceso AS TIMESTAMP FORMAT getFORMATO_FECHAHORA2_BD()) AS CHAR FORMAT getFORMATO_FECHA())	
+--										|| refParam.Servicio.EXTFILEDEST;
 		
 
 		--((1)) Validacion del tipo de archivo de lote
